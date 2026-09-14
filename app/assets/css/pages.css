@@ -1,0 +1,32 @@
+/* Layout de pàgines. La tipografia la posa AppText (decisió 026); el relleu el posen els primitius (AppCard…). */
+@layer components {
+  .page {
+    @apply mx-auto w-full max-w-5xl px-4 sm:px-6;
+  }
+  .home-page {
+    @apply pb-16;
+  }
+
+  .meme-page {
+    @apply flex flex-col gap-8 py-12 sm:py-16;
+  }
+  .meme-page__header {
+    @apply max-w-2xl;
+  }
+  .meme-page__kicker {
+    @apply mb-2;
+  }
+  .meme-page__intro {
+    @apply mt-4;
+  }
+  /* "Com funciona": AppCard filled (enfonsada) dins la pàgina plana */
+  .meme-page__how {
+    @apply rounded-2xl;
+  }
+  .meme-page__how-title {
+    @apply mb-3;
+  }
+  .meme-page__steps {
+    @apply list-decimal space-y-2 pl-5;
+  }
+}

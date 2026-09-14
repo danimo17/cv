@@ -1,0 +1,8 @@
+@layer components {
+  .contact-section__intro {
+    @apply mb-6 max-w-xl;
+  }
+  .contact-section__actions {
+    @apply flex flex-wrap gap-3;
+  }
+}

@@ -1,0 +1,18 @@
+/* Neumorphism: barra en relleu (ombra cap avall) amb desenfocament del fons. */
+@layer components {
+  .app-header {
+    @apply sticky top-0 z-40 bg-surface/85 shadow-neu-sm backdrop-blur;
+  }
+  .app-header__inner {
+    @apply mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6;
+  }
+  .app-header__brand {
+    @apply font-bold tracking-tight;
+  }
+  .app-header__nav {
+    @apply flex items-center gap-1;
+  }
+  .app-header__tools {
+    @apply flex items-center gap-3;
+  }
+}

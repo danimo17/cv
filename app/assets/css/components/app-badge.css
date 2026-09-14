@@ -1,0 +1,61 @@
+/* Mida i pes del text els posa AppText (caption per sm, small per md/lg). Neumorphism: relleu curt. */
+@layer components {
+  .app-badge {
+    @apply inline-flex items-center gap-1 rounded-full whitespace-nowrap shadow-neu-sm;
+  }
+  .app-badge--sm {
+    @apply px-2 py-0.5;
+  }
+  .app-badge--md {
+    @apply px-2.5 py-1;
+  }
+  .app-badge--lg {
+    @apply px-3 py-1.5;
+  }
+
+  /* soft: fons -soft del to en relleu */
+  .app-badge--soft.app-badge--primary {
+    @apply bg-primary-soft text-primary;
+  }
+  .app-badge--soft.app-badge--secondary {
+    @apply bg-secondary-soft text-secondary;
+  }
+  .app-badge--soft.app-badge--neutral {
+    @apply bg-neutral-soft text-text;
+  }
+  .app-badge--soft.app-badge--success {
+    @apply bg-success-soft text-success;
+  }
+  .app-badge--soft.app-badge--info {
+    @apply bg-info-soft text-info;
+  }
+  .app-badge--soft.app-badge--warning {
+    @apply bg-warning-soft text-warning;
+  }
+  .app-badge--soft.app-badge--danger {
+    @apply bg-danger-soft text-danger;
+  }
+
+  /* solid: fons ple del to en relleu */
+  .app-badge--solid.app-badge--primary {
+    @apply bg-primary text-primary-fg;
+  }
+  .app-badge--solid.app-badge--secondary {
+    @apply bg-secondary text-secondary-fg;
+  }
+  .app-badge--solid.app-badge--neutral {
+    @apply bg-neutral text-neutral-fg;
+  }
+  .app-badge--solid.app-badge--success {
+    @apply bg-success text-success-fg;
+  }
+  .app-badge--solid.app-badge--info {
+    @apply bg-info text-info-fg;
+  }
+  .app-badge--solid.app-badge--warning {
+    @apply bg-warning text-warning-fg;
+  }
+  .app-badge--solid.app-badge--danger {
+    @apply bg-danger text-danger-fg;
+  }
+}

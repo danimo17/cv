@@ -1,0 +1,3 @@
+#!/bin/sh
+# Regla 09: cap commit sense la gate en verd. --no-verify el bloqueja el hook de Claude i la CI ho repeteix.
+exec pnpm gate

@@ -1,0 +1,6 @@
+/* Sobre AppButton (ghost/neutral): cercle en relleu que s'enfonsa en prémer. */
+@layer components {
+  .theme-toggle {
+    @apply size-10 rounded-full bg-surface px-0 shadow-neu hover:shadow-neu-sm active:shadow-neu-inset;
+  }
+}

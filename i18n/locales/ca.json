@@ -1,0 +1,199 @@
+{
+  "meta": {
+    "title": "Daniel Morales · Desenvolupador Frontend",
+    "description": "Desenvolupador frontend (Vue, Nuxt, Shopify) a Girona. CV, stack, experiència i un mode meme impulsat per Giphy.",
+    "memeTitle": "Mode meme",
+    "memeDescription": "Canvia el meu retrat per un meme de Giphy. Una petita demo de useFetch, Pinia i estat de client a Nuxt."
+  },
+  "nav": {
+    "brand": "Daniel Morales",
+    "main": "Navegació principal",
+    "home": "Inici",
+    "meme": "Mode meme",
+    "skipToContent": "Salta al contingut"
+  },
+  "theme": {
+    "toggle": "Canvia el tema de color",
+    "light": "Canvia a clar",
+    "dark": "Canvia a fosc"
+  },
+  "locale": { "switch": "Idioma" },
+  "hero": {
+    "greeting": "Hola, sóc",
+    "headline": "Desenvolupador Frontend",
+    "tagline": "Vue, Nuxt i Shopify de dia. Readaptant-me ràpid amb la IA: pipelines agèntics, desenvolupament guiat per especificacions i quality gates.",
+    "location": "Banyoles, Girona · híbrid o remot",
+    "openToWork": "Obert a ofertes",
+    "cta": { "contact": "Contacta amb mi" },
+    "photoAlt": "Retrat de Daniel Morales",
+    "memeAlt": "Meme seleccionat",
+    "wearing": "Ara mateix porto:",
+    "reset": "Torna a la meva cara real",
+    "tryMeme": "Canvia la meva cara per un meme"
+  },
+  "about": {
+    "eyebrow": "Sobre mi",
+    "title": "Qui sóc",
+    "p1": "Em considero una persona responsable. Intento utilitzar sempre un to adequat i respectuós. Tinc molta curiositat i ganes d'aprendre. Estic acostumat al treball en equip però també crec en el progrés i desenvolupament individual.",
+    "p2": "Més recentment, m'ha fascinat com la intel·ligència artificial està transformant el desenvolupament de programari, i he estat construint fluxos de treball estructurats per integrar-la de manera fiable en projectes reals.",
+    "languages": "Idiomes",
+    "interests": "Interessos",
+    "lang": {
+      "ca": "Català · nadiu",
+      "es": "Castellà · nadiu",
+      "en": "Anglès · C1 Cambridge",
+      "ja": "Japonès · nocions bàsiques"
+    },
+    "interest": {
+      "frontend": "Frontend",
+      "threejs": "3D i three.js",
+      "motion": "Animació amb JS i CSS",
+      "uiux": "UI/UX",
+      "ai": "IA",
+      "ml": "Machine learning"
+    }
+  },
+  "experience": {
+    "eyebrow": "Trajectòria",
+    "title": "Experiència",
+    "present": "Actualitat",
+    "tags": "Tecnologies",
+    "items": {
+      "pdpaola-vue": {
+        "title": "Desenvolupador Frontend Vue",
+        "bullets": [
+          "Migració del frontend de la botiga de Vue 2 a Vue 3 + Nuxt.",
+          "Estat i dades asíncrones amb Pinia i GraphQL; tests end-to-end amb Cypress; PrimeVue.",
+          "IA al flux de treball: pipelines agèntics, desenvolupament guiat per especificacions, quality gates i tests automatitzats."
+        ]
+      },
+      "pdpaola-shopify": {
+        "title": "Desenvolupador Shopify",
+        "bullets": [
+          "Creació i edició de temes amb Liquid, HTML i SCSS; integracions de tercers.",
+          "Personalització de funcionalitats natives de Shopify: Pixels, Checkout, Functions.",
+          "Millores d'UX amb JavaScript, treballant amb Scrum."
+        ]
+      },
+      "rocket": {
+        "title": "Desenvolupador Shopify",
+        "bullets": [
+          "Temes de Shopify amb Liquid, HTML, preprocessadors CSS i Bootstrap per a diversos clients.",
+          "Millores de frontend amb JavaScript i jQuery; valoració creativa de solucions per a clients.",
+          "Manteniment continu de botigues en producció, treballant amb Scrum."
+        ]
+      },
+      "boka2": {
+        "title": "Desenvolupador Laravel Junior",
+        "bullets": [
+          "Solucions a mida per a empreses mitjanes amb Laravel (PHP), MySQL i APIs REST.",
+          "Branding, UI i UX per a fluxos de treball de clients; maquetació amb JavaScript i jQuery.",
+          "Metodologies àgils, branching i versionat amb Git."
+        ]
+      },
+      "groc": { "title": "Dissenyador gràfic (pràctiques)", "bullets": [] },
+      "paperfilm": { "title": "Editor de vídeo freelance", "bullets": [] }
+    }
+  },
+  "stack": {
+    "eyebrow": "Eines",
+    "title": "Stack tecnològic",
+    "groups": {
+      "frontend": "Frontend",
+      "ecommerce": "E-commerce",
+      "ai": "Flux de treball amb IA",
+      "backend": "Backend i dades",
+      "design": "Disseny i animació"
+    }
+  },
+  "education": {
+    "eyebrow": "Formació",
+    "title": "Educació",
+    "certifications": "Certificacions",
+    "items": {
+      "eram": {
+        "title": "Grau en Comunicació Audiovisual i Multimèdia",
+        "note": "Universitat de Girona (ERAM). Xoriguers de la UdG, la colla castellera de la universitat."
+      },
+      "santander": {
+        "title": "Santander X Explorer",
+        "note": "Programa de 12 setmanes per a joves emprenedors: pla de negoci complet amb mentors."
+      },
+      "esplai-php": {
+        "title": "Bootcamp PHP Junior Developer (285 h)",
+        "note": "Agile, Git, HTML/CSS/Bootstrap, JavaScript, jQuery, MySQL, PHP, MVC."
+      },
+      "esplai-web": {
+        "title": "Bootcamp de desenvolupament web (215 h)",
+        "note": "Primer contacte amb el codi: HTML5, CSS3, JavaScript, MySQL."
+      },
+      "hanbat": {
+        "title": "Summer Design Workshop",
+        "note": "Hanbat National University, Corea del Sud. Disseny gràfic."
+      },
+      "frederic-marti": { "title": "Batxillerat científic", "note": "Nota: 9,1." }
+    }
+  },
+  "certifications": {
+    "items": {
+      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
+      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
+      "amaltea": {
+        "title": "Introducció a la igualtat d'oportunitats a l'entorn laboral",
+        "note": "Amaltea Consultoría."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contacte",
+    "title": "Parlem",
+    "intro": "Busques un desenvolupador frontend que entregui amb tests, gestió d'estat i fluxos de treball assistits per IA? Escriu-me o troba'm a LinkedIn i GitHub.",
+    "email": "Envia'm un correu",
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
+  },
+  "cv": { "download": "Descarrega el CV (PDF)" },
+  "meme": {
+    "kicker": "Mode meme",
+    "title": "Canvia la meva cara per un meme",
+    "intro": "Cerca a Giphy, tria un GIF i posa-me'l a la pàgina d'inici. És una petita demo de com aquest lloc gestiona dades i estat.",
+    "how": {
+      "title": "Com funciona",
+      "steps": [
+        "La teva cerca arriba a una ruta de servidor de Nuxt (/api/giphy/search) que parla amb Giphy amb una clau privada. El navegador mai veu la clau.",
+        "Un servei defineix la petició useFetch i un store de Pinia en guarda l'estat: pending, error i resultats són reactius.",
+        "La teva tria viu en un store de Pinia, així que sobreviu a la navegació cap a la pàgina d'inici.",
+        "Recarrega la pàgina i torna la meva cara real: el store és en memòria a propòsit. Estat, no persistència."
+      ]
+    },
+    "currently": "Ara mateix portes: {title}",
+    "search": {
+      "label": "Cerca GIFs",
+      "placeholder": "gat, developer, dilluns…",
+      "button": "Cerca"
+    },
+    "results": {
+      "errorTitle": "Giphy no ha respost",
+      "error": "Torna-ho a provar d'aquí a un moment o amb una altra paraula.",
+      "badQuery": "Aquesta cerca no és vàlida: fes servir d'1 a 50 caràcters normals.",
+      "notConfigured": "El mode meme encara no està configurat en aquest servidor.",
+      "empty": "No s'ha trobat res. Prova amb una altra paraula.",
+      "select": "Previsualitza {title}"
+    },
+    "preview": {
+      "title": "Previsualització",
+      "size": "{width} × {height} px",
+      "use": "Posa'm aquest meme",
+      "cancel": "Tria'n un altre"
+    },
+    "success": "Fet! La teva nova cara ja és a la pàgina d'inici.",
+    "goHome": "Mira-ho a la pàgina d'inici",
+    "poweredBy": "Powered by GIPHY"
+  },
+  "footer": { "built": "Fet amb Nuxt 4, Tailwind, Pinia i una mica d'IA.", "source": "Codi font" },
+  "banner": {
+    "source": "Aquesta web és de codi obert — llegeix el codi a GitHub",
+    "repo": "danimo17/cv",
+    "label": "Avís de codi font"
+  }
+}

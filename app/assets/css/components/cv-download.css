@@ -1,0 +1,5 @@
+@layer components {
+  .cv-download {
+    @apply inline-flex;
+  }
+}

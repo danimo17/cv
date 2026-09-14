@@ -1,0 +1,5 @@
+@layer components {
+  .experience-section__list {
+    @apply flex flex-col gap-8;
+  }
+}

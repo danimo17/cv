@@ -1,0 +1,18 @@
+/* Neumorphism: viu dins d'una AppCard elevated; la imatge surt en relleu del fons de la card. */
+@layer components {
+  .meme-preview {
+    @apply grid gap-6 md:grid-cols-[1fr_1.2fr];
+  }
+  .meme-preview__image {
+    @apply aspect-square w-full shadow-neu;
+  }
+  .meme-preview__body {
+    @apply flex flex-col justify-center;
+  }
+  .meme-preview__meta {
+    @apply mt-1;
+  }
+  .meme-preview__actions {
+    @apply mt-6 flex flex-wrap gap-3;
+  }
+}

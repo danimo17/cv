@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cv",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".output/public", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+  // Domini registrat a Cloudflare Registrar el 2026-09-14 (decisió 002).
+  "routes": [{ "pattern": "danimorales.dev", "custom_domain": true }],
+  // Producció només al domini propi: sense cv.<subdomini>.workers.dev.
+  "workers_dev": false,
+  // Previews de PR (`wrangler versions upload`) a <versió|àlies>-cv.<subdomini>.workers.dev.
+  // Cal posar-ho explícitament: per defecte hereta el valor de workers_dev (decisió 024).
+  "preview_urls": true,
+  // El secret NUXT_GIPHY_API_KEY el puja el workflow deploy.yml des de GitHub (environment `production`).
+}

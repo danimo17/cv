@@ -1,0 +1,96 @@
+// @ts-check
+// Regles d'estil vinculants: .claude/docs/standards/code-style.md explica cadascuna.
+import prettier from 'eslint-config-prettier'
+import withNuxt from './.nuxt/eslint.config.mjs'
+
+const STYLE_UTILITIES =
+  '/^(bg|text|p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|rounded|border|shadow|font|w|h|max-w|max-h|size)-/'
+
+// Decisió 026: cada element natiu de text/formulari/enllaç/imatge té un únic primitiu propi.
+const PRIMITIVE_WRAPPERS = ['AppText', 'AppInput', 'AppButton', 'AppLink', 'AppImage', 'AppIcon']
+const RESTRICTED_ELEMENTS = [
+  {
+    element: [
+      'p',
+      'span',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'small',
+      'strong',
+      'em',
+      'label',
+      'figcaption',
+      'time',
+    ],
+    message: 'Usa <AppText as="…" variant="…"> (app/components/shared/AppText.vue).',
+  },
+  {
+    element: ['input', 'select', 'textarea'],
+    message: 'Usa <AppInput type="…"> (app/components/shared/AppInput.vue).',
+  },
+  { element: 'button', message: 'Usa <AppButton> (app/components/shared/AppButton.vue).' },
+  { element: 'a', message: 'Usa <AppLink to|href> (app/components/shared/AppLink.vue).' },
+  { element: 'img', message: 'Usa <AppImage> (app/components/shared/AppImage.vue).' },
+]
+
+export default withNuxt(
+  prettier,
+  {
+    rules: {
+      'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
+      'vue/define-macros-order': [
+        'error',
+        { order: ['defineOptions', 'defineProps', 'defineEmits', 'defineSlots'] },
+      ],
+      'vue/component-name-in-template-casing': [
+        'error',
+        'PascalCase',
+        { registeredComponentsOnly: false },
+      ],
+      'vue/require-explicit-emits': 'error',
+      // Regla 05: cap string d'usuari al template, tot passa per i18n.
+      'vue/no-bare-strings-in-template': 'error',
+      // Regla 08: cap utilitat de color/espai/tipografia al template; només classes del CSS del component.
+      'vue/no-restricted-class': ['error', STYLE_UTILITIES],
+      '@typescript-eslint/no-explicit-any': 'error',
+      'no-console': 'error',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@fortawesome/vue-fontawesome',
+              message: 'Usa <AppIcon> (app/components/shared/AppIcon.vue).',
+            },
+          ],
+        },
+      ],
+      'sort-imports': ['error', { ignoreDeclarationSort: true }],
+    },
+  },
+  {
+    // Decisió 026: elements natius només dins del seu primitiu.
+    files: ['app/**/*.vue'],
+    rules: { 'vue/no-restricted-html-elements': ['error', ...RESTRICTED_ELEMENTS] },
+  },
+  {
+    files: PRIMITIVE_WRAPPERS.map((name) => `app/components/shared/${name}.vue`),
+    rules: { 'vue/no-restricted-html-elements': 'off' },
+  },
+  {
+    files: ['app/components/shared/AppIcon.vue', 'app/plugins/fontawesome.ts'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
+  {
+    files: ['server/**'],
+    rules: { 'no-console': ['error', { allow: ['error', 'warn'] }] },
+  },
+  {
+    files: ['tests/**', 'e2e/**'],
+    rules: { 'vue/no-bare-strings-in-template': 'off', 'no-console': 'off' },
+  }
+)
