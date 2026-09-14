@@ -1,0 +1,36 @@
+@layer base {
+  html {
+    @apply scroll-smooth motion-reduce:scroll-auto;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-surface font-sans text-text antialiased;
+  }
+  /* Anell de focus sempre visible: mai depenem de l'ombra per indicar l'estat */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+  /* Neumorphism = transicions d'ombra; amb reduced-motion es tallen totes */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      @apply transition-none;
+    }
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply flex min-h-dvh flex-col;
+  }
+  .app-shell__main {
+    @apply flex-1;
+  }
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-fg focus:shadow-neu;
+  }
+}

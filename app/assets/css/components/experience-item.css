@@ -1,0 +1,25 @@
+/* Neumorphism: el punt de la línia de temps és una bola en relleu. */
+@layer components {
+  .experience-item {
+    @apply relative grid gap-1 border-l-2 border-border pl-6 sm:grid-cols-[9rem_1fr] sm:gap-6;
+  }
+  .experience-item::before {
+    content: '';
+    @apply absolute top-1 -left-[9px] size-4 rounded-full bg-primary shadow-neu-sm;
+  }
+  .experience-item--compact::before {
+    @apply bg-neutral;
+  }
+  .experience-item__body {
+    @apply flex flex-col gap-1;
+  }
+  .experience-item__org {
+    @apply flex flex-wrap items-center gap-x-2;
+  }
+  .experience-item__bullets {
+    @apply mt-2 list-disc space-y-1 pl-5;
+  }
+  .experience-item__tags {
+    @apply mt-3 flex flex-wrap gap-1.5;
+  }
+}

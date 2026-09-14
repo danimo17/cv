@@ -1,0 +1,92 @@
+/* Neumorphism: tot control és enfonsat (inset); focus = inset + anell primary; danger = anell danger. */
+@layer components {
+  .app-input {
+    @apply flex flex-col gap-1.5;
+  }
+  .app-input--disabled {
+    @apply opacity-60;
+  }
+  .app-input__label {
+    @apply block;
+  }
+  .app-input__field {
+    @apply relative flex items-center;
+  }
+  .app-input__icon {
+    @apply pointer-events-none absolute left-3 text-text-muted;
+  }
+  .app-input__control {
+    @apply h-10 w-full rounded-lg bg-surface-alt px-3 text-sm shadow-neu-inset transition-shadow placeholder:text-text-muted focus:ring-2 focus:ring-primary/40 focus:outline-none disabled:cursor-not-allowed;
+  }
+  .app-input--with-icon .app-input__control {
+    @apply pl-10;
+  }
+  .app-input--sm .app-input__control {
+    @apply h-8;
+  }
+  .app-input--lg .app-input__control {
+    @apply h-12 text-base;
+  }
+  .app-input--danger .app-input__control {
+    @apply ring-1 ring-danger focus:ring-2 focus:ring-danger/40;
+  }
+
+  /* textarea i multiselect: alçada lliure */
+  .app-input--textarea .app-input__control,
+  .app-input--multiselect .app-input__control {
+    @apply h-auto min-h-24 py-2;
+  }
+  .app-input--select .app-input__control {
+    @apply cursor-pointer appearance-none pr-8;
+  }
+
+  /* radio i checkbox: indicador propi enfonsat; marcat = fons primary en relleu + marca en -fg */
+  .app-input__group {
+    @apply m-0 min-w-0 border-0 p-0;
+  }
+  .app-input__options {
+    @apply mt-1.5 flex flex-wrap gap-x-4 gap-y-2;
+  }
+  .app-input__option {
+    @apply inline-flex items-center gap-2;
+  }
+  .app-input__radio,
+  .app-input__checkbox {
+    @apply relative size-4 shrink-0 cursor-pointer appearance-none bg-surface-alt shadow-neu-inset-sm transition-shadow checked:bg-primary checked:shadow-neu-sm disabled:cursor-not-allowed;
+  }
+  .app-input__radio {
+    @apply rounded-full;
+  }
+  .app-input__checkbox {
+    @apply rounded-sm;
+  }
+  .app-input__radio::after,
+  .app-input__checkbox::after {
+    content: '';
+    @apply absolute hidden;
+  }
+  .app-input__radio:checked::after,
+  .app-input__checkbox:checked::after {
+    @apply block;
+  }
+  .app-input__radio::after {
+    @apply top-1 left-1 size-2 rounded-full bg-primary-fg;
+  }
+  .app-input__checkbox::after {
+    @apply top-[2px] left-[5px] h-2.5 w-1.5 rotate-45 border-r-2 border-b-2 border-primary-fg;
+  }
+  .app-input--danger .app-input__radio,
+  .app-input--danger .app-input__checkbox {
+    @apply ring-1 ring-danger checked:bg-danger;
+  }
+  .app-input--danger .app-input__radio::after {
+    @apply bg-danger-fg;
+  }
+  .app-input--danger .app-input__checkbox::after {
+    @apply border-danger-fg;
+  }
+
+  .app-input__hint {
+    @apply block;
+  }
+}

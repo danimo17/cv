@@ -1,0 +1,12 @@
+/* Neumorphism: pista enfonsada; l'ítem actiu surt en relleu amb fons primary. */
+@layer components {
+  .locale-switcher {
+    @apply flex items-center gap-1 rounded-lg bg-surface-alt p-1 shadow-neu-inset-sm;
+  }
+  .locale-switcher__item {
+    @apply rounded-md px-2 py-1 text-xs font-semibold uppercase transition-[color,box-shadow];
+  }
+  .locale-switcher__item--active {
+    @apply bg-primary text-primary-fg shadow-neu-sm hover:text-primary-fg;
+  }
+}

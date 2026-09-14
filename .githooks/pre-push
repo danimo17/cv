@@ -1,0 +1,3 @@
+#!/bin/sh
+# Regla 09: cap push sense build + e2e en verd.
+exec pnpm gate:push

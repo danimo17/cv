@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "title": "Daniel Morales · Desarrollador Frontend",
+    "description": "Desarrollador frontend (Vue, Nuxt, Shopify) en Girona. CV, stack, experiencia y un modo meme impulsado por Giphy.",
+    "memeTitle": "Modo meme",
+    "memeDescription": "Cambia mi retrato por un meme de Giphy. Una pequeña demo de useFetch, Pinia y estado de cliente en Nuxt."
+  },
+  "nav": {
+    "brand": "Daniel Morales",
+    "main": "Navegación principal",
+    "home": "Inicio",
+    "meme": "Modo meme",
+    "skipToContent": "Saltar al contenido"
+  },
+  "theme": {
+    "toggle": "Cambiar el tema de color",
+    "light": "Cambiar a claro",
+    "dark": "Cambiar a oscuro"
+  },
+  "locale": { "switch": "Idioma" },
+  "hero": {
+    "greeting": "Hola, soy",
+    "headline": "Desarrollador Frontend",
+    "tagline": "Vue, Nuxt y Shopify de día. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
+    "location": "Banyoles, Girona · híbrido o remoto",
+    "openToWork": "Abierto a ofertas",
+    "cta": { "contact": "Contacta conmigo" },
+    "photoAlt": "Retrato de Daniel Morales",
+    "memeAlt": "Meme seleccionado",
+    "wearing": "Ahora mismo llevo:",
+    "reset": "Volver a mi cara real",
+    "tryMeme": "Cambia mi cara por un meme"
+  },
+  "about": {
+    "eyebrow": "Sobre mí",
+    "title": "Quién soy",
+    "p1": "Me considero una persona responsable. Siempre intento utilizar un tono adecuado y respetuoso. Tengo mucha curiosidad y ganas de aprender. Estoy acostumbrado al trabajo en equipo pero también creo en el progreso y desarrollo individual.",
+    "p2": "Más recientemente, me ha fascinado cómo la inteligencia artificial está transformando el desarrollo de software, y he estado construyendo flujos de trabajo estructurados para integrarla de forma fiable en proyectos reales.",
+    "languages": "Idiomas",
+    "interests": "Intereses",
+    "lang": {
+      "ca": "Catalán · nativo",
+      "es": "Español · nativo",
+      "en": "Inglés · C1 Cambridge",
+      "ja": "Japonés · nociones básicas"
+    },
+    "interest": {
+      "frontend": "Frontend",
+      "threejs": "3D y three.js",
+      "motion": "Animación con JS y CSS",
+      "uiux": "UI/UX",
+      "ai": "IA",
+      "ml": "Machine learning"
+    }
+  },
+  "experience": {
+    "eyebrow": "Trayectoria",
+    "title": "Experiencia",
+    "present": "Actualidad",
+    "tags": "Tecnologías",
+    "items": {
+      "pdpaola-vue": {
+        "title": "Desarrollador Frontend Vue",
+        "bullets": [
+          "Migración del frontend de la tienda de Vue 2 a Vue 3 + Nuxt.",
+          "Estado y datos asíncronos con Pinia y GraphQL; tests end-to-end con Cypress; PrimeVue.",
+          "IA en el flujo de trabajo: pipelines agénticos, desarrollo guiado por especificaciones, quality gates y tests automatizados."
+        ]
+      },
+      "pdpaola-shopify": {
+        "title": "Desarrollador Shopify",
+        "bullets": [
+          "Creación y edición de temas con Liquid, HTML y SCSS; integraciones de terceros.",
+          "Personalización de funcionalidades nativas de Shopify: Pixels, Checkout, Functions.",
+          "Mejoras de UX con JavaScript, trabajando con Scrum."
+        ]
+      },
+      "rocket": {
+        "title": "Desarrollador Shopify",
+        "bullets": [
+          "Temas de Shopify con Liquid, HTML, preprocesadores CSS y Bootstrap para varios clientes.",
+          "Mejoras de frontend con JavaScript y jQuery; valoración creativa de soluciones para clientes.",
+          "Mantenimiento continuo de tiendas en producción, trabajando con Scrum."
+        ]
+      },
+      "boka2": {
+        "title": "Desarrollador Laravel Junior",
+        "bullets": [
+          "Soluciones a medida para empresas medianas con Laravel (PHP), MySQL y APIs REST.",
+          "Branding, UI y UX para flujos de trabajo de clientes; maquetación con JavaScript y jQuery.",
+          "Metodologías ágiles, branching y versionado con Git."
+        ]
+      },
+      "groc": { "title": "Diseñador gráfico (prácticas)", "bullets": [] },
+      "paperfilm": { "title": "Editor de vídeo freelance", "bullets": [] }
+    }
+  },
+  "stack": {
+    "eyebrow": "Herramientas",
+    "title": "Stack tecnológico",
+    "groups": {
+      "frontend": "Frontend",
+      "ecommerce": "E-commerce",
+      "ai": "Flujo de trabajo con IA",
+      "backend": "Backend y datos",
+      "design": "Diseño y animación"
+    }
+  },
+  "education": {
+    "eyebrow": "Formación",
+    "title": "Educación",
+    "certifications": "Certificaciones",
+    "items": {
+      "eram": {
+        "title": "Grado en Comunicación Audiovisual y Multimedia",
+        "note": "Universitat de Girona (ERAM). Xoriguers de la UdG, la colla castellera de la universidad."
+      },
+      "santander": {
+        "title": "Santander X Explorer",
+        "note": "Programa de 12 semanas para jóvenes emprendedores: plan de negocio completo con mentores."
+      },
+      "esplai-php": {
+        "title": "Bootcamp PHP Junior Developer (285 h)",
+        "note": "Agile, Git, HTML/CSS/Bootstrap, JavaScript, jQuery, MySQL, PHP, MVC."
+      },
+      "esplai-web": {
+        "title": "Bootcamp de desarrollo web (215 h)",
+        "note": "Primer contacto con el código: HTML5, CSS3, JavaScript, MySQL."
+      },
+      "hanbat": {
+        "title": "Summer Design Workshop",
+        "note": "Hanbat National University, Corea del Sur. Diseño gráfico."
+      },
+      "frederic-marti": { "title": "Bachillerato científico", "note": "Nota: 9,1." }
+    }
+  },
+  "certifications": {
+    "items": {
+      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
+      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
+      "amaltea": {
+        "title": "Introducción a la igualdad de oportunidades en el entorno laboral",
+        "note": "Amaltea Consultoría."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contacto",
+    "title": "Hablemos",
+    "intro": "¿Buscas un desarrollador frontend que entregue con tests, gestión de estado y flujos de trabajo asistidos por IA? Escríbeme o encuéntrame en LinkedIn y GitHub.",
+    "email": "Envíame un correo",
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
+  },
+  "cv": { "download": "Descargar CV (PDF)" },
+  "meme": {
+    "kicker": "Modo meme",
+    "title": "Cambia mi cara por un meme",
+    "intro": "Busca en Giphy, elige un GIF y póntelo en la página de inicio. Es una pequeña demo de cómo este sitio gestiona datos y estado.",
+    "how": {
+      "title": "Cómo funciona",
+      "steps": [
+        "Tu búsqueda llega a una ruta de servidor de Nuxt (/api/giphy/search) que habla con Giphy con una clave privada. El navegador nunca ve la clave.",
+        "Un servicio define la petición useFetch y un store de Pinia guarda su estado: pending, error y resultados son reactivos.",
+        "Tu elección vive en un store de Pinia, así que sobrevive a la navegación hacia la página de inicio.",
+        "Recarga la página y vuelve mi cara real: el store está en memoria a propósito. Estado, no persistencia."
+      ]
+    },
+    "currently": "Ahora mismo llevas: {title}",
+    "search": {
+      "label": "Buscar GIFs",
+      "placeholder": "gato, developer, lunes…",
+      "button": "Buscar"
+    },
+    "results": {
+      "errorTitle": "Giphy no ha respondido",
+      "error": "Vuelve a intentarlo en un momento o con otra palabra.",
+      "badQuery": "Esa búsqueda no es válida: usa de 1 a 50 caracteres normales.",
+      "notConfigured": "El modo meme aún no está configurado en este servidor.",
+      "empty": "No se ha encontrado nada. Prueba con otra palabra.",
+      "select": "Previsualizar {title}"
+    },
+    "preview": {
+      "title": "Previsualización",
+      "size": "{width} × {height} px",
+      "use": "Ponerme este meme",
+      "cancel": "Elegir otro"
+    },
+    "success": "¡Hecho! Tu nueva cara ya está en la página de inicio.",
+    "goHome": "Verlo en la página de inicio",
+    "poweredBy": "Powered by GIPHY"
+  },
+  "footer": {
+    "built": "Hecho con Nuxt 4, Tailwind, Pinia y un poco de IA.",
+    "source": "Código fuente"
+  },
+  "banner": {
+    "source": "Esta web es de código abierto — lee el código en GitHub",
+    "repo": "danimo17/cv",
+    "label": "Aviso de código fuente"
+  }
+}

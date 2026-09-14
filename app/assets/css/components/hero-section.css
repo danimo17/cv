@@ -1,0 +1,36 @@
+/* Neumorphism: la figura és un marc en relleu gran; la imatge (AppImage frame) hi seu a dins. */
+@layer components {
+  .hero-section {
+    @apply grid items-center gap-10 py-16 sm:py-24 md:grid-cols-[1.2fr_1fr];
+  }
+  .hero-section__greeting {
+    @apply mb-2;
+  }
+  .hero-section__headline {
+    @apply mt-3;
+  }
+  .hero-section__tagline {
+    @apply mt-4 max-w-xl;
+  }
+  .hero-section__meta {
+    @apply mt-4 flex flex-wrap items-center gap-3;
+  }
+  .hero-section__meta-item {
+    @apply inline-flex items-center gap-1.5;
+  }
+  .hero-section__actions {
+    @apply mt-8 flex flex-wrap gap-3;
+  }
+  .hero-section__figure {
+    @apply mx-auto w-full max-w-sm rounded-3xl bg-surface p-4 shadow-neu-lg;
+  }
+  .hero-section__image {
+    @apply aspect-square w-full;
+  }
+  .hero-section__image--meme {
+    @apply ring-2 ring-primary;
+  }
+  .hero-section__caption {
+    @apply mt-4 flex flex-wrap items-center justify-center gap-2;
+  }
+}

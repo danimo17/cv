@@ -1,0 +1,78 @@
+/* Neumorphism: la marquesina és una franja enfonsada (inset) del to. */
+@layer components {
+  .app-marquee {
+    @apply relative w-full overflow-hidden whitespace-nowrap shadow-neu-inset-sm;
+  }
+  .app-marquee__track {
+    @apply flex w-max;
+    animation: app-marquee-scroll var(--app-marquee-duration, 40s) linear infinite;
+  }
+  .app-marquee__copy {
+    @apply flex shrink-0 items-center;
+  }
+
+  .app-marquee--slow {
+    --app-marquee-duration: 70s;
+  }
+  .app-marquee--normal {
+    --app-marquee-duration: 40s;
+  }
+  .app-marquee--fast {
+    --app-marquee-duration: 20s;
+  }
+
+  .app-marquee--pause:hover .app-marquee__track,
+  .app-marquee--pause:focus-within .app-marquee__track {
+    animation-play-state: paused;
+  }
+
+  .app-marquee--sm .app-marquee__copy {
+    @apply py-1.5;
+  }
+  .app-marquee--md .app-marquee__copy {
+    @apply py-2.5;
+  }
+  .app-marquee--lg .app-marquee__copy {
+    @apply py-4;
+  }
+
+  .app-marquee--primary {
+    @apply bg-primary-soft text-primary;
+  }
+  .app-marquee--secondary {
+    @apply bg-secondary-soft text-secondary;
+  }
+  .app-marquee--neutral {
+    @apply bg-neutral-soft text-text;
+  }
+  .app-marquee--success {
+    @apply bg-success-soft text-success;
+  }
+  .app-marquee--info {
+    @apply bg-info-soft text-info;
+  }
+  .app-marquee--warning {
+    @apply bg-warning-soft text-warning;
+  }
+  .app-marquee--danger {
+    @apply bg-danger-soft text-danger;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-marquee__track {
+      animation: none;
+    }
+    .app-marquee__copy[aria-hidden='true'] {
+      @apply hidden;
+    }
+  }
+}
+
+@keyframes app-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

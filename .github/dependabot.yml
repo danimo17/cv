@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm # cobreix pnpm-lock.yaml
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    # Els majors arriben en PRs individuals.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ['*']

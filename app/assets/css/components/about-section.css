@@ -1,0 +1,17 @@
+@layer components {
+  .about-section__grid {
+    @apply grid gap-8 md:grid-cols-[2fr_1fr];
+  }
+  .about-section__text {
+    @apply flex flex-col gap-4;
+  }
+  .about-section__aside {
+    @apply flex flex-col gap-6;
+  }
+  .about-section__aside-title {
+    @apply mb-2;
+  }
+  .about-section__list {
+    @apply flex flex-wrap gap-2;
+  }
+}

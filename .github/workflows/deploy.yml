@@ -1,0 +1,64 @@
+name: deploy
+# Es dispara quan el workflow `ci` acaba sobre `main`; només desplega si ha acabat en verd.
+# Alternativa descartada: `push` a main repetint la gate aquí (dobla el temps i duplica la definició de la gate).
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://danimorales.dev
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }} # el commit exacte que ha passat la gate, no "l'últim de main"
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # `secrets:` puja NUXT_GIPHY_API_KEY al Worker (wrangler secret bulk) abans del deploy:
+      # GitHub és l'únic lloc on es rota el secret.
+      - name: Deploy to Cloudflare Workers
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          command: deploy
+          secrets: |
+            NUXT_GIPHY_API_KEY
+        env:
+          NUXT_GIPHY_API_KEY: ${{ secrets.NUXT_GIPHY_API_KEY }}
+
+      - name: Print deployed URL
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          echo "Deployed $HEAD_SHA -> ${DEPLOYMENT_URL:-https://danimorales.dev}"
+          {
+            echo "### Production deploy"
+            echo ""
+            echo "- Commit: \`$HEAD_SHA\`"
+            echo "- URL: ${DEPLOYMENT_URL:-https://danimorales.dev}"
+          } >> "$GITHUB_STEP_SUMMARY"

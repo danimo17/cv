@@ -1,0 +1,20 @@
+# deps / build
+node_modules
+.nuxt
+.output
+.data
+.cache
+dist
+# tests
+test-results
+playwright-report
+coverage
+# secrets (regla 01): mai al repo
+.env
+.env.*
+!.env.example
+.dev.vars
+# local
+.DS_Store
+.claude/settings.local.json
+*.log

@@ -1,0 +1,12 @@
+/* Neumorphism: la franja enfonsada la posa AppMarquee; aquí només posició i espai dels ítems. */
+@layer components {
+  .source-banner {
+    @apply relative z-30;
+  }
+  .source-banner__item {
+    @apply inline-flex items-center gap-2 px-6;
+  }
+  .source-banner__icon {
+    @apply opacity-60;
+  }
+}

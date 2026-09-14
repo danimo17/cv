@@ -1,0 +1,79 @@
+import type { TimelineItem } from '~/domain/cv/types'
+
+export const education: TimelineItem[] = [
+  {
+    id: 'eram',
+    section: 'education',
+    org: 'Escola Universitària ERAM · Universitat de Girona',
+    location: 'Salt',
+    start: '2015-09',
+    end: '2020-06',
+    tags: [],
+  },
+  {
+    id: 'santander',
+    section: 'education',
+    org: 'Santander X Explorer',
+    start: '2021-03',
+    end: '2021-05',
+    tags: [],
+  },
+  {
+    id: 'esplai-php',
+    section: 'education',
+    org: 'Fundación Esplai',
+    location: 'Girona',
+    start: '2020-10',
+    end: '2021-02',
+    tags: [],
+  },
+  {
+    id: 'esplai-web',
+    section: 'education',
+    org: 'Fundación Esplai',
+    location: 'Girona',
+    start: '2020-08',
+    end: '2020-09',
+    tags: [],
+  },
+  {
+    id: 'hanbat',
+    section: 'education',
+    org: 'Hanbat National University',
+    location: 'Daejeon',
+    start: '2018',
+    tags: [],
+  },
+  {
+    id: 'frederic-marti',
+    section: 'education',
+    org: 'IES Frederic Martí',
+    start: '2012-09',
+    end: '2014-06',
+    tags: [],
+  },
+]
+
+export const certifications: TimelineItem[] = [
+  {
+    id: 'cambridge',
+    section: 'certifications',
+    org: 'University of Cambridge',
+    start: '2015-03',
+    tags: [],
+  },
+  {
+    id: 'esplai-cert',
+    section: 'certifications',
+    org: 'Fundación Esplai',
+    start: '2021-02',
+    tags: [],
+  },
+  {
+    id: 'amaltea',
+    section: 'certifications',
+    org: 'Amaltea Consultoría',
+    start: '2023-05',
+    tags: [],
+  },
+]

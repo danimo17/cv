@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "title": "Daniel Morales · Frontend Developer",
+    "description": "Frontend developer (Vue, Nuxt, Shopify) based in Girona. CV, stack, experience and a meme mode powered by Giphy.",
+    "memeTitle": "Meme mode",
+    "memeDescription": "Swap my portrait for a Giphy meme. A small demo of useFetch, Pinia and client state in Nuxt."
+  },
+  "nav": {
+    "brand": "Daniel Morales",
+    "main": "Main navigation",
+    "home": "Home",
+    "meme": "Meme mode",
+    "skipToContent": "Skip to content"
+  },
+  "theme": {
+    "toggle": "Toggle colour theme",
+    "light": "Switch to light",
+    "dark": "Switch to dark"
+  },
+  "locale": { "switch": "Language" },
+  "hero": {
+    "greeting": "Hi, I'm",
+    "headline": "Frontend Developer",
+    "tagline": "Vue, Nuxt and Shopify by day. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
+    "location": "Banyoles, Girona · hybrid or remote",
+    "openToWork": "Open to work",
+    "cta": { "contact": "Get in touch" },
+    "photoAlt": "Portrait of Daniel Morales",
+    "memeAlt": "Selected meme",
+    "wearing": "Currently wearing:",
+    "reset": "Back to my real face",
+    "tryMeme": "Swap my face for a meme"
+  },
+  "about": {
+    "eyebrow": "About",
+    "title": "About me",
+    "p1": "I'm a responsible person who tries to treat everyone politely and respectfully. I'm full of curiosity and willingness to learn, used to working in teams but able to make progress on my own.",
+    "p2": "Lately I've become fascinated by how AI is reshaping software development, and I've been building structured workflows to integrate it reliably into real projects.",
+    "languages": "Languages",
+    "interests": "Interests",
+    "lang": {
+      "ca": "Catalan · native",
+      "es": "Spanish · native",
+      "en": "English · C1 Cambridge",
+      "ja": "Japanese · basics"
+    },
+    "interest": {
+      "frontend": "Frontend",
+      "threejs": "3D & three.js",
+      "motion": "JS & CSS animation",
+      "uiux": "UI/UX",
+      "ai": "AI",
+      "ml": "Machine learning"
+    }
+  },
+  "experience": {
+    "eyebrow": "Career",
+    "title": "Experience",
+    "present": "Present",
+    "tags": "Technologies",
+    "items": {
+      "pdpaola-vue": {
+        "title": "Vue Frontend Developer",
+        "bullets": [
+          "Migrated the storefront frontend from Vue 2 to Vue 3 + Nuxt.",
+          "State and async data with Pinia and GraphQL; end-to-end testing with Cypress; PrimeVue.",
+          "AI in the workflow: agentic pipelines, spec-driven development, quality gates and automated testing."
+        ]
+      },
+      "pdpaola-shopify": {
+        "title": "Shopify Developer",
+        "bullets": [
+          "Theme creation and editing with Liquid, HTML and SCSS; third-party integrations.",
+          "Customised Shopify built-ins: Pixels, Checkout, Functions.",
+          "UX improvements in JavaScript, working in Scrum."
+        ]
+      },
+      "rocket": {
+        "title": "Shopify Developer",
+        "bullets": [
+          "Shopify themes with Liquid, HTML, CSS preprocessors and Bootstrap for multiple clients.",
+          "Frontend enhancements with JavaScript and jQuery; creative assessment for client solutions.",
+          "Ongoing maintenance of live stores, working in Scrum."
+        ]
+      },
+      "boka2": {
+        "title": "Junior Laravel Developer",
+        "bullets": [
+          "Custom solutions for mid-sized companies with Laravel (PHP), MySQL and REST APIs.",
+          "Branding, UI and UX for client workflows; layouts with JavaScript and jQuery.",
+          "Agile, Git branching and versioning."
+        ]
+      },
+      "groc": { "title": "Graphic Designer (intern)", "bullets": [] },
+      "paperfilm": { "title": "Freelance Video Editor", "bullets": [] }
+    }
+  },
+  "stack": {
+    "eyebrow": "Tools",
+    "title": "Tech stack",
+    "groups": {
+      "frontend": "Frontend",
+      "ecommerce": "E-commerce",
+      "ai": "AI workflow",
+      "backend": "Backend & data",
+      "design": "Design & motion"
+    }
+  },
+  "education": {
+    "eyebrow": "Learning",
+    "title": "Education",
+    "certifications": "Certifications",
+    "items": {
+      "eram": {
+        "title": "BA in Audiovisual Communication and Multimedia",
+        "note": "Universitat de Girona (ERAM). Xoriguers de la UdG, the university castells team."
+      },
+      "santander": {
+        "title": "Santander X Explorer",
+        "note": "12-week programme for young entrepreneurs: full business plan with mentors."
+      },
+      "esplai-php": {
+        "title": "Bootcamp PHP Junior Developer (285 h)",
+        "note": "Agile, Git, HTML/CSS/Bootstrap, JavaScript, jQuery, MySQL, PHP, MVC."
+      },
+      "esplai-web": {
+        "title": "Web development bootcamp (215 h)",
+        "note": "First contact with code: HTML5, CSS3, JavaScript, MySQL."
+      },
+      "hanbat": {
+        "title": "Summer Design Workshop",
+        "note": "Hanbat National University, South Korea. Graphic design."
+      },
+      "frederic-marti": { "title": "Baccalaureate in Science", "note": "Grade 9.1." }
+    }
+  },
+  "certifications": {
+    "items": {
+      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
+      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
+      "amaltea": {
+        "title": "Introduction to equal opportunities in the workplace",
+        "note": "Amaltea Consultoría."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Let's talk",
+    "intro": "Looking for a frontend developer who ships with tests, state and AI-assisted workflows? Write me or find me on LinkedIn and GitHub.",
+    "email": "Email me",
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
+  },
+  "cv": { "download": "Download CV (PDF)" },
+  "meme": {
+    "kicker": "Meme mode",
+    "title": "Swap my face for a meme",
+    "intro": "Search Giphy, pick a GIF and wear it on the home page. It's a tiny demo of how this site handles data and state.",
+    "how": {
+      "title": "How it works",
+      "steps": [
+        "Your search hits a Nuxt server route (/api/giphy/search) that talks to Giphy with a private key. The browser never sees the key.",
+        "A service defines the useFetch request and a Pinia store owns its state: pending, error and results are reactive.",
+        "Your pick lives in a Pinia store, so it survives navigating to the home page.",
+        "Reload the page and my real face is back: the store is in memory on purpose. State, not persistence."
+      ]
+    },
+    "currently": "You're currently wearing: {title}",
+    "search": {
+      "label": "Search GIFs",
+      "placeholder": "cat, developer, monday…",
+      "button": "Search"
+    },
+    "results": {
+      "errorTitle": "Giphy didn't answer",
+      "error": "Try again in a moment or with another word.",
+      "badQuery": "That search isn't valid: use 1 to 50 plain characters.",
+      "notConfigured": "Meme mode isn't configured on this server yet.",
+      "empty": "Nothing found. Try another word.",
+      "select": "Preview {title}"
+    },
+    "preview": {
+      "title": "Preview",
+      "size": "{width} × {height} px",
+      "use": "Wear this meme",
+      "cancel": "Pick another"
+    },
+    "success": "Done! Your new face is live on the home page.",
+    "goHome": "See it on the home page",
+    "poweredBy": "Powered by GIPHY"
+  },
+  "footer": {
+    "built": "Built with Nuxt 4, Tailwind, Pinia and a bit of AI.",
+    "source": "Source code"
+  },
+  "banner": {
+    "source": "This site is open source — read the code on GitHub",
+    "repo": "danimo17/cv",
+    "label": "Source code announcement"
+  }
+}

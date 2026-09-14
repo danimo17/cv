@@ -1,0 +1,69 @@
+/* Neumorphism: relleu sobre fons -soft del to; icona i títol amb el color del to (mai només ombra). */
+@layer components {
+  .app-alert {
+    @apply flex gap-3 rounded-xl p-4 text-sm shadow-neu;
+  }
+  .app-alert__icon {
+    @apply mt-0.5 shrink-0;
+  }
+  .app-alert__body {
+    @apply flex flex-1 flex-col gap-2;
+  }
+  .app-alert__title {
+    @apply block;
+  }
+  .app-alert__content {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .app-alert--primary {
+    @apply bg-primary-soft;
+  }
+  .app-alert--secondary {
+    @apply bg-secondary-soft;
+  }
+  .app-alert--neutral {
+    @apply bg-neutral-soft;
+  }
+  .app-alert--success {
+    @apply bg-success-soft;
+  }
+  .app-alert--info {
+    @apply bg-info-soft;
+  }
+  .app-alert--warning {
+    @apply bg-warning-soft;
+  }
+  .app-alert--danger {
+    @apply bg-danger-soft;
+  }
+
+  .app-alert--primary .app-alert__icon,
+  .app-alert--primary .app-alert__title {
+    @apply text-primary;
+  }
+  .app-alert--secondary .app-alert__icon,
+  .app-alert--secondary .app-alert__title {
+    @apply text-secondary;
+  }
+  .app-alert--neutral .app-alert__icon,
+  .app-alert--neutral .app-alert__title {
+    @apply text-text;
+  }
+  .app-alert--success .app-alert__icon,
+  .app-alert--success .app-alert__title {
+    @apply text-success;
+  }
+  .app-alert--info .app-alert__icon,
+  .app-alert--info .app-alert__title {
+    @apply text-info;
+  }
+  .app-alert--warning .app-alert__icon,
+  .app-alert--warning .app-alert__title {
+    @apply text-warning;
+  }
+  .app-alert--danger .app-alert__icon,
+  .app-alert--danger .app-alert__title {
+    @apply text-danger;
+  }
+}

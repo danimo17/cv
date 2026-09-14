@@ -1,0 +1,21 @@
+/* Sobre AppButton (ghost/neutral): targeta quadrada en relleu; hover relleu gran; seleccionada anell + enfonsada. */
+@layer components {
+  .meme-card {
+    @apply relative aspect-square h-auto w-full overflow-hidden rounded-xl bg-surface p-0 shadow-neu transition-shadow hover:shadow-neu-lg active:shadow-neu-inset;
+  }
+  .meme-card--selected,
+  .meme-card--selected:hover {
+    @apply shadow-neu-inset ring-2 ring-primary;
+  }
+  .meme-card__image {
+    @apply size-full;
+  }
+  .meme-card__title {
+    @apply absolute inset-x-0 bottom-0 bg-secondary/80 px-2 py-1 text-left text-secondary-fg opacity-0 transition-opacity;
+  }
+  .meme-card:hover .meme-card__title,
+  .meme-card:focus-visible .meme-card__title,
+  .meme-card--selected .meme-card__title {
+    @apply opacity-100;
+  }
+}
