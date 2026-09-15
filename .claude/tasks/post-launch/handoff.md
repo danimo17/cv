@@ -1,150 +1,138 @@
 # Handoff: post-launch
 
-_Actualitzat: 2026-09-14 (nit). Sessió tancada aquí; continua demà. Estat REAL, no un resum optimista._
+_Actualitzat: 2026-09-15. Estat REAL de la branca `feat/post-launch` (7 commits per davant de `main`, sense
+pujar, working tree net)._
 
-## 0. Com continuar (llegir primer)
+## Com continuar (llegir primer)
 
 1. `CLAUDE.md` → `.claude/hard-rules.md` → `.claude/workflow.md` → aquest fitxer.
-2. `.claude/tasks/ACTIVE` = `post-launch`. Contracte a `.claude/tasks/post-launch/contract.md`.
-3. La tasca `bootstrap` (la web sencera) està **tancada i fusionada** a `main` (PR #1, commit `03eedd9`). El seu handoff detallat es va esborrar en tancar (regla de tancament, pas 9 del workflow); tot el que era durador ja és a `.claude/docs/{standards,decisions,catalog}/`. Si cal recuperar el detall exacte de com es va construir, és a l'historial de git de `feat/bootstrap` (commits `cfb3251` i `43146c3`).
-4. Regla 06/031: la IA treballa a `feat/<slug>`, mai a `main`. Push només si l'usuari ho demana explícitament (excepció afegida el 2026-09-14 a la decisió 031, ja usada un cop aquesta nit).
-5. Aquest fitxer viu ara a la branca `chore/close-bootstrap-and-dns` (encara sense commit al moment d'escriure). Si demà comences de zero: `git checkout main && git pull` i després `git checkout chore/close-bootstrap-and-dns` si existeix al remot, o repartir aquest contingut en una `feat/post-launch` nova.
+2. `.claude/tasks/ACTIVE` = `post-launch`. Contracte a `.claude/tasks/post-launch/contract.md` — **8/8 criteris
+   marcats ✅ o ⏳ pendent tu**, cap pendent de codi.
+3. La branca ja té 7 commits fets aquesta sessió (llista completa a "Fet", secció següent). Ningú n'ha fet
+   `push` (regla 06/031): quan vulguis, `git push -u origin feat/post-launch` i obrir la PR contra `main`.
+4. No hi ha res més a preguntar sobre D1-D5 (decisions 034-038, totes tancades). Els únics punts oberts són
+   accions manuals teves al dashboard de Cloudflare/GitHub — vegeu "Pendents de l'usuari".
 
-## 1. Estat real del deploy (actualitzat 2026-09-14 23:52, DESPRÉS de tancar la resta del handoff)
+## Fet (verificat)
 
-**RESOLT durant la mateixa nit, sense tocar res més**: `https://danimorales.dev` ha començat a respondre 200
-uns 5 minuts després d'escriure la secció de diagnòstic de sota (era propagació DNS pura, tal com s'havia
-previst; el registre Worker/DNS ja era correcte des d'abans). Verificat en directe:
+- **DNS**: `danimorales.dev` → 200 (verificat amb `curl -I`, real, avui). `www.danimorales.dev` encara no
+  resol — acció manual pendent (vegeu pendents).
+- **Dependabot — diagnòstic complet**: el job `npm_and_yarn Update` falla perquè `packageManager:
+"pnpm@12.4.1"` intenta autodescarregar el binari natiu `@pnpm/exe.linux-x64` i el `fetch` falla dins el
+  sandbox de xarxa de Dependabot (evidència: log complet descarregat via `gh api .../logs`, no és
+  `minimumReleaseAge`/`allowBuilds` — no existeix `.npmrc` al repo). `gh run rerun` no funciona en jobs de
+  Dependabot (no reexecutables per API/CLI).
+- **Decisions D1-D5 (034-038)**, totes escrites a `.claude/docs/decisions/` i implementades:
+  - **034 (D1)**: "recent searches" a `/meme` — `useGiphyStore.history` (màx. 5, sense duplicats, més recent
+    primer) + `MemeRecentSearches.vue` (clicable, omple el camp i torna a cercar). Component genèric
+    `CustomPagination.vue` wired amb `giphy.offset`/`giphy.total` (l'API de Giphy ja retornava `total`, no
+    s'usava). **Verificat en viu** amb `pnpm dev`: cercar "dog" → "cat" acumula `[cat, dog]`; clicar "dog" torna
+    a cercar i reordena a `[dog, cat]`; "Next page" mostra "Page 2 of 42" amb GIFs diferents.
+  - **035 (D2)**: secció "Projectes" descartada per sempre ("no la vull mai").
+  - **036 (D3)**: Cloudflare Web Analytics, mode Automatic Setup — decidit, sense codi (acció de dashboard).
+  - **037 (D4)**: `CustomImage` guanya props opcionals `srcset`/`sizes` (reflectides tal qual a l'`<img>`; sense
+    efecte si no es passen). Cap mida real generada encara (YAGNI fins que Lighthouse ho demani).
+  - **038 (D5)**: rename mecànic `App*` → `Custom*` (12 primitius: Text, Input, Link, Image, Button, Icon,
+    Badge, Alert, Card, Section, Skeleton, Marquee). CSS, ESLint (`no-restricted-html-elements`), tests i
+    catàleg actualitzats al mateix canvi. `git grep 'App[A-Z]'` net fora dels decisions/handoff històrics.
+  - **Extra decidit i fet la mateixa sessió** (no eren D1-D5 però van sortir d'un `/grill-me` sobre el
+    favicon): tokens `--color-primary`/`--color-secondary` de blau corporatiu a mostassa/gris fosc neutre
+    (clar+fosc, contrast AA recalculat a `catalog/styles.md`, tot ≥4.5:1); foto de perfil substituïda
+    (`app/assets/img/daniel.jpg`, retallada 800×800 des de `~/Downloads/Perfil.jpg`); favicon redissenyat
+    3 iteracions fins a un gat pixel-art (32×32 graella, mostassa/gris fosc, boca real, bigotis que toquen la
+    cara) — cap decisió pròpia escrita per al favicon en si (és un actiu visual, no un token/component nou),
+    però el canvi de tokens que el va motivar sí (implícit a la mateixa àrea que 036-038, no calia una 039
+    separada perquè no és una tria estructural nova, és aplicar-la).
+- **PDFs**: `public/cv/cv-{ca,en,es}.pdf` actualitzats (exports nous que vas posar tu fora de sessió, detectats
+  per canvi de mida de fitxer); revisada la capa de text amb el Read tool — sense telèfon ni adreça postal
+  (regla 04), només ciutat ("Banyoles, Girona").
+
+### Commits d'aquesta sessió (`feat/post-launch`, cap pujat)
 
 ```
-GET https://danimorales.dev        -> 200
-GET https://danimorales.dev/ca     -> 200
-GET https://danimorales.dev/es     -> 200
-GET https://danimorales.dev/meme   -> 200
-GET https://danimorales.dev/api/giphy/search?q=cat&limit=1
-  -> 200, resultats reals de Giphy (la clau NUXT_GIPHY_API_KEY del secret `production` funciona)
+ad4d4f6 docs(post-launch): check off criteria 1,5-8; add dev preview launch config
+94b6b31 Merge branch 'worktree-agent-af4432d0a4e4d5714' into feat/post-launch
+5c36665 content: refresh CV PDF exports
+0aaea8f feat(CustomImage): optional srcset/sizes props
+700da59 feat(brand): mustard/dark-gray tokens, new hero photo, pixel-cat favicon
+9360f50 feat(meme): recent searches + generic pagination
+5957be7 refactor: rename App* primitive components to Custom*
 ```
 
-**Únic que queda pendent d'aquesta secció: `www.danimorales.dev`.** Encara NO té registre propi; Cloudflare
-ho assenyala explícitament a DNS → Records → Recommendations ("Visitors cannot reach www.danimorales.dev").
-No bloqueja res (el domini "de veritat" ja funciona), és cosmètic/opcional.
+## En curs / no fet
 
-### Pas pendent per demà (únic pas real que queda d'aquesta secció)
+- `www.danimorales.dev` no resol — requereix acció manual al dashboard de Cloudflare (fora de l'abast de la
+  IA: no hi ha token/accés).
+- Dependabot segueix fallant fins al pròxim intent (automàtic, dilluns) o fins que es prengui l'acció manual.
+- Cloudflare Web Analytics (D3/036) no activat encara — acció manual de dashboard, no bloqueja res.
+- P3 (preview de PR) i P4 (contrast mesurat al navegador real, no només calculat) i P5 (radio/checkbox
+  d'`CustomInput` sense pàgina real que els usi) segueixen igual que a la nit del bootstrap — baixa prioritat,
+  ningú els ha tocat aquesta sessió.
+- No s'ha corregut `pnpm gate:push` (build + e2e) en cap moment d'aquesta sessió, només `pnpm gate`. Abans de
+  fer push caldria córrer-lo un cop (regla 09).
+- No s'ha obert cap PR ni fet `push` (regla 06/031: només ho fas tu).
 
-Cloudflare dashboard → Workers & Pages → Worker `cv` → pestanya **Domains** → **Add Domain** →
-`www.danimorales.dev` → Add. Comprovar amb:
+## Subagents (regla 12)
 
-```bash
-curl -I --max-time 15 https://www.danimorales.dev
+| Subagent                                        | Què ha fet                                                                                                                              | Resultat                                                                                          |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Diagnose failing Dependabot job                 | Va baixar el log real via `gh api .../logs` (l'annotation del run no n'hi ha prou) i va aïllar la causa arrel                           | Sense fix (decisió amb massa abast per fer-la sola, rule 11) — vegeu "Fet"                        |
+| Rename App\* primitives to Custom\*             | Rename mecànic de 12 components + CSS + ESLint + tests + docs en un únic commit                                                         | `pnpm gate` verd (240 tests) abans de fusionar-lo a `feat/post-launch`                            |
+| Build meme recent-searches + pagination feature | `useGiphyStore.history`/`offset`, `GiphyService` amb `offset`, `CustomPagination.vue`, `MemeRecentSearches.vue`, i18n×3, tests, catàleg | `pnpm gate` verd (269 tests) abans de fusionar; verificat addicionalment en viu pel fil principal |
+
+Els tres van treballar en worktrees aïllats (`.claude/worktrees/agent-*`, ja netejats amb `git worktree
+remove` + `git branch -d` un cop fusionats). El fil principal ha escrit els tokens/decisions/favicon/foto/D4
+directament (canvis d'un sol fitxer o síntesi, excepció de la regla 12).
+
+## Validació (sortida real de la darrera gate)
+
+```
+$ pnpm gate
+$ prettier --check .        → All matched files use Prettier code style!
+$ eslint .                  → (0 errors)
+$ nuxt typecheck             → 0 errors (soroll no fatal: warning "vue-router/volar/sfc-route-blocks"
+                                preexistent, no relacionat amb cap canvi d'aquesta sessió)
+$ vitest run                → Test Files 20 passed (20) · Tests 271 passed (271)
+Exit code: 0
 ```
 
-Si es prefereix no gestionar dos dominis, alternativa vàlida: NO afegir `www` com a domini del Worker, sinó
-crear una regla de redirecció `www.danimorales.dev` → `danimorales.dev` (Cloudflare → zona → Rules → Redirect
-Rules). Qualsevol de les dues és acceptable; no calia decidir-ho a mitjanit, es decideix demà segons preferència.
+No cobreix (i per què no bloqueja):
 
----
+- **e2e (Playwright)**: no s'ha corregut `pnpm gate:push` aquesta sessió — cal fer-ho abans del push (regla 09).
+- **`www.danimorales.dev`**: no hi ha manera de testar-ho fins que existeixi el registre; és una comprovació
+  manual (`curl -I`), no un test automatitzat.
+- **Contrast AA real al navegador**: recalculat matemàticament (oklch → sRGB → ràtio), mai mesurat amb una eina
+  d'accessibilitat real (Lighthouse/axe) — P4, baixa prioritat, arrossegat del bootstrap.
+- **Favicon**: cap test el cobreix (és un actiu SVG estàtic, no un component amb lògica); verificat només
+  visualment (previsualitzat a 16/32/64/160px durant la sessió).
+- **Verificació visual d'aquesta sessió**: feta amb `pnpm dev` + Browser pane (home en clar/fosc, `/meme` amb
+  cerca real contra Giphy, paginació, recent searches) — no és un test automatitzat, és una comprovació manual
+  puntual d'aquesta conversa.
 
-### Diagnòstic original d'anit (queda per context, ja no cal seguir-lo pas a pas — l'arrel ja resol)
+## Pendents de l'usuari
 
-El log del job `deploy` de GitHub Actions va mostrar:
+| #   | Què                                                                                                                | Bloqueja                          | Estat                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------- |
+| 1   | Cloudflare → Worker `cv` → Domains → Add Domain `www.danimorales.dev` (o Redirect Rule)                            | criteri 2 del contracte           | pendent                                                                     |
+| 2   | Dependabot: esperar el reintent automàtic de dilluns, o baixar `packageManager` a `pnpm@11.17.0` si torna a fallar | criteri 3 del contracte           | pendent (triat: esperar primer)                                             |
+| 3   | Activar Cloudflare Web Analytics (Automatic Setup) al dashboard                                                    | D3/036, no bloqueja res           | pendent, sense pressa                                                       |
+| 4   | Revisar/aprovar el favicon i la resta de canvis visuals (foto, colors, "recent searches") abans de fer push        | push/PR                           | **fet dins la sessió** (vist a `pnpm dev`), falta el teu OK final per pujar |
+| 5   | `git push -u origin feat/post-launch` + obrir PR (la IA mai fa push, regla 06/031)                                 | merge a `main` / desplegament     | pendent tu                                                                  |
+| 6   | Córrer `pnpm gate:push` (build + e2e) abans del push, si vols la garantia extra                                    | res, però és la gate real de push | pendent tu (o demana-ho a la pròxima sessió)                                |
 
-```
-Uploaded cv (4.72 sec)
-Deployed cv triggers (1.77 sec)
-  danimorales.dev (custom domain)
-Current Version ID: 4721dc62-eccf-4491-b192-f703519bbcd6
-✨ Success! Uploaded 25 files
-```
+## Decisions preses en aquesta tasca
 
-El Worker `cv` i el custom domain `danimorales.dev` ja existien correctament. El registre DNS a Cloudflare
-(Type Worker, Name `danimorales.dev`, Content `cv`, Proxied) també era correcte des del principi. El que faltava
-eren minuts de propagació (el domini es va registrar el mateix dia), no una configuració trencada. Lliçó per a
-la pròxima vegada: si el custom domain surt bé al log de deploy i el registre DNS és correcte, esperar
-5-15 minuts abans de tocar res a Cloudflare.
+- → `.claude/docs/decisions/034-meme-recent-searches-and-pagination.md`
+- → `.claude/docs/decisions/035-no-projects-section.md`
+- → `.claude/docs/decisions/036-cloudflare-web-analytics.md`
+- → `.claude/docs/decisions/037-customimage-srcset-ready.md`
+- → `.claude/docs/decisions/038-rename-app-to-custom-prefix.md`
 
-## 2bis. Estat actualitzat (sessió 2026-09-15)
+## Context històric (nit del bootstrap, 2026-09-14 — es manté per si cal l'arrel del diagnòstic DNS)
 
-- **P1 (DNS)**: `danimorales.dev` → 200. `www.danimorales.dev` encara no resol — **pendent tu**: Cloudflare →
-  Worker `cv` → Domains → Add Domain `www.danimorales.dev` (o una Redirect Rule).
-- **P2 (Dependabot)**: causa arrel trobada. `packageManager: "pnpm@12.4.1"` intenta autodescarregar el binari
-  natiu (`@pnpm/exe.linux-x64`) i falla dins el sandbox de xarxa de Dependabot (`fetch failed`); no és
-  `.npmrc`/`allowBuilds` (no existia `.npmrc`). `gh run rerun` no funciona en jobs de Dependabot (no reexecutable
-  per API/CLI). **Vas triar esperar el reintent automàtic de dilluns** (`dependabot.yml`, `schedule: weekly`); si
-  torna a fallar, l'alternativa és baixar `packageManager` a `pnpm@11.17.0` (el mateix log demostra que funciona).
-- **D1-D5: tots decidits** (decisions `034`-`038` a `.claude/docs/decisions/`):
-  - D1 → **implementat**: "recent searches" (màx. 5, clicables) + `CustomPagination` genèric a `/meme`.
-    Verificat en viu amb `pnpm dev` (cerca s'acumula, clic reomple el camp i torna a cercar, "Next page" pagina).
-  - D2 → **descartat per sempre** ("no la vull mai").
-  - D3 → **decidit, pendent d'acció manual teva**: Cloudflare Web Analytics, Automatic Setup (sense codi).
-  - D4 → **implementat**: `CustomImage` accepta `srcset`/`sizes` opcionals; cap mida generada encara (YAGNI).
-  - D5 → **implementat**: rename mecànic `App*` → `Custom*` (12 primitius, CSS, ESLint, tests, docs), gate en
-    verd abans d'afegir res més a sobre.
-  - A més: tokens `primary`/`secondary` canviats de blau corporatiu a mostassa/gris fosc (contrast AA
-    recalculat), foto de perfil nova, favicon redissenyat com a gat pixel-art.
-
-Res més a preguntar de la llista D1-D5. La secció següent (2-4) és el registre original de la nit anterior, es
-manté com a context històric.
-
-## 2. Altres pendents detectats aquesta nit
-
-| #   | Què                                                                        | Detall                                                                                                                                                                                                                                                                                                                                                                                  | Prioritat                       |
-| --- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| P1  | DNS domini (secció 1)                                                      | Vegeu més amunt                                                                                                                                                                                                                                                                                                                                                                         | alta, bloqueja veure el lloc    |
-| P2  | Job de Dependabot fallat                                                   | `npm_and_yarn in /. - Update #1576414186` (Dependabot Updates #2) va fallar; `github_actions` update (#1) va anar bé. Cal obrir el log del job fallat a Actions i veure si és per `minimumReleaseAge`/`allowBuilds` de pnpm 12 topant amb com Dependabot instal·la, o una altra cosa. Si és `allowBuilds`, potser cal un `.npmrc`/config perquè el runner de Dependabot també l'accepti | mitjana                         |
-| P3  | Preview de PR (`preview.yml`) va fallar a la PR #1 amb "Failing after 36s" | Esperat: `wrangler versions upload` necessita que el Worker ja existeixi, i era la primera vegada. Ara que el Worker `cv` ja existeix, la següent PR hauria de generar preview correctament. Verificar-ho a la propera PR abans de donar-ho per tancat                                                                                                                                  | baixa, verificar en curs normal |
-| P4  | Contrast del neumorphism                                                   | Calculat (taules a `catalog/styles.md`), mai mesurat al navegador real                                                                                                                                                                                                                                                                                                                  | baixa                           |
-| P5  | Radio/checkbox d'`CustomInput`                                             | Implementats i testejats unitàriament, cap pàgina real els usa encara                                                                                                                                                                                                                                                                                                                   | baixa                           |
-
-## 3. Punts oberts de disseny/producte (arrossegats del bootstrap, encara sense decidir)
-
-| #   | Pregunta                                                          | Notes                                                                                                                                               |
-| --- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Persistir l'historial de memes (`history` a la store) o treure'l? | Ara existeix però cap UI el mostra                                                                                                                  |
-| D2  | Secció "Projectes" a la home?                                     | LinkedIn no en té; el mateix repo en podria ser el primer exemple                                                                                   |
-| D3  | Analítica (Cloudflare Web Analytics, gratuïta, sense cookies)?    | Decisió 030 exigeix cost zero: aquesta opció ho compleix                                                                                            |
-| D4  | Mides responsive de la foto (avui un JPEG únic de 800px)          | Revisar si Lighthouse ho demana                                                                                                                     |
-| D5  | Renomenar el prefix `App*` a `Custom*`?                           | L'usuari havia dit "CustomInput/CustomText"; es va mantenir `App*` per coherència amb Font Awesome/Nuxt. Preguntar si li sembla bé o ho vol canviar |
-
-Quan es decideixi cadascun: escriure la decisió a `.claude/docs/decisions/` (regla 11/027) abans de tornar-lo a
-preguntar.
-
-## 4. Resum de tot el que ja està fet i validat (per no haver de rellegir tota la sessió)
-
-- **Repo**: `danimo17/cv`, públic, gratuït (decisió 030), només l'usuari fa push/merge a `main` (031).
-  Identitat local `danimo17 <daniel.spr17@gmail.com>`. LICENSE MIT + `CONTENT-LICENSE.md` (033).
-- **Web**: Nuxt 4.5 + Tailwind v4 + Pinia + i18n (ca/es/en) + Font Awesome. Home amb hero (foto de LinkedIn),
-  about, experiència, stack, formació, contacte, descàrrega de CV en PDF (redactat, sense telèfon ni codi
-  postal — decisió 032). `/meme`: cerca a Giphy, previsualitza, "porta'l" substitueix la foto (Pinia, sense
-  persistir a propòsit — 004). Banner carrusel infinit (`SourceBanner`/`CustomMarquee`) amb enllaç al repo.
-- **Arquitectura** (029): `server/api/giphy` → `app/services/giphy/GiphyService.ts` → `app/stores/{giphy,hero}.ts`
-  → `app/pages/*.vue` → `app/ui-config/`. `app/domain/cv/`, `app/data/cv/`.
-- **Primitius** (026): tot HTML "de fulla" passa per `app/components/shared/{CustomText,CustomInput,CustomLink,CustomImage,
-CustomButton,CustomIcon,CustomBadge,CustomAlert,CustomCard,CustomSection,CustomSkeleton,CustomMarquee}`, forçat per ESLint
-  `vue/no-restricted-html-elements`.
-- **Estil**: neumorphism (025) amb tokens semàntics i ombres a `tokens.css`, un CSS per component (015/008),
-  contrast AA calculat.
-- **Governança `.claude/`**: mirall d'AI-METHODOLOGY.md (028): `hard-rules.md`, `rules/01..12`,
-  `docs/{standards,decisions,catalog}`, `templates/`, `workflow.md`, `backlog.md`, hook
-  `require-contract.{sh,py}`. 33 decisions numerades.
-- **Gates**: `pnpm gate` (format+lint+typecheck+test) pre-commit; `pnpm gate:push` (+build+e2e) pre-push;
-  CI (`ci.yml`) + seguretat (`security.yml`: gitleaks, `pnpm audit`, CodeQL) + preview (`preview.yml`) + deploy
-  (`deploy.yml`, `workflow_run` després de `ci` verda a `main`) a `.github/workflows/`. Ruleset de `main` creat
-  per l'usuari amb els 4 checks obligatoris. Dependabot configurat (`dependabot.yml`).
-- **Tests**: 240 tests (16 fitxers: unit de stores/serveis/domini/server/components + arquitectura de
-  fronteres/secrets/docs-sync/css-per-component/no-pii amb `pdf-parse`) + 5 E2E Playwright, tots en verd a la
-  darrera execució (`gate:push` i `git push` d'aquesta nit).
-- **README.md**: 546 línies, complet, en anglès.
-- **Última validació real** (2026-09-14, abans del merge):
-  ```
-  prettier --check .  → OK
-  eslint .            → 0 errors
-  nuxt typecheck      → 0 errors
-  vitest run          → 240 tests passed (16 files)
-  nuxt build          → cloudflare_module OK, 326 kB gzip
-  playwright test     → 5 passed
-  ```
-
-## 5. Subagents usats en tota la sessió (regla 12)
-
-i18n · tests+e2e+catàleg · entorns/CI/deploy · capes+primitius (+marquee) · neumorphism · README. Tots van
-acabar amb èxit i van deixar la gate en verd (verificat pel fil principal després de cada un).
+El log del job `deploy` de GitHub Actions va mostrar que el Worker `cv` i el custom domain `danimorales.dev` ja
+existien correctament; el registre DNS (Type Worker, Name `danimorales.dev`, Content `cv`, Proxied) també era
+correcte des del principi. El que faltava eren minuts de propagació (domini registrat el mateix dia), no una
+configuració trencada. Lliçó: si el custom domain surt bé al log de deploy i el DNS és correcte, esperar
+5-15 minuts abans de tocar res a Cloudflare — exactament el mateix principi aplica a `www`, només que aquí cal
+crear el registre, no esperar-lo.
