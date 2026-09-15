@@ -137,6 +137,8 @@ Plantilla d'un bloc:
 | `fit`     | `'cover' \| 'contain'`                     | `'cover'` | `.custom-image--fit-cover` / `--fit-contain`                                   |
 | `radius`  | `'none' \| 'md' \| 'lg' \| 'xl' \| 'full'` | `'none'`  | `.custom-image--radius-none/-md/-lg/-xl/-full` (`rounded-none/md/lg/3xl/full`) |
 | `frame`   | `boolean`                                  | `false`   | `.custom-image--frame` (vora `border` + `shadow-lg`)                           |
+| `srcset`  | `string \| undefined`                      | —         | reflectit tal qual a `<img srcset>`; sense ús real encara (decisió 037)        |
+| `sizes`   | `string \| undefined`                      | —         | reflectit tal qual a `<img sizes>`; només té efecte si `srcset` també es passa |
 
 - **Variants/classes**: `.custom-image` (`block max-w-full`) + les anteriors.
 - **Slots**: cap.

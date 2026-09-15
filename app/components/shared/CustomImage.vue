@@ -16,6 +16,10 @@ withDefaults(
     radius?: ImageRadius
     /** Vora + ombra al voltant de la imatge */
     frame?: boolean
+    /** `srcset` de l'`<img>` natiu; opcional, decisió 037 (sense mides generades encara) */
+    srcset?: string
+    /** `sizes` de l'`<img>` natiu; només té efecte si `srcset` també es passa */
+    sizes?: string
   }>(),
   {
     width: undefined,
@@ -24,6 +28,8 @@ withDefaults(
     fit: 'cover',
     radius: 'none',
     frame: false,
+    srcset: undefined,
+    sizes: undefined,
   }
 )
 </script>
@@ -36,6 +42,8 @@ withDefaults(
     :width="width"
     :height="height"
     :loading="loading"
+    :srcset="srcset"
+    :sizes="sizes"
     :class="[
       'custom-image',
       `custom-image--fit-${fit}`,
