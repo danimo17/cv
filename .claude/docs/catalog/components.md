@@ -459,6 +459,32 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 
 - **Consumidors**: SourceBanner. Test: `tests/unit/components/CustomMarquee.spec.ts`.
 
+### CustomPagination
+
+- **Ruta**: `app/components/shared/CustomPagination.vue`
+- **Propòsit**: navegació genèrica de resultats paginats (decisió 034). Es calcula `pageCount` a partir de
+  `total`/`perPage` i es renderitza dins un `<nav>`; s'amaga sola quan només hi ha una pàgina. Botons
+  anterior/següent (`CustomButton` ghost, només icona) desactivats als extrems.
+- **Props**:
+
+| Prop      | Tipus                | Default | Valors permesos → classe                                         |
+| --------- | -------------------- | ------- | ---------------------------------------------------------------- |
+| `page`    | `number` (requerida) | —       | pàgina actual, **1-indexada**                                    |
+| `total`   | `number` (requerida) | —       | nombre total d'elements paginables (no de pàgines)               |
+| `perPage` | `number`             | `12`    | elements per pàgina; `pageCount = max(1, ceil(total / perPage))` |
+
+- **Variants/classes**: `.custom-pagination` (`<nav>`, ocult si `pageCount <= 1`); element `__status`.
+- **Slots**: cap.
+- **Events**: `update:page: [page: number]` (permet `v-model:page`); només s'emet si la pàgina de destí
+  (retallada a `[1, pageCount]`) és diferent de l'actual.
+- **Exemple**:
+
+```vue
+<CustomPagination v-model:page="page" :total="giphy.total" :per-page="giphy.limit" />
+```
+
+- **Consumidors**: `pages/meme.vue`. Test: `tests/unit/components/CustomPagination.spec.ts`.
+
 ---
 
 ## Layout (`app/components/layout/`)
@@ -714,12 +740,14 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 - **Ruta**: `app/components/meme/MemeSearch.vue`
 - **Propòsit**: formulari `role="search"` amb `CustomInput type=search` (`id="meme-query"`) i botó de cerca
   (`data-testid="meme-search-submit"`, desactivat si la query és buida). Emet la query retallada en fer submit.
+  `initial` és reactiu: un `watch` torna a sincronitzar el camp si canvia després del muntatge (p. ex. en clicar
+  una recent search a `MemeRecentSearches`).
 - **Props**:
 
 | Prop      | Tipus     | Default | Valors permesos                    |
 | --------- | --------- | ------- | ---------------------------------- |
 | `loading` | `boolean` | `false` | passa a `CustomButton` (`loading`) |
-| `initial` | `string`  | `''`    | valor inicial del camp             |
+| `initial` | `string`  | `''`    | valor del camp (inicial i reactiu) |
 
 - **Variants/classes**: `.meme-search`, `__input`.
 - **Slots**: cap.
@@ -811,3 +839,26 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 ```
 
 - **Consumidors**: `pages/meme.vue`.
+
+### MemeRecentSearches
+
+- **Ruta**: `app/components/meme/MemeRecentSearches.vue`
+- **Propòsit**: apartat "recent searches" a sota de la graella de `/meme` (decisió 034). Mostra els termes de
+  `useGiphyStore.history` (màxim 5, més recent primer) com a botons clicables; en clicar-ne un s'emet `select`
+  amb el terme. S'amaga sencer (`v-if="terms.length"`) quan encara no hi ha historial.
+- **Props**:
+
+| Prop    | Tipus                  | Default | Valors permesos         |
+| ------- | ---------------------- | ------- | ----------------------- |
+| `terms` | `string[]` (requerida) | —       | `useGiphyStore.history` |
+
+- **Variants/classes**: `.meme-recent-searches`; element `__list`.
+- **Slots**: cap.
+- **Events**: `select: [term: string]`.
+- **Exemple**:
+
+```vue
+<MemeRecentSearches :terms="giphy.history" @select="onSearch" />
+```
+
+- **Consumidors**: `pages/meme.vue`. Test: `tests/unit/components/MemeRecentSearches.spec.ts`.

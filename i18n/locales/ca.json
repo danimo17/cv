@@ -188,7 +188,16 @@
     },
     "success": "Fet! La teva nova cara ja és a la pàgina d'inici.",
     "goHome": "Mira-ho a la pàgina d'inici",
-    "poweredBy": "Powered by GIPHY"
+    "poweredBy": "Powered by GIPHY",
+    "recentSearches": {
+      "title": "Cerques recents"
+    }
+  },
+  "pagination": {
+    "title": "Paginació",
+    "previous": "Pàgina anterior",
+    "next": "Pàgina següent",
+    "page": "Pàgina {page} de {total}"
   },
   "footer": { "built": "Fet amb Nuxt 4, Tailwind, Pinia i una mica d'IA.", "source": "Codi font" },
   "banner": {

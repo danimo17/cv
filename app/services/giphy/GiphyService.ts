@@ -16,11 +16,12 @@ const SEARCH_ENDPOINT = '/api/giphy/search'
 export class GiphyService {
   /**
    * Crea el handle de `useFetch` (immediate: false, watch: false). L'executa qui el crida
-   * (l'acció `search` de la store). S'ha de cridar dins d'un context Nuxt (setup de store/component).
+   * (les accions `search`/`goToOffset` de la store). S'ha de cridar dins d'un context Nuxt (setup
+   * de store/component).
    */
-  createSearch(query: Ref<string>, limit: Ref<number> | number) {
+  createSearch(query: Ref<string>, limit: Ref<number> | number, offset: Ref<number> | number = 0) {
     return useFetch<GiphySearchResponse>(SEARCH_ENDPOINT, {
-      query: { q: query, limit },
+      query: { q: query, limit, offset },
       immediate: false,
       watch: false,
     })

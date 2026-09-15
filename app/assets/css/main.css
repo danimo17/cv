@@ -14,6 +14,7 @@
 @import './components/custom-input.css';
 @import './components/custom-skeleton.css';
 @import './components/custom-marquee.css';
+@import './components/custom-pagination.css';
 @import './components/app-header.css';
 @import './components/app-footer.css';
 @import './components/source-banner.css';
@@ -31,5 +32,6 @@
 @import './components/meme-grid.css';
 @import './components/meme-card.css';
 @import './components/meme-preview.css';
+@import './components/meme-recent-searches.css';
 
 @custom-variant dark (&:where(.dark, .dark *));

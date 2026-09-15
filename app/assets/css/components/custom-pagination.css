@@ -1,0 +1,8 @@
+@layer components {
+  .custom-pagination {
+    @apply flex items-center justify-center gap-3;
+  }
+  .custom-pagination__status {
+    @apply tabular-nums;
+  }
+}
