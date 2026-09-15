@@ -7,7 +7,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <AppSection
+  <CustomSection
     :id="config.id"
     :title="t(config.titleKey)"
     :eyebrow="t(config.eyebrowKey)"
@@ -19,14 +19,14 @@ const { t } = useI18n()
         <ExperienceItem :item="item" variant="compact" />
       </li>
     </ol>
-    <AppText as="h3" variant="lead" weight="semibold" class="education-section__subtitle">
-      <AppIcon name="certificate" size="sm" />
+    <CustomText as="h3" variant="lead" weight="semibold" class="education-section__subtitle">
+      <CustomIcon name="certificate" size="sm" />
       {{ t('education.certifications') }}
-    </AppText>
+    </CustomText>
     <ol class="education-section__list">
       <li v-for="item in certifications" :key="item.id">
         <ExperienceItem :item="item" variant="compact" />
       </li>
     </ol>
-  </AppSection>
+  </CustomSection>
 </template>

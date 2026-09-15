@@ -16,7 +16,7 @@ function submit() {
 
 <template>
   <form class="meme-search" role="search" @submit.prevent="submit">
-    <AppInput
+    <CustomInput
       id="meme-query"
       v-model="query"
       class="meme-search__input"
@@ -26,7 +26,7 @@ function submit() {
       type="search"
       hide-label
     />
-    <AppButton
+    <CustomButton
       type="submit"
       icon="magnifying-glass"
       :loading="loading"
@@ -34,6 +34,6 @@ function submit() {
       data-testid="meme-search-submit"
     >
       {{ t('meme.search.button') }}
-    </AppButton>
+    </CustomButton>
   </form>
 </template>

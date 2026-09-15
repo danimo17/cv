@@ -28,13 +28,13 @@ const role = computed(() =>
 </script>
 
 <template>
-  <div :class="['app-alert', `app-alert--${tone}`]" :role="role">
-    <AppIcon :name="iconName" class="app-alert__icon" />
-    <div class="app-alert__body">
-      <AppText v-if="title" as="p" variant="small" weight="semibold" class="app-alert__title">
+  <div :class="['custom-alert', `custom-alert--${tone}`]" :role="role">
+    <CustomIcon :name="iconName" class="custom-alert__icon" />
+    <div class="custom-alert__body">
+      <CustomText v-if="title" as="p" variant="small" weight="semibold" class="custom-alert__title">
         {{ title }}
-      </AppText>
-      <div class="app-alert__content"><slot /></div>
+      </CustomText>
+      <div class="custom-alert__content"><slot /></div>
     </div>
   </div>
 </template>

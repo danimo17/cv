@@ -1,30 +1,30 @@
 /* Neumorphism: `--frame` és un relleu curt (la imatge "surt" del marc que la conté). */
 @layer components {
-  .app-image {
+  .custom-image {
     @apply block max-w-full;
   }
-  .app-image--fit-cover {
+  .custom-image--fit-cover {
     @apply object-cover;
   }
-  .app-image--fit-contain {
+  .custom-image--fit-contain {
     @apply object-contain;
   }
-  .app-image--radius-none {
+  .custom-image--radius-none {
     @apply rounded-none;
   }
-  .app-image--radius-md {
+  .custom-image--radius-md {
     @apply rounded-md;
   }
-  .app-image--radius-lg {
+  .custom-image--radius-lg {
     @apply rounded-lg;
   }
-  .app-image--radius-xl {
+  .custom-image--radius-xl {
     @apply rounded-3xl;
   }
-  .app-image--radius-full {
+  .custom-image--radius-full {
     @apply rounded-full;
   }
-  .app-image--frame {
+  .custom-image--frame {
     @apply shadow-neu-sm;
   }
 }

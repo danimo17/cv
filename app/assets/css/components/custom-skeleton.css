@@ -1,15 +1,15 @@
 /* Neumorphism: el placeholder és un buit enfonsat (inset). */
 @layer components {
-  .app-skeleton {
+  .custom-skeleton {
     @apply animate-pulse rounded-lg bg-surface-alt shadow-neu-inset-sm motion-reduce:animate-none;
   }
-  .app-skeleton--text {
+  .custom-skeleton--text {
     @apply h-4 w-full;
   }
-  .app-skeleton--image {
+  .custom-skeleton--image {
     @apply aspect-square w-full;
   }
-  .app-skeleton--circle {
+  .custom-skeleton--circle {
     @apply size-12 rounded-full;
   }
 }

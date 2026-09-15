@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     '@nuxt/test-utils/module',
   ],
   css: ['~/assets/css/main.css', '@fortawesome/fontawesome-svg-core/styles.css'],
-  // Els components es registren pel nom del fitxer (AppButton, HeroSection), no per la carpeta.
+  // Els components es registren pel nom del fitxer (CustomButton, HeroSection), no per la carpeta.
   components: [{ path: '~/components', pathPrefix: false }],
   vite: { plugins: [tailwindcss()] },
   // Server-only. Set NUXT_GIPHY_API_KEY in .env (local) or as a Worker secret (prod). Regla 01.

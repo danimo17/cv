@@ -29,44 +29,44 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
 <template>
   <div class="page meme-page">
     <header class="meme-page__header">
-      <AppText as="p" variant="eyebrow" tone="primary" class="meme-page__kicker">
+      <CustomText as="p" variant="eyebrow" tone="primary" class="meme-page__kicker">
         {{ t('meme.kicker') }}
-      </AppText>
-      <AppText as="h1" variant="h1" class="meme-page__title">{{ t('meme.title') }}</AppText>
-      <AppText as="p" variant="lead" tone="muted" class="meme-page__intro">
+      </CustomText>
+      <CustomText as="h1" variant="h1" class="meme-page__title">{{ t('meme.title') }}</CustomText>
+      <CustomText as="p" variant="lead" tone="muted" class="meme-page__intro">
         {{ t('meme.intro') }}
-      </AppText>
+      </CustomText>
     </header>
 
-    <AppCard variant="filled" padding="md" class="meme-page__how">
-      <AppText as="h2" variant="body" weight="semibold" class="meme-page__how-title">
+    <CustomCard variant="filled" padding="md" class="meme-page__how">
+      <CustomText as="h2" variant="body" weight="semibold" class="meme-page__how-title">
         {{ t('meme.how.title') }}
-      </AppText>
+      </CustomText>
       <ol class="meme-page__steps">
-        <AppText v-for="(step, i) in steps" :key="i" as="li" variant="small" tone="muted">
+        <CustomText v-for="(step, i) in steps" :key="i" as="li" variant="small" tone="muted">
           {{ step }}
-        </AppText>
+        </CustomText>
       </ol>
-    </AppCard>
+    </CustomCard>
 
-    <AppAlert
+    <CustomAlert
       v-if="justApplied"
       tone="success"
       :title="t('meme.success')"
       data-testid="meme-success"
     >
-      <AppButton size="sm" variant="outline" tone="success" icon="arrow-left" to="/">
+      <CustomButton size="sm" variant="outline" tone="success" icon="arrow-left" to="/">
         {{ t('meme.goHome') }}
-      </AppButton>
-    </AppAlert>
-    <AppAlert v-else-if="hero.hasMeme" tone="info">
-      <AppText as="span" variant="small">
+      </CustomButton>
+    </CustomAlert>
+    <CustomAlert v-else-if="hero.hasMeme" tone="info">
+      <CustomText as="span" variant="small">
         {{ t('meme.currently', { title: hero.selected?.title }) }}
-      </AppText>
-      <AppButton size="sm" variant="ghost" tone="info" icon="rotate-left" @click="hero.reset()">
+      </CustomText>
+      <CustomButton size="sm" variant="ghost" tone="info" icon="rotate-left" @click="hero.reset()">
         {{ t('hero.reset') }}
-      </AppButton>
-    </AppAlert>
+      </CustomButton>
+    </CustomAlert>
 
     <MemeSearch :loading="giphy.status === 'pending'" :initial="giphy.query" @search="onSearch" />
 
@@ -80,8 +80,8 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
       @select="candidate = $event"
     />
 
-    <AppText as="p" variant="caption" tone="muted" class="meme-page__credit">
+    <CustomText as="p" variant="caption" tone="muted" class="meme-page__credit">
       {{ t('meme.poweredBy') }}
-    </AppText>
+    </CustomText>
   </div>
 </template>

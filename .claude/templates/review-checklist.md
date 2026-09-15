@@ -11,7 +11,7 @@
 - [ ] **Gates (09):** `pnpm gate` en verd amb sortida copiada al handoff.
 - [ ] **Contracte (10):** cada criteri té un test amb nom; res al diff que cap criteri demani.
 - [ ] **Decisions (11):** tota decisió d'aquesta tasca està a `.claude/docs/decisions/`.
-- [ ] **Primitius (026):** cap `p/span/h*/a/img/input/select/textarea/button` natiu fora dels wrappers `App*`; tot estil via props documentades al catàleg.
+- [ ] **Primitius (026, 038):** cap `p/span/h*/a/img/input/select/textarea/button` natiu fora dels wrappers `Custom*`; tot estil via props documentades al catàleg.
 - [ ] **Docs viva (027):** abans de crear res s'ha consultat el catàleg; cada prop/valor nou està documentat amb la seva classe.
 - [ ] **Subagents (12):** el handoff diu qui ha fet què.
 - [ ] **Accessibilitat:** focus visible, `aria-*` als botons icona, contrast dels tokens en dark.

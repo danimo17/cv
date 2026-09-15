@@ -117,31 +117,31 @@ const stringValue = computed(() =>
 <template>
   <div
     :class="[
-      'app-input',
-      `app-input--${type}`,
-      `app-input--${size}`,
-      `app-input--${tone}`,
-      { 'app-input--with-icon': icon && isText, 'app-input--disabled': disabled },
+      'custom-input',
+      `custom-input--${type}`,
+      `custom-input--${size}`,
+      `custom-input--${tone}`,
+      { 'custom-input--with-icon': icon && isText, 'custom-input--disabled': disabled },
     ]"
   >
     <!-- radio: fieldset + legend -->
     <fieldset
       v-if="type === 'radio'"
-      class="app-input__group"
+      class="custom-input__group"
       :disabled="disabled"
       :aria-describedby="hintId"
       :aria-invalid="invalid"
       :aria-required="required || undefined"
     >
-      <legend :class="['app-input__label', { 'sr-only': hideLabel }]">
-        <AppText as="span" variant="small" weight="medium">{{ label }}</AppText>
+      <legend :class="['custom-input__label', { 'sr-only': hideLabel }]">
+        <CustomText as="span" variant="small" weight="medium">{{ label }}</CustomText>
       </legend>
-      <div class="app-input__options">
-        <div v-for="option in options" :key="String(option.value)" class="app-input__option">
+      <div class="custom-input__options">
+        <div v-for="option in options" :key="String(option.value)" class="custom-input__option">
           <input
             :id="`${id}-${option.value}`"
             type="radio"
-            class="app-input__radio"
+            class="custom-input__radio"
             :name="groupName"
             :value="option.value"
             :checked="model === option.value"
@@ -149,19 +149,19 @@ const stringValue = computed(() =>
             :required="required || undefined"
             @change="set(option.value)"
           />
-          <AppText as="label" variant="small" :for="`${id}-${option.value}`">{{
+          <CustomText as="label" variant="small" :for="`${id}-${option.value}`">{{
             option.label
-          }}</AppText>
+          }}</CustomText>
         </div>
       </div>
     </fieldset>
 
     <!-- checkbox: control + label a la dreta -->
-    <div v-else-if="type === 'checkbox'" class="app-input__option">
+    <div v-else-if="type === 'checkbox'" class="custom-input__option">
       <input
         :id="id"
         type="checkbox"
-        class="app-input__checkbox"
+        class="custom-input__checkbox"
         :checked="model === true"
         :disabled="disabled"
         :required="required || undefined"
@@ -169,7 +169,7 @@ const stringValue = computed(() =>
         :aria-invalid="invalid"
         @change="onCheckbox"
       />
-      <AppText
+      <CustomText
         as="label"
         variant="small"
         weight="medium"
@@ -177,27 +177,27 @@ const stringValue = computed(() =>
         :class="{ 'sr-only': hideLabel }"
       >
         {{ label }}
-      </AppText>
+      </CustomText>
     </div>
 
     <!-- resta: label a sobre + control -->
     <template v-else>
-      <AppText
+      <CustomText
         as="label"
         variant="small"
         weight="medium"
         :for="id"
-        :class="['app-input__label', { 'sr-only': hideLabel }]"
+        :class="['custom-input__label', { 'sr-only': hideLabel }]"
       >
         {{ label }}
-      </AppText>
-      <div class="app-input__field">
-        <AppIcon v-if="icon && isText" :name="icon" size="sm" class="app-input__icon" />
+      </CustomText>
+      <div class="custom-input__field">
+        <CustomIcon v-if="icon && isText" :name="icon" size="sm" class="custom-input__icon" />
 
         <textarea
           v-if="type === 'textarea'"
           :id="id"
-          class="app-input__control"
+          class="custom-input__control"
           :value="stringValue"
           :placeholder="placeholder || undefined"
           :rows="rows"
@@ -211,7 +211,7 @@ const stringValue = computed(() =>
         <select
           v-else-if="type === 'select'"
           :id="id"
-          class="app-input__control"
+          class="custom-input__control"
           :value="stringValue"
           :disabled="disabled"
           :required="required || undefined"
@@ -233,7 +233,7 @@ const stringValue = computed(() =>
         <select
           v-else-if="type === 'multiselect'"
           :id="id"
-          class="app-input__control"
+          class="custom-input__control"
           multiple
           :disabled="disabled"
           :required="required || undefined"
@@ -256,7 +256,7 @@ const stringValue = computed(() =>
           v-else-if="type === 'number'"
           :id="id"
           type="number"
-          class="app-input__control"
+          class="custom-input__control"
           :value="stringValue"
           :placeholder="placeholder || undefined"
           :min="min"
@@ -273,7 +273,7 @@ const stringValue = computed(() =>
           v-else
           :id="id"
           :type="type"
-          class="app-input__control"
+          class="custom-input__control"
           :value="stringValue"
           :placeholder="placeholder || undefined"
           :disabled="disabled"
@@ -286,15 +286,15 @@ const stringValue = computed(() =>
       </div>
     </template>
 
-    <AppText
+    <CustomText
       v-if="hint"
       :id="hintId"
       as="p"
       variant="caption"
       :tone="tone === 'danger' ? 'danger' : 'muted'"
-      class="app-input__hint"
+      class="custom-input__hint"
     >
       {{ hint }}
-    </AppText>
+    </CustomText>
   </div>
 </template>

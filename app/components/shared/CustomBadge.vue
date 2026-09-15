@@ -11,18 +11,23 @@ const props = withDefaults(
   { tone: 'neutral', variant: 'soft', size: 'sm', icon: '' }
 )
 
-// La tipografia (mida, pes) la posa AppText; el badge només aporta fons, color i forma.
+// La tipografia (mida, pes) la posa CustomText; el badge només aporta fons, color i forma.
 const textVariant = computed(() => (props.size === 'sm' ? 'caption' : 'small'))
 </script>
 
 <template>
-  <AppText
+  <CustomText
     as="span"
     :variant="textVariant"
     weight="medium"
-    :class="['app-badge', `app-badge--${size}`, `app-badge--${variant}`, `app-badge--${tone}`]"
+    :class="[
+      'custom-badge',
+      `custom-badge--${size}`,
+      `custom-badge--${variant}`,
+      `custom-badge--${tone}`,
+    ]"
   >
-    <AppIcon v-if="icon" :name="icon" size="sm" />
+    <CustomIcon v-if="icon" :name="icon" size="sm" />
     <slot />
-  </AppText>
+  </CustomText>
 </template>

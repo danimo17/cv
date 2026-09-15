@@ -4,7 +4,7 @@ import type { Size, Tone } from '~/types/ui'
 export type MarqueeSpeed = 'slow' | 'normal' | 'fast'
 
 // Banner horitzontal infinit: el slot es renderitza dues vegades (la còpia és aria-hidden + inert)
-// i la pista es desplaça -50% en bucle. Respecta prefers-reduced-motion via app-marquee.css.
+// i la pista es desplaça -50% en bucle. Respecta prefers-reduced-motion via custom-marquee.css.
 withDefaults(
   defineProps<{
     /** Text accessible del contenidor (i18n) */
@@ -26,17 +26,17 @@ defineSlots<{
 <template>
   <div
     :class="[
-      'app-marquee',
-      `app-marquee--${speed}`,
-      `app-marquee--${tone}`,
-      `app-marquee--${size}`,
-      { 'app-marquee--pause': pauseOnHover },
+      'custom-marquee',
+      `custom-marquee--${speed}`,
+      `custom-marquee--${tone}`,
+      `custom-marquee--${size}`,
+      { 'custom-marquee--pause': pauseOnHover },
     ]"
     :aria-label="label"
   >
-    <div class="app-marquee__track">
-      <div class="app-marquee__copy"><slot :duplicate="false" /></div>
-      <div class="app-marquee__copy" aria-hidden="true" inert><slot :duplicate="true" /></div>
+    <div class="custom-marquee__track">
+      <div class="custom-marquee__copy"><slot :duplicate="false" /></div>
+      <div class="custom-marquee__copy" aria-hidden="true" inert><slot :duplicate="true" /></div>
     </div>
   </div>
 </template>

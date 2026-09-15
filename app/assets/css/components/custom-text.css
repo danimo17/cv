@@ -1,92 +1,92 @@
 /* Escala tipogràfica única (decisió 026). Cap altre CSS de component declara mida/pes/color de text. */
 @layer components {
-  .app-text {
+  .custom-text {
     @apply m-0;
   }
 
   /* variants: mida + pes per defecte */
-  .app-text--display {
+  .custom-text--display {
     @apply text-4xl font-extrabold tracking-tight sm:text-6xl;
   }
-  .app-text--h1 {
+  .custom-text--h1 {
     @apply text-3xl font-extrabold tracking-tight sm:text-5xl;
   }
-  .app-text--h2 {
+  .custom-text--h2 {
     @apply text-2xl font-bold tracking-tight sm:text-3xl;
   }
-  .app-text--h3 {
+  .custom-text--h3 {
     @apply text-xl font-semibold sm:text-2xl;
   }
-  .app-text--lead {
+  .custom-text--lead {
     @apply text-lg;
   }
-  .app-text--body {
+  .custom-text--body {
     @apply text-base leading-relaxed;
   }
-  .app-text--small {
+  .custom-text--small {
     @apply text-sm;
   }
-  .app-text--caption {
+  .custom-text--caption {
     @apply text-xs;
   }
-  .app-text--eyebrow {
+  .custom-text--eyebrow {
     @apply text-sm font-semibold tracking-wide uppercase;
   }
 
   /* tons */
-  .app-text--tone-default {
+  .custom-text--tone-default {
     @apply text-inherit;
   }
-  .app-text--tone-muted {
+  .custom-text--tone-muted {
     @apply text-text-muted;
   }
-  .app-text--tone-primary {
+  .custom-text--tone-primary {
     @apply text-primary;
   }
-  .app-text--tone-secondary {
+  .custom-text--tone-secondary {
     @apply text-secondary;
   }
-  .app-text--tone-neutral {
+  .custom-text--tone-neutral {
     @apply text-neutral;
   }
-  .app-text--tone-success {
+  .custom-text--tone-success {
     @apply text-success;
   }
-  .app-text--tone-info {
+  .custom-text--tone-info {
     @apply text-info;
   }
-  .app-text--tone-warning {
+  .custom-text--tone-warning {
     @apply text-warning;
   }
-  .app-text--tone-danger {
+  .custom-text--tone-danger {
     @apply text-danger;
   }
 
   /* pes explícit (sobreescriu el de la variant) */
-  .app-text--normal {
+  .custom-text--normal {
     @apply font-normal;
   }
-  .app-text--medium {
+  .custom-text--medium {
     @apply font-medium;
   }
-  .app-text--semibold {
+  .custom-text--semibold {
     @apply font-semibold;
   }
-  .app-text--bold {
+  .custom-text--bold {
     @apply font-bold;
   }
 
   /* alineació i truncat */
-  .app-text--align-start {
+  .custom-text--align-start {
     @apply text-start;
   }
-  .app-text--align-center {
+  .custom-text--align-center {
     @apply text-center;
   }
-  .app-text--align-end {
+  .custom-text--align-end {
     @apply text-end;
   }
-  .app-text--truncate {
+  .custom-text--truncate {
     @apply truncate;
   }
 }

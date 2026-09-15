@@ -65,7 +65,7 @@ see [AI collaboration methodology](#ai-collaboration-methodology).
 | [Pinia](https://pinia.vuejs.org)                    | Application state (`useGiphyStore`, `useHeroStore`)                                               |
 | [@nuxtjs/i18n](https://i18n.nuxtjs.org)             | Three locales (`en`, `ca`, `es`), `prefix_except_default` routing                                 |
 | [@nuxtjs/color-mode](https://color-mode.nuxtjs.org) | Light/dark/system theme with persistence                                                          |
-| Font Awesome (svg-core, solid, brands)              | Icons, wrapped by `AppIcon`; only the icons registered in `app/plugins/fontawesome.ts` ship       |
+| Font Awesome (svg-core, solid, brands)              | Icons, wrapped by `CustomIcon`; only the icons registered in `app/plugins/fontawesome.ts` ship    |
 | [Vitest](https://vitest.dev)                        | Unit tests (Nuxt environment, happy-dom) and architecture tests (node)                            |
 | [Playwright](https://playwright.dev)                | End-to-end tests of the meme flow, theme, locale and server validation (Giphy mocked)             |
 | ESLint (`@nuxt/eslint`) + Prettier                  | Conventions and formatting; both run in the gate                                                  |
@@ -108,7 +108,7 @@ app/
     main.css              imports everything above and defines the `dark` variant
   assets/img/             portrait (800x800 JPEG from LinkedIn, decision 013)
   components/
-    shared/               App* primitives: AppText, AppInput, AppLink, AppImage, AppButton, AppIcon, AppCard, AppBadge, AppAlert, AppSection, AppSkeleton, AppMarquee
+    shared/               Custom* primitives: CustomText, CustomInput, CustomLink, CustomImage, CustomButton, CustomIcon, CustomCard, CustomBadge, CustomAlert, CustomSection, CustomSkeleton, CustomMarquee
     layout/               AppHeader, AppFooter, LocaleSwitcher, ThemeToggle, SourceBanner
     cv/                   HeroSection, AboutSection, ExperienceSection, ExperienceItem, TechStack, EducationSection, ContactSection, CvDownload
     meme/                 MemeSearch, MemeGrid, MemeCard, MemePreview
@@ -163,30 +163,30 @@ primitive that wraps each element is exempt. Structural elements (`div`, `sectio
 The consequence is that restyling the site, or swapping the primitives for a component library such as PrimeVue,
 means touching one `.vue` file and one CSS file per primitive. Consumers do not change.
 
-| Primitive     | Replaces                                                                                       | Key props                                                                                                                                           | CSS file                                     |
-| ------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `AppText`     | `p`, `span`, `h1`–`h6`, `small`, `strong`, `em`, `label`, `figcaption`, `time`, `li` with text | `as`, `variant` (`display h1 h2 h3 lead body small caption eyebrow`), `tone`, `weight`, `align`, `truncate`                                         | `app/assets/css/components/app-text.css`     |
-| `AppInput`    | `input` (all types), `select`, `textarea`                                                      | `id`, `label`, `type` (`text search email number textarea select multiselect radio checkbox`), `options`, `hint`, `tone`, `size`, `icon`, `v-model` | `app/assets/css/components/app-input.css`    |
-| `AppLink`     | `a`, `NuxtLink`, `NuxtLinkLocale`                                                              | `to` / `href`, `variant` (`inline nav subtle icon`), `tone`, `localize`, `download`                                                                 | `app/assets/css/components/app-link.css`     |
-| `AppImage`    | `img`                                                                                          | `src`, `alt`, `width`, `height`, `loading`, `fit`, `radius`, `frame`                                                                                | `app/assets/css/components/app-image.css`    |
-| `AppButton`   | `button`, and `a`/`NuxtLinkLocale` used as a button                                            | `tone`, `size`, `variant` (`solid outline ghost`), `icon`, `to` / `href`, `type`, `loading`, `disabled`, `block`                                    | `app/assets/css/components/app-button.css`   |
-| `AppIcon`     | `FontAwesomeIcon` (importing `@fortawesome/vue-fontawesome` elsewhere is a lint error)         | `name`, `set` (`solid brands`), `size`, `label`                                                                                                     | `app/assets/css/components/app-icon.css`     |
-| `AppCard`     | Card containers                                                                                | `as`, `variant` (`outline filled elevated`), `padding`; slots `header`, `footer`                                                                    | `app/assets/css/components/app-card.css`     |
-| `AppBadge`    | Inline tags                                                                                    | `tone`, `variant` (`soft solid`), `size`, `icon`                                                                                                    | `app/assets/css/components/app-badge.css`    |
-| `AppAlert`    | Status messages                                                                                | `tone`, `title`, `icon`; `role` is `alert` or `status` depending on tone                                                                            | `app/assets/css/components/app-alert.css`    |
-| `AppSection`  | CV sections with anchor, eyebrow, title, subtitle                                              | `id`, `title`, `eyebrow`, `icon`, `subtitle`                                                                                                        | `app/assets/css/components/app-section.css`  |
-| `AppSkeleton` | Loading placeholders                                                                           | `shape` (`text image circle`)                                                                                                                       | `app/assets/css/components/app-skeleton.css` |
-| `AppMarquee`  | Infinite horizontal banner                                                                     | `label`, `speed`, `pauseOnHover`, `tone`, `size`; slot prop `duplicate`; respects `prefers-reduced-motion`                                          | `app/assets/css/components/app-marquee.css`  |
+| Primitive        | Replaces                                                                                       | Key props                                                                                                                                           | CSS file                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `CustomText`     | `p`, `span`, `h1`–`h6`, `small`, `strong`, `em`, `label`, `figcaption`, `time`, `li` with text | `as`, `variant` (`display h1 h2 h3 lead body small caption eyebrow`), `tone`, `weight`, `align`, `truncate`                                         | `app/assets/css/components/custom-text.css`     |
+| `CustomInput`    | `input` (all types), `select`, `textarea`                                                      | `id`, `label`, `type` (`text search email number textarea select multiselect radio checkbox`), `options`, `hint`, `tone`, `size`, `icon`, `v-model` | `app/assets/css/components/custom-input.css`    |
+| `CustomLink`     | `a`, `NuxtLink`, `NuxtLinkLocale`                                                              | `to` / `href`, `variant` (`inline nav subtle icon`), `tone`, `localize`, `download`                                                                 | `app/assets/css/components/custom-link.css`     |
+| `CustomImage`    | `img`                                                                                          | `src`, `alt`, `width`, `height`, `loading`, `fit`, `radius`, `frame`                                                                                | `app/assets/css/components/custom-image.css`    |
+| `CustomButton`   | `button`, and `a`/`NuxtLinkLocale` used as a button                                            | `tone`, `size`, `variant` (`solid outline ghost`), `icon`, `to` / `href`, `type`, `loading`, `disabled`, `block`                                    | `app/assets/css/components/custom-button.css`   |
+| `CustomIcon`     | `FontAwesomeIcon` (importing `@fortawesome/vue-fontawesome` elsewhere is a lint error)         | `name`, `set` (`solid brands`), `size`, `label`                                                                                                     | `app/assets/css/components/custom-icon.css`     |
+| `CustomCard`     | Card containers                                                                                | `as`, `variant` (`outline filled elevated`), `padding`; slots `header`, `footer`                                                                    | `app/assets/css/components/custom-card.css`     |
+| `CustomBadge`    | Inline tags                                                                                    | `tone`, `variant` (`soft solid`), `size`, `icon`                                                                                                    | `app/assets/css/components/custom-badge.css`    |
+| `CustomAlert`    | Status messages                                                                                | `tone`, `title`, `icon`; `role` is `alert` or `status` depending on tone                                                                            | `app/assets/css/components/custom-alert.css`    |
+| `CustomSection`  | CV sections with anchor, eyebrow, title, subtitle                                              | `id`, `title`, `eyebrow`, `icon`, `subtitle`                                                                                                        | `app/assets/css/components/custom-section.css`  |
+| `CustomSkeleton` | Loading placeholders                                                                           | `shape` (`text image circle`)                                                                                                                       | `app/assets/css/components/custom-skeleton.css` |
+| `CustomMarquee`  | Infinite horizontal banner                                                                     | `label`, `speed`, `pauseOnHover`, `tone`, `size`; slot prop `duplicate`; respects `prefers-reduced-motion`                                          | `app/assets/css/components/custom-marquee.css`  |
 
-`AppText` is the only owner of typography: sizes, weights and text colours exist in `app-text.css` and nowhere
+`CustomText` is the only owner of typography: sizes, weights and text colours exist in `custom-text.css` and nowhere
 else. Section CSS files only contain layout and spacing.
 
 ```vue
-<AppText as="h1" variant="display">{{ profile.name }}</AppText>
-<AppText as="p" variant="body" tone="muted">{{ t('about.p1') }}</AppText>
-<AppText as="time" variant="small" tone="muted" :datetime="item.start">{{ period }}</AppText>
+<CustomText as="h1" variant="display">{{ profile.name }}</CustomText>
+<CustomText as="p" variant="body" tone="muted">{{ t('about.p1') }}</CustomText>
+<CustomText as="time" variant="small" tone="muted" :datetime="item.start">{{ period }}</CustomText>
 
-<AppInput
+<CustomInput
   id="meme-query"
   v-model="query"
   type="search"
@@ -194,7 +194,7 @@ else. Section CSS files only contain layout and spacing.
   icon="magnifying-glass"
   hide-label
 />
-<AppInput
+<CustomInput
   id="level"
   v-model="level"
   type="radio"
@@ -236,18 +236,18 @@ component exists without a block or a block points to a deleted component.
   fonts, no webfonts and real dark mode. At the time of writing the CSS is the flat baseline; the neumorphism pass
   adds shadow tokens to `tokens.css` and touches only the component CSS files, never the components or their
   classes.
-- **Motion** respects `prefers-reduced-motion: reduce` (see `app-marquee.css`).
+- **Motion** respects `prefers-reduced-motion: reduce` (see `custom-marquee.css`).
 
 How to customise:
 
 | Change                                | Where                                                                                                                                |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | A global colour (light or dark)       | `tokens.css`; every primitive and state derives from it                                                                              |
-| Typography                            | `app-text.css` (variants) or `tokens.css` (`--font-*`)                                                                               |
+| Typography                            | `custom-text.css` (variants) or `tokens.css` (`--font-*`)                                                                            |
 | The look of a primitive               | Its `app-<name>.css`; consumers are untouched                                                                                        |
 | Add a tone                            | 6 token values (3 light, 3 dark) in `tokens.css` + entry in `TONES` (`app/types/ui.ts`) + modifiers in the primitives that use tones |
 | Add a variant or state to a primitive | Prop value + `.app-<name>--<value>` modifier + row in `.claude/docs/catalog/components.md` and `styles.md`                           |
-| A new section or page                 | Layout only in its `<kebab>.css`; text via `AppText`, links via `AppLink`, images via `AppImage`                                     |
+| A new section or page                 | Layout only in its `<kebab>.css`; text via `CustomText`, links via `CustomLink`, images via `CustomImage`                            |
 
 Full token, scale and class reference: `.claude/docs/catalog/styles.md`.
 
@@ -262,7 +262,7 @@ Full token, scale and class reference: `.claude/docs/catalog/styles.md`.
   `experience.items.<id>.title`, `experience.items.<id>.bullets[]`, `meme.results.empty`. Arrays are read with
   `useMessageList(key)`. JSON holds text only; dates, URLs, organisation names and tags live in `app/data/cv/*.ts`.
 - Rule 05: no bare strings in templates (`vue/no-bare-strings-in-template`); all text, including `alt`,
-  `aria-label`, `placeholder` and `title`, goes through `t()` and is rendered with `AppText`.
+  `aria-label`, `placeholder` and `title`, goes through `t()` and is rendered with `CustomText`.
 - `tests/unit/i18n-parity.spec.ts` flattens the three files and fails on any missing or extra key, and on any
   empty string in `ca` or `es`.
 - Adding a locale: entry in `nuxt.config.ts` `i18n.locales`, a complete JSON, `public/cv/cv-<code>.pdf`, and a
@@ -274,7 +274,7 @@ Full token, scale and class reference: `.claude/docs/catalog/styles.md`.
 
 | Layer         | Tool                                      | Covers                                                                                                                                                                                                                                                          | Where                            |
 | ------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| Unit          | Vitest, environment `nuxt` with happy-dom | Primitives with logic (`AppButton`, `AppInput`, `AppAlert`, `AppMarquee`, `MemeCard`), stores (`registerEndpoint` simulating 200/400/503), `GiphyService`, `server/utils/giphy`, `formatPeriod`, i18n parity                                                    | `tests/unit/**`                  |
+| Unit          | Vitest, environment `nuxt` with happy-dom | Primitives with logic (`CustomButton`, `CustomInput`, `CustomAlert`, `CustomMarquee`, `MemeCard`), stores (`registerEndpoint` simulating 200/400/503), `GiphyService`, `server/utils/giphy`, `formatPeriod`, i18n parity                                        | `tests/unit/**`                  |
 | Architecture  | Vitest, environment `node`                | Invariants no linter expresses (see below)                                                                                                                                                                                                                      | `tests/arch/**`                  |
 | End-to-end    | Playwright (chromium) against `nuxt dev`  | Home renders all sections and the source banner; search, pick and wear a meme, then reload restores the portrait; theme persists; locale switch; `/api/giphy/search` returns 400 on bad input. `/api/giphy/**` is mocked with `page.route`, so no key is needed | `e2e/**`                         |
 | Security (CI) | gitleaks, `pnpm audit`, CodeQL            | Secrets in the whole git history, vulnerable dependencies (`--audit-level=high`), insecure patterns (javascript-typescript)                                                                                                                                     | `.github/workflows/security.yml` |
@@ -367,20 +367,20 @@ is the entry point: it imports `.claude/hard-rules.md` on every turn and maps th
 
 ### The 12 hard rules
 
-| #   | Rule                                                                                                                                                             | Enforced by                                                                                          |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 01  | No secret in the repo, the chat or the logs. Only a local dotenv file (ignored) and GitHub/Cloudflare secrets. An exposed key is regenerated                     | `.gitignore`, `tests/arch/secrets.spec.ts`, gitleaks in CI                                           |
-| 02  | No internal code or resource from any employer. Public information only                                                                                          | Human review of the contract's declared sources and the review checklist                             |
-| 03  | Giphy is called only from `server/api/giphy/*`; the client only via `GiphyService` → `useGiphyStore`                                                             | `tests/arch/giphy-boundary.spec.ts`                                                                  |
-| 04  | No sensitive personal data (phone, postal address) on the site or in the PDFs, text layer included                                                               | `tests/arch/no-pii.spec.ts` + review                                                                 |
-| 05  | No hardcoded user-facing strings; every key exists in the three locales                                                                                          | `vue/no-bare-strings-in-template`, `tests/unit/i18n-parity.spec.ts`                                  |
-| 06  | The AI always works on `feat/<slug>`; never commits to `main`, never pushes                                                                                      | Global `git-safety` Claude hook, GitHub branch ruleset                                               |
-| 07  | New or changed component, store, composable, token or key → catalog updated in the same commit                                                                   | `tests/arch/docs-sync.spec.ts`                                                                       |
-| 08  | One CSS file per component; only its own semantic classes in the template; typography only through `AppText`; native leaf elements only inside `App*` primitives | `tests/arch/css-per-component.spec.ts`, `vue/no-restricted-class`, `vue/no-restricted-html-elements` |
-| 09  | No commit without a green `pnpm gate`; no push without `pnpm gate:push`; no merge to `main` without CI + security green. Never `--no-verify`                     | `.githooks/*`, CI, branch ruleset, `require-contract` hook                                           |
-| 10  | No code without a story and a contract with Given/When/Then criteria in `.claude/tasks/<slug>/`                                                                  | `require-contract` hook (blocks `git commit`)                                                        |
-| 11  | A clear directive that cannot be followed → direct question with options, never a silent substitution. Every decision goes to `docs/decisions/`                  | Human review; `docs/decisions/` is the memory                                                        |
-| 12  | The main thread orchestrates (contracts, decisions, synthesis, gates); research and development are delegated to subagents                                       | Human review; `workflow.md`; the handoff lists which subagent did what                               |
+| #   | Rule                                                                                                                                                                   | Enforced by                                                                                          |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 01  | No secret in the repo, the chat or the logs. Only a local dotenv file (ignored) and GitHub/Cloudflare secrets. An exposed key is regenerated                           | `.gitignore`, `tests/arch/secrets.spec.ts`, gitleaks in CI                                           |
+| 02  | No internal code or resource from any employer. Public information only                                                                                                | Human review of the contract's declared sources and the review checklist                             |
+| 03  | Giphy is called only from `server/api/giphy/*`; the client only via `GiphyService` → `useGiphyStore`                                                                   | `tests/arch/giphy-boundary.spec.ts`                                                                  |
+| 04  | No sensitive personal data (phone, postal address) on the site or in the PDFs, text layer included                                                                     | `tests/arch/no-pii.spec.ts` + review                                                                 |
+| 05  | No hardcoded user-facing strings; every key exists in the three locales                                                                                                | `vue/no-bare-strings-in-template`, `tests/unit/i18n-parity.spec.ts`                                  |
+| 06  | The AI always works on `feat/<slug>`; never commits to `main`, never pushes                                                                                            | Global `git-safety` Claude hook, GitHub branch ruleset                                               |
+| 07  | New or changed component, store, composable, token or key → catalog updated in the same commit                                                                         | `tests/arch/docs-sync.spec.ts`                                                                       |
+| 08  | One CSS file per component; only its own semantic classes in the template; typography only through `CustomText`; native leaf elements only inside `Custom*` primitives | `tests/arch/css-per-component.spec.ts`, `vue/no-restricted-class`, `vue/no-restricted-html-elements` |
+| 09  | No commit without a green `pnpm gate`; no push without `pnpm gate:push`; no merge to `main` without CI + security green. Never `--no-verify`                           | `.githooks/*`, CI, branch ruleset, `require-contract` hook                                           |
+| 10  | No code without a story and a contract with Given/When/Then criteria in `.claude/tasks/<slug>/`                                                                        | `require-contract` hook (blocks `git commit`)                                                        |
+| 11  | A clear directive that cannot be followed → direct question with options, never a silent substitution. Every decision goes to `docs/decisions/`                        | Human review; `docs/decisions/` is the memory                                                        |
+| 12  | The main thread orchestrates (contracts, decisions, synthesis, gates); research and development are delegated to subagents                                             | Human review; `workflow.md`; the handoff lists which subagent did what                               |
 
 ### Lifecycle
 
@@ -497,14 +497,14 @@ single quotes, 100 columns, ES5 trailing commas. ESLint through `@nuxt/eslint` (
 | --------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `vue/block-order`                       | `<script setup>` before `<template>`; no `<style>` blocks (CSS lives in `assets/css/components/`) |
 | `vue/define-macros-order`               | `defineOptions` → `defineProps` → `defineEmits` → `defineSlots`                                   |
-| `vue/component-name-in-template-casing` | `<AppButton>`, never `<app-button>`                                                               |
+| `vue/component-name-in-template-casing` | `<CustomButton>`, never `<custom-button>`                                                         |
 | `vue/require-explicit-emits`            | Typed `defineEmits<{ select: [Meme] }>()`                                                         |
 | `vue/no-bare-strings-in-template`       | Every user-facing string is `t('…')`                                                              |
 | `vue/no-restricted-class`               | No Tailwind utilities in templates                                                                |
-| `vue/no-restricted-html-elements`       | Native leaf elements only inside their `App*` primitive                                           |
+| `vue/no-restricted-html-elements`       | Native leaf elements only inside their `Custom*` primitive                                        |
 | `@typescript-eslint/no-explicit-any`    | Concrete types or `unknown` + narrowing                                                           |
 | `no-console`                            | Throw `createError` or return state; `server/` may use `error`/`warn`                             |
-| `no-restricted-imports`                 | `@fortawesome/vue-fontawesome` only inside `AppIcon` and the plugin                               |
+| `no-restricted-imports`                 | `@fortawesome/vue-fontawesome` only inside `CustomIcon` and the plugin                            |
 | `sort-imports`                          | Sorted import members                                                                             |
 
 Other conventions (checked in review): files `kebab-case.ts`, components `PascalCase.vue` and multi-word,

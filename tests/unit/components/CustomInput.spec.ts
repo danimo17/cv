@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import AppInput from '~/components/shared/AppInput.vue'
+import CustomInput from '~/components/shared/CustomInput.vue'
 
 const OPTIONS = [
   { value: 'vue', label: 'Vue' },
@@ -8,9 +8,9 @@ const OPTIONS = [
   { value: 3, label: 'Three' },
 ]
 
-describe('AppInput', () => {
+describe('CustomInput', () => {
   it('text: renders a labelled input and round-trips v-model', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'q', label: 'Query', modelValue: 'cat' },
     })
     const input = wrapper.find('input')
@@ -18,7 +18,7 @@ describe('AppInput', () => {
     expect(input.attributes('type')).toBe('text')
     expect(wrapper.find('label').attributes('for')).toBe('q')
     expect(wrapper.find('label').text()).toBe('Query')
-    expect(wrapper.classes()).toContain('app-input--text')
+    expect(wrapper.classes()).toContain('custom-input--text')
     expect((input.element as HTMLInputElement).value).toBe('cat')
 
     await input.setValue('dog')
@@ -26,22 +26,22 @@ describe('AppInput', () => {
   })
 
   it('search: forwards the type and the icon modifier', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'q', label: 'Query', type: 'search', icon: 'magnifying-glass', hideLabel: true },
     })
     expect(wrapper.find('input').attributes('type')).toBe('search')
-    expect(wrapper.classes()).toContain('app-input--with-icon')
+    expect(wrapper.classes()).toContain('custom-input--with-icon')
     expect(wrapper.find('label').classes()).toContain('sr-only')
   })
 
   it('select: renders the options and emits the chosen (typed) value', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'fw', label: 'Framework', type: 'select', options: OPTIONS, modelValue: 'vue' },
     })
     const select = wrapper.find('select')
     expect(select.exists()).toBe(true)
     expect(select.findAll('option').map((o) => o.text())).toEqual(['Vue', 'Nuxt', 'Three'])
-    expect(wrapper.classes()).toContain('app-input--select')
+    expect(wrapper.classes()).toContain('custom-input--select')
 
     await select.setValue('nuxt')
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['nuxt'])
@@ -51,7 +51,7 @@ describe('AppInput', () => {
   })
 
   it('checkbox: emits a boolean', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'ok', label: 'Agree', type: 'checkbox', modelValue: false },
     })
     const box = wrapper.find('input[type="checkbox"]')
@@ -63,7 +63,7 @@ describe('AppInput', () => {
   })
 
   it('radio: renders a fieldset with legend and emits the chosen value', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'fw', label: 'Framework', type: 'radio', options: OPTIONS, modelValue: 'vue' },
     })
     expect(wrapper.find('fieldset').exists()).toBe(true)
@@ -78,7 +78,7 @@ describe('AppInput', () => {
   })
 
   it('number: emits a number (and null when cleared)', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'n', label: 'Amount', type: 'number', min: 0, max: 10, step: 2, modelValue: 4 },
     })
     const input = wrapper.find('input[type="number"]')
@@ -94,7 +94,7 @@ describe('AppInput', () => {
   })
 
   it('textarea: renders rows and round-trips the text', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'msg', label: 'Message', type: 'textarea', rows: 6, modelValue: 'hi' },
     })
     const area = wrapper.find('textarea')
@@ -104,13 +104,13 @@ describe('AppInput', () => {
   })
 
   it('danger tone sets aria-invalid and the hint is linked', async () => {
-    const wrapper = await mountSuspended(AppInput, {
+    const wrapper = await mountSuspended(CustomInput, {
       props: { id: 'q', label: 'Query', tone: 'danger', hint: 'Required' },
     })
     const input = wrapper.find('input')
     expect(input.attributes('aria-invalid')).toBe('true')
     expect(input.attributes('aria-describedby')).toBe('q-hint')
     expect(wrapper.find('#q-hint').text()).toBe('Required')
-    expect(wrapper.classes()).toContain('app-input--danger')
+    expect(wrapper.classes()).toContain('custom-input--danger')
   })
 })

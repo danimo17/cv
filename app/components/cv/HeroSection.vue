@@ -14,32 +14,32 @@ const alt = computed(() =>
 <template>
   <section class="hero-section" aria-labelledby="hero-title">
     <div class="hero-section__content">
-      <AppText as="p" variant="lead" tone="muted" class="hero-section__greeting">
+      <CustomText as="p" variant="lead" tone="muted" class="hero-section__greeting">
         {{ t('hero.greeting') }}
-      </AppText>
-      <AppText id="hero-title" as="h1" variant="display" class="hero-section__name">
+      </CustomText>
+      <CustomText id="hero-title" as="h1" variant="display" class="hero-section__name">
         {{ profile.name }}
-      </AppText>
-      <AppText as="p" variant="h3" tone="primary" class="hero-section__headline">
+      </CustomText>
+      <CustomText as="p" variant="h3" tone="primary" class="hero-section__headline">
         {{ t('hero.headline') }}
-      </AppText>
-      <AppText as="p" variant="body" tone="muted" class="hero-section__tagline">
+      </CustomText>
+      <CustomText as="p" variant="body" tone="muted" class="hero-section__tagline">
         {{ t('hero.tagline') }}
-      </AppText>
+      </CustomText>
       <div class="hero-section__meta">
-        <AppText as="span" variant="small" tone="muted" class="hero-section__meta-item">
-          <AppIcon name="location-dot" size="sm" />
+        <CustomText as="span" variant="small" tone="muted" class="hero-section__meta-item">
+          <CustomIcon name="location-dot" size="sm" />
           {{ t('hero.location') }}
-        </AppText>
-        <AppBadge tone="success" icon="circle-check">{{ t('hero.openToWork') }}</AppBadge>
+        </CustomText>
+        <CustomBadge tone="success" icon="circle-check">{{ t('hero.openToWork') }}</CustomBadge>
       </div>
       <div class="hero-section__actions">
-        <AppButton href="#contact" icon="envelope">{{ t('hero.cta.contact') }}</AppButton>
+        <CustomButton href="#contact" icon="envelope">{{ t('hero.cta.contact') }}</CustomButton>
         <CvDownload variant="outline" />
       </div>
     </div>
     <figure class="hero-section__figure">
-      <AppImage
+      <CustomImage
         :src="image"
         :alt="alt"
         :class="['hero-section__image', { 'hero-section__image--meme': hero.hasMeme }]"
@@ -51,10 +51,10 @@ const alt = computed(() =>
         fetchpriority="high"
         data-testid="hero-image"
       />
-      <AppText as="figcaption" variant="small" tone="muted" class="hero-section__caption">
+      <CustomText as="figcaption" variant="small" tone="muted" class="hero-section__caption">
         <template v-if="hero.hasMeme">
           {{ t('hero.wearing') }} {{ hero.selected?.title }}
-          <AppButton
+          <CustomButton
             size="sm"
             variant="ghost"
             tone="neutral"
@@ -63,12 +63,12 @@ const alt = computed(() =>
             @click="hero.reset()"
           >
             {{ t('hero.reset') }}
-          </AppButton>
+          </CustomButton>
         </template>
-        <AppButton v-else size="sm" variant="ghost" icon="wand-magic-sparkles" to="/meme">
+        <CustomButton v-else size="sm" variant="ghost" icon="wand-magic-sparkles" to="/meme">
           {{ t('hero.tryMeme') }}
-        </AppButton>
-      </AppText>
+        </CustomButton>
+      </CustomText>
     </figure>
   </section>
 </template>

@@ -1,0 +1,78 @@
+/* Neumorphism: la marquesina és una franja enfonsada (inset) del to. */
+@layer components {
+  .custom-marquee {
+    @apply relative w-full overflow-hidden whitespace-nowrap shadow-neu-inset-sm;
+  }
+  .custom-marquee__track {
+    @apply flex w-max;
+    animation: custom-marquee-scroll var(--custom-marquee-duration, 40s) linear infinite;
+  }
+  .custom-marquee__copy {
+    @apply flex shrink-0 items-center;
+  }
+
+  .custom-marquee--slow {
+    --custom-marquee-duration: 70s;
+  }
+  .custom-marquee--normal {
+    --custom-marquee-duration: 40s;
+  }
+  .custom-marquee--fast {
+    --custom-marquee-duration: 20s;
+  }
+
+  .custom-marquee--pause:hover .custom-marquee__track,
+  .custom-marquee--pause:focus-within .custom-marquee__track {
+    animation-play-state: paused;
+  }
+
+  .custom-marquee--sm .custom-marquee__copy {
+    @apply py-1.5;
+  }
+  .custom-marquee--md .custom-marquee__copy {
+    @apply py-2.5;
+  }
+  .custom-marquee--lg .custom-marquee__copy {
+    @apply py-4;
+  }
+
+  .custom-marquee--primary {
+    @apply bg-primary-soft text-primary;
+  }
+  .custom-marquee--secondary {
+    @apply bg-secondary-soft text-secondary;
+  }
+  .custom-marquee--neutral {
+    @apply bg-neutral-soft text-text;
+  }
+  .custom-marquee--success {
+    @apply bg-success-soft text-success;
+  }
+  .custom-marquee--info {
+    @apply bg-info-soft text-info;
+  }
+  .custom-marquee--warning {
+    @apply bg-warning-soft text-warning;
+  }
+  .custom-marquee--danger {
+    @apply bg-danger-soft text-danger;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .custom-marquee__track {
+      animation: none;
+    }
+    .custom-marquee__copy[aria-hidden='true'] {
+      @apply hidden;
+    }
+  }
+}
+
+@keyframes custom-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

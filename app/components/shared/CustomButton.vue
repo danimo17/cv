@@ -43,11 +43,11 @@ const inactive = computed(() => props.disabled || props.loading)
   <component
     :is="tag"
     :class="[
-      'app-button',
-      `app-button--${size}`,
-      `app-button--${variant}`,
-      `app-button--${tone}`,
-      { 'app-button--loading': loading, 'app-button--block': block },
+      'custom-button',
+      `custom-button--${size}`,
+      `custom-button--${variant}`,
+      `custom-button--${tone}`,
+      { 'custom-button--loading': loading, 'custom-button--block': block },
     ]"
     :to="to || undefined"
     :href="href || undefined"
@@ -58,7 +58,7 @@ const inactive = computed(() => props.disabled || props.loading)
     :target="isExternal ? '_blank' : undefined"
     :rel="isExternal ? 'noopener noreferrer' : undefined"
   >
-    <AppIcon v-if="icon" :name="icon" :set="iconSet" :size="size" class="app-button__icon" />
+    <CustomIcon v-if="icon" :name="icon" :set="iconSet" :size="size" class="custom-button__icon" />
     <slot />
   </component>
 </template>

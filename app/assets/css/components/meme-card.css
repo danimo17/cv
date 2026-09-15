@@ -1,4 +1,4 @@
-/* Sobre AppButton (ghost/neutral): targeta quadrada en relleu; hover relleu gran; seleccionada anell + enfonsada. */
+/* Sobre CustomButton (ghost/neutral): targeta quadrada en relleu; hover relleu gran; seleccionada anell + enfonsada. */
 @layer components {
   .meme-card {
     @apply relative aspect-square h-auto w-full overflow-hidden rounded-xl bg-surface p-0 shadow-neu transition-shadow hover:shadow-neu-lg active:shadow-neu-inset;

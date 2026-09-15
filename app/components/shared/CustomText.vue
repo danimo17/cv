@@ -23,7 +23,7 @@ export type TextTone = 'default' | 'muted' | Tone
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold'
 export type TextAlign = 'start' | 'center' | 'end'
 
-// Únic propietari de la tipografia (decisió 026): mides, pesos i colors de text viuen a app-text.css.
+// Únic propietari de la tipografia (decisió 026): mides, pesos i colors de text viuen a custom-text.css.
 withDefaults(
   defineProps<{
     as?: TextTag
@@ -48,12 +48,12 @@ withDefaults(
   <component
     :is="as"
     :class="[
-      'app-text',
-      `app-text--${variant}`,
-      `app-text--tone-${tone}`,
-      weight && `app-text--${weight}`,
-      align && `app-text--align-${align}`,
-      { 'app-text--truncate': truncate },
+      'custom-text',
+      `custom-text--${variant}`,
+      `custom-text--tone-${tone}`,
+      weight && `custom-text--${weight}`,
+      align && `custom-text--align-${align}`,
+      { 'custom-text--truncate': truncate },
     ]"
   >
     <slot />

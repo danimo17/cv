@@ -8,7 +8,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <AppButton
+  <CustomButton
     variant="ghost"
     tone="neutral"
     :class="['meme-card', { 'meme-card--selected': selected }]"
@@ -17,7 +17,7 @@ const { t } = useI18n()
     data-testid="meme-card"
     @click="emit('select', meme)"
   >
-    <AppImage
+    <CustomImage
       :src="meme.preview"
       :alt="meme.title"
       :width="meme.width"
@@ -25,8 +25,8 @@ const { t } = useI18n()
       class="meme-card__image"
       loading="lazy"
     />
-    <AppText as="span" variant="caption" truncate class="meme-card__title" aria-hidden="true">
+    <CustomText as="span" variant="caption" truncate class="meme-card__title" aria-hidden="true">
       {{ meme.title }}
-    </AppText>
-  </AppButton>
+    </CustomText>
+  </CustomButton>
 </template>

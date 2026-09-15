@@ -3,5 +3,5 @@ withDefaults(defineProps<{ shape?: 'text' | 'image' | 'circle' }>(), { shape: 't
 </script>
 
 <template>
-  <div :class="['app-skeleton', `app-skeleton--${shape}`]" aria-hidden="true" />
+  <div :class="['custom-skeleton', `custom-skeleton--${shape}`]" aria-hidden="true" />
 </template>

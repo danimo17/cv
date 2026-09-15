@@ -23,38 +23,44 @@ const note = computed(() => (te(`${key.value}.note`) ? t(`${key.value}.note`) : 
 
 <template>
   <article :class="['experience-item', `experience-item--${variant}`]">
-    <AppText as="p" variant="small" tone="muted" class="experience-item__period">
-      <AppText as="time" variant="small" :datetime="item.start">{{ period }}</AppText>
-    </AppText>
+    <CustomText as="p" variant="small" tone="muted" class="experience-item__period">
+      <CustomText as="time" variant="small" :datetime="item.start">{{ period }}</CustomText>
+    </CustomText>
     <div class="experience-item__body">
-      <AppText as="h3" variant="body" weight="semibold" class="experience-item__title">
+      <CustomText as="h3" variant="body" weight="semibold" class="experience-item__title">
         {{ t(`${key}.title`) }}
-      </AppText>
-      <AppText as="p" variant="body" tone="muted" class="experience-item__org">
-        <AppLink
+      </CustomText>
+      <CustomText as="p" variant="body" tone="muted" class="experience-item__org">
+        <CustomLink
           v-if="item.url"
           :href="item.url"
           variant="inline"
           class="experience-item__org-link"
         >
           {{ item.org }}
-        </AppLink>
-        <AppText v-else as="span" variant="body">{{ item.org }}</AppText>
-        <AppText v-if="item.location" as="span" variant="small" tone="muted">
+        </CustomLink>
+        <CustomText v-else as="span" variant="body">{{ item.org }}</CustomText>
+        <CustomText v-if="item.location" as="span" variant="small" tone="muted">
           {{ item.location }}
-        </AppText>
-      </AppText>
+        </CustomText>
+      </CustomText>
       <ul v-if="variant === 'detailed' && bullets.length" class="experience-item__bullets">
-        <AppText v-for="(bullet, i) in bullets" :key="i" as="li" variant="small" tone="muted">
+        <CustomText v-for="(bullet, i) in bullets" :key="i" as="li" variant="small" tone="muted">
           {{ bullet }}
-        </AppText>
+        </CustomText>
       </ul>
-      <AppText v-else-if="note" as="p" variant="small" tone="muted" class="experience-item__note">
+      <CustomText
+        v-else-if="note"
+        as="p"
+        variant="small"
+        tone="muted"
+        class="experience-item__note"
+      >
         {{ note }}
-      </AppText>
+      </CustomText>
       <ul v-if="item.tags.length" class="experience-item__tags" :aria-label="t('experience.tags')">
         <li v-for="tag in item.tags" :key="tag">
-          <AppBadge>{{ tag }}</AppBadge>
+          <CustomBadge>{{ tag }}</CustomBadge>
         </li>
       </ul>
     </div>

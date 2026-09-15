@@ -11,7 +11,7 @@ function toggle() {
 
 <template>
   <ClientOnly>
-    <AppButton
+    <CustomButton
       variant="ghost"
       tone="neutral"
       class="theme-toggle"

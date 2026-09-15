@@ -12,9 +12,12 @@ withDefaults(
 </script>
 
 <template>
-  <component :is="as" :class="['app-card', `app-card--${variant}`, `app-card--padding-${padding}`]">
-    <div v-if="$slots.header" class="app-card__header"><slot name="header" /></div>
+  <component
+    :is="as"
+    :class="['custom-card', `custom-card--${variant}`, `custom-card--padding-${padding}`]"
+  >
+    <div v-if="$slots.header" class="custom-card__header"><slot name="header" /></div>
     <slot />
-    <div v-if="$slots.footer" class="app-card__footer"><slot name="footer" /></div>
+    <div v-if="$slots.footer" class="custom-card__footer"><slot name="footer" /></div>
   </component>
 </template>

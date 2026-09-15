@@ -21,7 +21,7 @@ const icon = computed(() => [props.set === 'brands' ? 'fab' : 'fas', props.name]
 <template>
   <FontAwesomeIcon
     :icon="icon"
-    :class="['app-icon', `app-icon--${size}`]"
+    :class="['custom-icon', `custom-icon--${size}`]"
     :aria-hidden="label ? undefined : 'true'"
     :aria-label="label || undefined"
     :title="label || undefined"

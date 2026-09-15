@@ -5,7 +5,7 @@ const switchLocalePath = useSwitchLocalePath()
 
 <template>
   <nav class="locale-switcher" :aria-label="t('locale.switch')">
-    <AppLink
+    <CustomLink
       v-for="item in locales"
       :key="item.code"
       :to="switchLocalePath(item.code)"
@@ -18,6 +18,6 @@ const switchLocalePath = useSwitchLocalePath()
       :data-testid="`locale-${item.code}`"
     >
       {{ item.code }}
-    </AppLink>
+    </CustomLink>
   </nav>
 </template>

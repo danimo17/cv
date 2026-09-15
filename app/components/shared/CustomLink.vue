@@ -25,7 +25,7 @@ const props = withDefaults(
     href: '',
     variant: 'inline',
     tone: 'default',
-    activeClass: 'app-link--active',
+    activeClass: 'custom-link--active',
     download: undefined,
     localize: true,
   }
@@ -40,7 +40,7 @@ const isExternal = computed(() => /^https?:\/\//.test(props.href))
 <template>
   <component
     :is="tag"
-    :class="['app-link', `app-link--${variant}`, `app-link--tone-${tone}`]"
+    :class="['custom-link', `custom-link--${variant}`, `custom-link--tone-${tone}`]"
     :to="to || undefined"
     :href="to ? undefined : href || undefined"
     :active-class="to ? activeClass : undefined"

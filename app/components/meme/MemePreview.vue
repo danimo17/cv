@@ -8,30 +8,30 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <AppCard variant="elevated" padding="md">
+  <CustomCard variant="elevated" padding="md">
     <div class="meme-preview" data-testid="meme-preview">
-      <AppImage :src="meme.full" :alt="meme.title" radius="lg" class="meme-preview__image" />
+      <CustomImage :src="meme.full" :alt="meme.title" radius="lg" class="meme-preview__image" />
       <div class="meme-preview__body">
-        <AppText as="p" variant="lead" weight="semibold" class="meme-preview__title">
+        <CustomText as="p" variant="lead" weight="semibold" class="meme-preview__title">
           {{ meme.title }}
-        </AppText>
-        <AppText as="p" variant="small" tone="muted" class="meme-preview__meta">
+        </CustomText>
+        <CustomText as="p" variant="small" tone="muted" class="meme-preview__meta">
           {{ t('meme.preview.size', { width: meme.width, height: meme.height }) }}
-        </AppText>
+        </CustomText>
         <div class="meme-preview__actions">
-          <AppButton
+          <CustomButton
             tone="success"
             icon="wand-magic-sparkles"
             data-testid="meme-use"
             @click="emit('use', meme)"
           >
             {{ t('meme.preview.use') }}
-          </AppButton>
-          <AppButton variant="ghost" tone="neutral" icon="xmark" @click="emit('cancel')">
+          </CustomButton>
+          <CustomButton variant="ghost" tone="neutral" icon="xmark" @click="emit('cancel')">
             {{ t('meme.preview.cancel') }}
-          </AppButton>
+          </CustomButton>
         </div>
       </div>
     </div>
-  </AppCard>
+  </CustomCard>
 </template>

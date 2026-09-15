@@ -1,99 +1,99 @@
 /* Neumorphism: en repòs relleu (shadow-neu), hover relleu curt, active/loading enfonsat (inset). */
 @layer components {
-  .app-button {
+  .custom-button {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-surface font-medium whitespace-nowrap shadow-neu transition-shadow select-none hover:shadow-neu-sm active:shadow-neu-inset disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-neu-sm;
   }
-  .app-button--block {
+  .custom-button--block {
     @apply flex w-full;
   }
-  .app-button--sm {
+  .custom-button--sm {
     @apply h-8 px-3 text-sm;
   }
-  .app-button--md {
+  .custom-button--md {
     @apply h-10 px-4 text-sm;
   }
-  .app-button--lg {
+  .custom-button--lg {
     @apply h-12 px-6 text-base;
   }
-  .app-button--loading {
+  .custom-button--loading {
     @apply pointer-events-none opacity-70 shadow-neu-inset;
   }
-  .app-button__icon {
+  .custom-button__icon {
     @apply shrink-0;
   }
 
   /* solid: fons ple del to + text -fg, mateix relleu */
-  .app-button--solid.app-button--primary {
+  .custom-button--solid.custom-button--primary {
     @apply bg-primary text-primary-fg;
   }
-  .app-button--solid.app-button--secondary {
+  .custom-button--solid.custom-button--secondary {
     @apply bg-secondary text-secondary-fg;
   }
-  .app-button--solid.app-button--neutral {
+  .custom-button--solid.custom-button--neutral {
     @apply bg-neutral text-neutral-fg;
   }
-  .app-button--solid.app-button--success {
+  .custom-button--solid.custom-button--success {
     @apply bg-success text-success-fg;
   }
-  .app-button--solid.app-button--info {
+  .custom-button--solid.custom-button--info {
     @apply bg-info text-info-fg;
   }
-  .app-button--solid.app-button--warning {
+  .custom-button--solid.custom-button--warning {
     @apply bg-warning text-warning-fg;
   }
-  .app-button--solid.app-button--danger {
+  .custom-button--solid.custom-button--danger {
     @apply bg-danger text-danger-fg;
   }
 
   /* outline: superfície en relleu + text del to + anell fi del to */
-  .app-button--outline {
+  .custom-button--outline {
     @apply bg-surface ring-1;
   }
-  .app-button--outline.app-button--primary {
+  .custom-button--outline.custom-button--primary {
     @apply text-primary ring-primary/40;
   }
-  .app-button--outline.app-button--secondary {
+  .custom-button--outline.custom-button--secondary {
     @apply text-secondary ring-secondary/40;
   }
-  .app-button--outline.app-button--neutral {
+  .custom-button--outline.custom-button--neutral {
     @apply text-text ring-neutral/40;
   }
-  .app-button--outline.app-button--success {
+  .custom-button--outline.custom-button--success {
     @apply text-success ring-success/40;
   }
-  .app-button--outline.app-button--info {
+  .custom-button--outline.custom-button--info {
     @apply text-info ring-info/40;
   }
-  .app-button--outline.app-button--warning {
+  .custom-button--outline.custom-button--warning {
     @apply text-warning ring-warning/40;
   }
-  .app-button--outline.app-button--danger {
+  .custom-button--outline.custom-button--danger {
     @apply text-danger ring-danger/40;
   }
 
   /* ghost: pla en repòs, relleu curt a hover, enfonsat a active */
-  .app-button--ghost {
+  .custom-button--ghost {
     @apply bg-transparent shadow-neu-none;
   }
-  .app-button--ghost.app-button--primary {
+  .custom-button--ghost.custom-button--primary {
     @apply text-primary;
   }
-  .app-button--ghost.app-button--secondary {
+  .custom-button--ghost.custom-button--secondary {
     @apply text-secondary;
   }
-  .app-button--ghost.app-button--neutral {
+  .custom-button--ghost.custom-button--neutral {
     @apply text-text-muted hover:text-text;
   }
-  .app-button--ghost.app-button--success {
+  .custom-button--ghost.custom-button--success {
     @apply text-success;
   }
-  .app-button--ghost.app-button--info {
+  .custom-button--ghost.custom-button--info {
     @apply text-info;
   }
-  .app-button--ghost.app-button--warning {
+  .custom-button--ghost.custom-button--warning {
     @apply text-warning;
   }
-  .app-button--ghost.app-button--danger {
+  .custom-button--ghost.custom-button--danger {
     @apply text-danger;
   }
 }

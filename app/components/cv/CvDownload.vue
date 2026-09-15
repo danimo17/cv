@@ -17,8 +17,15 @@ const href = computed(() => `/cv/cv-${locale.value}.pdf`)
 
 <template>
   <div class="cv-download">
-    <AppButton :href="href" :variant="variant" :tone="tone" :size="size" icon="download" download>
+    <CustomButton
+      :href="href"
+      :variant="variant"
+      :tone="tone"
+      :size="size"
+      icon="download"
+      download
+    >
       {{ t('cv.download') }}
-    </AppButton>
+    </CustomButton>
   </div>
 </template>

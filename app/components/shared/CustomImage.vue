@@ -37,10 +37,10 @@ withDefaults(
     :height="height"
     :loading="loading"
     :class="[
-      'app-image',
-      `app-image--fit-${fit}`,
-      `app-image--radius-${radius}`,
-      { 'app-image--frame': frame },
+      'custom-image',
+      `custom-image--fit-${fit}`,
+      `custom-image--radius-${radius}`,
+      { 'custom-image--frame': frame },
     ]"
   />
 </template>

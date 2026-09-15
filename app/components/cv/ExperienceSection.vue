@@ -7,7 +7,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <AppSection
+  <CustomSection
     :id="config.id"
     :title="t(config.titleKey)"
     :eyebrow="t(config.eyebrowKey)"
@@ -19,5 +19,5 @@ const { t } = useI18n()
         <ExperienceItem :item="item" variant="detailed" />
       </li>
     </ol>
-  </AppSection>
+  </CustomSection>
 </template>

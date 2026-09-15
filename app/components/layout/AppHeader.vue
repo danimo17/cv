@@ -10,11 +10,11 @@ const links = [
 <template>
   <header class="app-header">
     <div class="app-header__inner">
-      <AppLink to="/" variant="subtle" tone="neutral" class="app-header__brand">
+      <CustomLink to="/" variant="subtle" tone="neutral" class="app-header__brand">
         {{ t('nav.brand') }}
-      </AppLink>
+      </CustomLink>
       <nav class="app-header__nav" :aria-label="t('nav.main')">
-        <AppLink
+        <CustomLink
           v-for="link in links"
           :key="link.to"
           :to="link.to"
@@ -22,7 +22,7 @@ const links = [
           class="app-header__link"
         >
           {{ t(link.key) }}
-        </AppLink>
+        </CustomLink>
       </nav>
       <div class="app-header__tools">
         <LocaleSwitcher />

@@ -1,17 +1,17 @@
 @layer components {
-  .app-section {
+  .custom-section {
     @apply scroll-mt-20 py-12 sm:py-16;
   }
-  .app-section__header {
+  .custom-section__header {
     @apply mb-8;
   }
-  .app-section__eyebrow {
+  .custom-section__eyebrow {
     @apply mb-2 flex items-center gap-2;
   }
-  .app-section__title {
+  .custom-section__title {
     @apply block;
   }
-  .app-section__subtitle {
+  .custom-section__subtitle {
     @apply mt-2 max-w-2xl;
   }
 }

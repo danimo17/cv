@@ -70,7 +70,7 @@ la pròxima vegada: si el custom domain surt bé al log de deploy i el registre 
 | P2  | Job de Dependabot fallat                                                   | `npm_and_yarn in /. - Update #1576414186` (Dependabot Updates #2) va fallar; `github_actions` update (#1) va anar bé. Cal obrir el log del job fallat a Actions i veure si és per `minimumReleaseAge`/`allowBuilds` de pnpm 12 topant amb com Dependabot instal·la, o una altra cosa. Si és `allowBuilds`, potser cal un `.npmrc`/config perquè el runner de Dependabot també l'accepti | mitjana                         |
 | P3  | Preview de PR (`preview.yml`) va fallar a la PR #1 amb "Failing after 36s" | Esperat: `wrangler versions upload` necessita que el Worker ja existeixi, i era la primera vegada. Ara que el Worker `cv` ja existeix, la següent PR hauria de generar preview correctament. Verificar-ho a la propera PR abans de donar-ho per tancat                                                                                                                                  | baixa, verificar en curs normal |
 | P4  | Contrast del neumorphism                                                   | Calculat (taules a `catalog/styles.md`), mai mesurat al navegador real                                                                                                                                                                                                                                                                                                                  | baixa                           |
-| P5  | Radio/checkbox d'`AppInput`                                                | Implementats i testejats unitàriament, cap pàgina real els usa encara                                                                                                                                                                                                                                                                                                                   | baixa                           |
+| P5  | Radio/checkbox d'`CustomInput`                                             | Implementats i testejats unitàriament, cap pàgina real els usa encara                                                                                                                                                                                                                                                                                                                   | baixa                           |
 
 ## 3. Punts oberts de disseny/producte (arrossegats del bootstrap, encara sense decidir)
 
@@ -92,11 +92,11 @@ preguntar.
 - **Web**: Nuxt 4.5 + Tailwind v4 + Pinia + i18n (ca/es/en) + Font Awesome. Home amb hero (foto de LinkedIn),
   about, experiència, stack, formació, contacte, descàrrega de CV en PDF (redactat, sense telèfon ni codi
   postal — decisió 032). `/meme`: cerca a Giphy, previsualitza, "porta'l" substitueix la foto (Pinia, sense
-  persistir a propòsit — 004). Banner carrusel infinit (`SourceBanner`/`AppMarquee`) amb enllaç al repo.
+  persistir a propòsit — 004). Banner carrusel infinit (`SourceBanner`/`CustomMarquee`) amb enllaç al repo.
 - **Arquitectura** (029): `server/api/giphy` → `app/services/giphy/GiphyService.ts` → `app/stores/{giphy,hero}.ts`
   → `app/pages/*.vue` → `app/ui-config/`. `app/domain/cv/`, `app/data/cv/`.
-- **Primitius** (026): tot HTML "de fulla" passa per `app/components/shared/{AppText,AppInput,AppLink,AppImage,
-AppButton,AppIcon,AppBadge,AppAlert,AppCard,AppSection,AppSkeleton,AppMarquee}`, forçat per ESLint
+- **Primitius** (026): tot HTML "de fulla" passa per `app/components/shared/{CustomText,CustomInput,CustomLink,CustomImage,
+CustomButton,CustomIcon,CustomBadge,CustomAlert,CustomCard,CustomSection,CustomSkeleton,CustomMarquee}`, forçat per ESLint
   `vue/no-restricted-html-elements`.
 - **Estil**: neumorphism (025) amb tokens semàntics i ombres a `tokens.css`, un CSS per component (015/008),
   contrast AA calculat.

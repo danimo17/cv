@@ -7,7 +7,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <AppSection
+  <CustomSection
     :id="config.id"
     :title="t(config.titleKey)"
     :eyebrow="t(config.eyebrowKey)"
@@ -16,16 +16,16 @@ const { t } = useI18n()
   >
     <div class="tech-stack__groups">
       <div v-for="group in stack" :key="group.id" class="tech-stack__group">
-        <AppText as="h3" variant="body" weight="semibold" class="tech-stack__group-title">
-          <AppIcon :name="group.icon" size="sm" />
+        <CustomText as="h3" variant="body" weight="semibold" class="tech-stack__group-title">
+          <CustomIcon :name="group.icon" size="sm" />
           {{ t(`stack.groups.${group.id}`) }}
-        </AppText>
+        </CustomText>
         <ul class="tech-stack__list">
           <li v-for="tech in group.items" :key="tech">
-            <AppBadge size="md">{{ tech }}</AppBadge>
+            <CustomBadge size="md">{{ tech }}</CustomBadge>
           </li>
         </ul>
       </div>
     </div>
-  </AppSection>
+  </CustomSection>
 </template>

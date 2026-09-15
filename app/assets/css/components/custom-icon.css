@@ -1,14 +1,14 @@
 @layer components {
-  .app-icon {
+  .custom-icon {
     @apply inline-block shrink-0 align-[-0.125em];
   }
-  .app-icon--sm {
+  .custom-icon--sm {
     @apply text-sm;
   }
-  .app-icon--md {
+  .custom-icon--md {
     @apply text-base;
   }
-  .app-icon--lg {
+  .custom-icon--lg {
     @apply text-2xl;
   }
 }

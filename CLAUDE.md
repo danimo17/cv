@@ -28,7 +28,7 @@ recursos interns de cap empresa; només informació pública.
 
 Capes (decisió 029, dependència en un sol sentit API → Service → Store → View → UI-config):
 `server/api/giphy` + `server/utils` (API) · `app/services/<api>/` (Service) · `app/stores/` (Store) ·
-`app/pages/` + `app/components/{shared,layout,cv,meme}/` (View; `shared/App*` són els primitius, decisió 026) ·
+`app/pages/` + `app/components/{shared,layout,cv,meme}/` (View; `shared/Custom*` són els primitius, decisions 026, 038) ·
 `app/ui-config/<entitat>/` (UI-config) · `app/domain/<entitat>/` (tipus + regles pures) · `app/data/cv/` (taules) ·
 `app/composables/` (helpers de framework) · `app/types/ui.ts` · `app/plugins` · `app/assets/css/{tokens,base,pages,components/*}` ·
 `shared/types` · `i18n/locales` · `tests/{unit,arch}` · `e2e/` · `.github/workflows` · `.claude/` (tot el context d'IA).

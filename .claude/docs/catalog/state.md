@@ -100,7 +100,7 @@ Regla 04: `tests/arch/no-pii.spec.ts` escaneja `app/data/cv/*.ts`.
 ### getSectionConfig
 
 `getSectionConfig(id: HomeSectionId): HomeSectionConfig`. Cada secció `cv/*` llegeix la seva entrada per passar
-`id`, `title`, `eyebrow` i `icon` a `AppSection`. Llença si l'id no existeix.
+`id`, `title`, `eyebrow` i `icon` a `CustomSection`. Llença si l'id no existeix.
 
 ## Servidor (`server/`)
 
