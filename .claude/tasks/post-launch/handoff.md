@@ -62,6 +62,29 @@ eren minuts de propagació (el domini es va registrar el mateix dia), no una con
 la pròxima vegada: si el custom domain surt bé al log de deploy i el registre DNS és correcte, esperar
 5-15 minuts abans de tocar res a Cloudflare.
 
+## 2bis. Estat actualitzat (sessió 2026-09-15)
+
+- **P1 (DNS)**: `danimorales.dev` → 200. `www.danimorales.dev` encara no resol — **pendent tu**: Cloudflare →
+  Worker `cv` → Domains → Add Domain `www.danimorales.dev` (o una Redirect Rule).
+- **P2 (Dependabot)**: causa arrel trobada. `packageManager: "pnpm@12.4.1"` intenta autodescarregar el binari
+  natiu (`@pnpm/exe.linux-x64`) i falla dins el sandbox de xarxa de Dependabot (`fetch failed`); no és
+  `.npmrc`/`allowBuilds` (no existia `.npmrc`). `gh run rerun` no funciona en jobs de Dependabot (no reexecutable
+  per API/CLI). **Vas triar esperar el reintent automàtic de dilluns** (`dependabot.yml`, `schedule: weekly`); si
+  torna a fallar, l'alternativa és baixar `packageManager` a `pnpm@11.17.0` (el mateix log demostra que funciona).
+- **D1-D5: tots decidits** (decisions `034`-`038` a `.claude/docs/decisions/`):
+  - D1 → **implementat**: "recent searches" (màx. 5, clicables) + `CustomPagination` genèric a `/meme`.
+    Verificat en viu amb `pnpm dev` (cerca s'acumula, clic reomple el camp i torna a cercar, "Next page" pagina).
+  - D2 → **descartat per sempre** ("no la vull mai").
+  - D3 → **decidit, pendent d'acció manual teva**: Cloudflare Web Analytics, Automatic Setup (sense codi).
+  - D4 → **implementat**: `CustomImage` accepta `srcset`/`sizes` opcionals; cap mida generada encara (YAGNI).
+  - D5 → **implementat**: rename mecànic `App*` → `Custom*` (12 primitius, CSS, ESLint, tests, docs), gate en
+    verd abans d'afegir res més a sobre.
+  - A més: tokens `primary`/`secondary` canviats de blau corporatiu a mostassa/gris fosc (contrast AA
+    recalculat), foto de perfil nova, favicon redissenyat com a gat pixel-art.
+
+Res més a preguntar de la llista D1-D5. La secció següent (2-4) és el registre original de la nit anterior, es
+manté com a context històric.
+
 ## 2. Altres pendents detectats aquesta nit
 
 | #   | Què                                                                        | Detall                                                                                                                                                                                                                                                                                                                                                                                  | Prioritat                       |
