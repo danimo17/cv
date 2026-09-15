@@ -188,7 +188,16 @@
     },
     "success": "Done! Your new face is live on the home page.",
     "goHome": "See it on the home page",
-    "poweredBy": "Powered by GIPHY"
+    "poweredBy": "Powered by GIPHY",
+    "recentSearches": {
+      "title": "Recent searches"
+    }
+  },
+  "pagination": {
+    "title": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {page} of {total}"
   },
   "footer": {
     "built": "Built with Nuxt 4, Tailwind, Pinia and a bit of AI.",

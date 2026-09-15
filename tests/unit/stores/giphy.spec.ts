@@ -78,4 +78,72 @@ describe('useGiphyStore', () => {
     expect(giphy.errorKey).toBe('')
     expect(giphy.items).toHaveLength(1)
   })
+
+  it('a successful search exposes the total from the response', async () => {
+    const giphy = store()
+    await giphy.search('cat')
+    expect(giphy.total).toBe(1)
+  })
+})
+
+// Historial de termes cercats (decisió 034): distint de `useHeroStore.history` (memes portats).
+// Continua sobre el mateix singleton (regla del fitxer: la store es crea una sola vegada).
+describe('useGiphyStore · history', () => {
+  it('starts with the entries accumulated so far and keeps deduping to the front', async () => {
+    const giphy = store()
+    // Estat heretat de la suite anterior: ['cat', 'down', 'bad'] (cat mogut al davant en el darrer search).
+    expect(giphy.history).toEqual(['cat', 'down', 'bad'])
+
+    await giphy.search('dog')
+    expect(giphy.history).toEqual(['dog', 'cat', 'down', 'bad'])
+
+    await giphy.search('bird')
+    expect(giphy.history).toEqual(['bird', 'dog', 'cat', 'down', 'bad'])
+  })
+
+  it('caps the history at 5 entries, dropping the oldest', async () => {
+    const giphy = store()
+    await giphy.search('fish')
+    expect(giphy.history).toEqual(['fish', 'bird', 'dog', 'cat', 'down'])
+    expect(giphy.history).toHaveLength(5)
+  })
+
+  it('re-searching an existing term moves it to the front without growing the list', async () => {
+    const giphy = store()
+    await giphy.search('cat')
+    expect(giphy.history).toEqual(['cat', 'fish', 'bird', 'dog', 'down'])
+    expect(giphy.history).toHaveLength(5)
+  })
+
+  it('a blank search does not touch the history', async () => {
+    const giphy = store()
+    const before = [...giphy.history]
+    await giphy.search('   ')
+    expect(giphy.history).toEqual(before)
+  })
+})
+
+describe('useGiphyStore · pagination', () => {
+  it('starts at offset 0', () => {
+    const giphy = store()
+    expect(giphy.offset).toBe(0)
+  })
+
+  it('goToOffset changes the page without touching the query or history', async () => {
+    const giphy = store()
+    const historyBefore = [...giphy.history]
+    const queryBefore = giphy.query
+    await giphy.goToOffset(12)
+    expect(giphy.offset).toBe(12)
+    expect(giphy.query).toBe(queryBefore)
+    expect(giphy.history).toEqual(historyBefore)
+  })
+
+  it('a new search resets the offset back to 0', async () => {
+    const giphy = store()
+    await giphy.goToOffset(24)
+    expect(giphy.offset).toBe(24)
+    await giphy.search('cat')
+    expect(giphy.offset).toBe(0)
+  })
 })

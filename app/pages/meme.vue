@@ -11,6 +11,14 @@ const justApplied = ref(false)
 
 const steps = useMessageList('meme.how.steps')
 
+/** Pàgina actual (1-indexada) derivada de l'offset de la store; canviar-la torna a paginar la mateixa cerca. */
+const page = computed({
+  get: () => Math.floor(giphy.offset / giphy.limit) + 1,
+  set: (value: number) => {
+    giphy.goToOffset((value - 1) * giphy.limit)
+  },
+})
+
 function onSearch(q: string) {
   candidate.value = null
   justApplied.value = false
@@ -79,6 +87,10 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
       :selected-id="candidate?.id ?? hero.selected?.id ?? null"
       @select="candidate = $event"
     />
+
+    <CustomPagination v-model:page="page" :total="giphy.total" :per-page="giphy.limit" />
+
+    <MemeRecentSearches :terms="giphy.history" @select="onSearch" />
 
     <CustomText as="p" variant="caption" tone="muted" class="meme-page__credit">
       {{ t('meme.poweredBy') }}
