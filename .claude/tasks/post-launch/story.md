@@ -8,7 +8,9 @@ Dependabot no falli, i vull decidir els punts oberts (D1-D5) del bootstrap, per 
 
 ## Fora d'abast
 
-- Noves funcionalitats de producte (secció projectes, analítica...) fins que D1-D5 es decideixin.
+- Secció "Projectes" (descartada, decisió 035).
+- Generar mides reals de la foto (decisió 037: `CustomImage` només queda preparat per a `srcset`/`sizes`).
+- Activar Cloudflare Web Analytics (decisió 036: acció manual de dashboard, no codi).
 
 ## Dependències externes
 

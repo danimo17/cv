@@ -25,7 +25,8 @@ clara a dalt-esquerra (`neu-light`) i una fosca a baix-dreta (`neu-dark`).
 | `--color-<tone>-fg`           | text sobre fons ple del to                                                    |                            |                       |
 | `--color-<tone>-soft`         | fons suau del to (badges soft, alerts, marquesina)                            |                            |                       |
 
-Tons (clar → fosc, L/C/h en oklch): `primary` 48%/.2/268 → 76%/.14/268 · `secondary` 36%/.03/260 → 82%/.02/260 ·
+Tons (clar → fosc, L/C/h en oklch): `primary` (mostassa) 50%/.14/88 → 78%/.13/88 · `secondary` (gris fosc neutre)
+30%/.006/90 → 82%/.006/90 ·
 `neutral` 50%/.012/260 → 72%/.01/260 · `success` 48%/.16/150 → 78%/.15/150 · `info` 48%/.14/230 → 78%/.12/230 ·
 `warning` 50%/.15/75 → 82%/.15/80 · `danger` 52%/.21/25 → 74%/.18/25. Els `-soft` són a L 91-92% (clar) / 28-32%
 (fosc), lleugerament més foscos/clars que `surface` perquè es distingeixin sense vora.
@@ -67,8 +68,8 @@ premut/seleccionat porta també color o anell; el focus sempre porta `outline-pr
 | `text` / `surface`           | **13.79:1** | **14.16:1** |
 | `text-muted` / `surface`     | **5.97:1**  | **6.81:1**  |
 | `text-muted` / `surface-alt` | **5.53:1**  | **7.30:1**  |
-| `primary` / `surface`        | 5.82:1      | 7.62:1      |
-| `primary-fg` / `primary`     | 6.74:1      | 8.51:1      |
+| `primary` / `surface`        | 5.04:1      | 8.39:1      |
+| `primary-fg` / `primary`     | 5.83:1      | 9.01:1      |
 | `success` / `surface`        | 4.97:1      | 8.93:1      |
 | `info` / `surface`           | 5.05:1      | 8.64:1      |
 | `warning` / `surface`        | 5.13:1      | 9.52:1      |

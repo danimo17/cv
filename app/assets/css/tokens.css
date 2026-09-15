@@ -33,13 +33,13 @@
     inset 2px 2px 4px var(--color-neu-dark), inset -2px -2px 4px var(--color-neu-light);
   --shadow-neu-none: 0 0 #0000;
 
-  --color-primary: oklch(48% 0.2 268);
+  --color-primary: oklch(50% 0.14 88);
   --color-primary-fg: oklch(99% 0 0);
-  --color-primary-soft: oklch(91% 0.04 268);
+  --color-primary-soft: oklch(92% 0.05 88);
 
-  --color-secondary: oklch(36% 0.03 260);
+  --color-secondary: oklch(30% 0.006 90);
   --color-secondary-fg: oklch(99% 0 0);
-  --color-secondary-soft: oklch(90% 0.012 260);
+  --color-secondary-soft: oklch(90% 0.004 90);
 
   --color-neutral: oklch(50% 0.012 260);
   --color-neutral-fg: oklch(99% 0 0);
@@ -73,13 +73,13 @@
   --color-neu-light: oklch(29% 0.018 250);
   --color-neu-dark: oklch(15% 0.015 250);
 
-  --color-primary: oklch(76% 0.14 268);
-  --color-primary-fg: oklch(18% 0.04 268);
-  --color-primary-soft: oklch(30% 0.06 268);
+  --color-primary: oklch(78% 0.13 88);
+  --color-primary-fg: oklch(20% 0.05 88);
+  --color-primary-soft: oklch(32% 0.06 88);
 
-  --color-secondary: oklch(82% 0.02 260);
-  --color-secondary-fg: oklch(18% 0.02 260);
-  --color-secondary-soft: oklch(29% 0.01 260);
+  --color-secondary: oklch(82% 0.006 90);
+  --color-secondary-fg: oklch(18% 0.01 90);
+  --color-secondary-soft: oklch(29% 0.005 90);
 
   --color-neutral: oklch(72% 0.01 260);
   --color-neutral-fg: oklch(18% 0.01 260);
