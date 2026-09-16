@@ -1,7 +1,7 @@
 # Workflow de treball amb IA (vinculant)
 
 ```
-story → contract → build ⟲ iterate → consolidate (gate) → review → validate → handoff → commit → PR → CI+seguretat → merge → deploy
+story → contract → build ⟲ iterate → consolidate (gate) → validate → handoff → commit → review → gate:push → PR (IA) → CI+seguretat → merge → deploy
 ```
 
 1. **Story** — `.claude/tasks/<slug>/story.md` (plantilla `templates/story.md`): "Com a <actor> vull <què> per
@@ -17,17 +17,22 @@ story → contract → build ⟲ iterate → consolidate (gate) → review → v
    sencera: una línia de report per canvi, contracte actualitzat si es mou l'abast. Cada correcció demanada per
    l'humà guanya un test en el mateix canvi.
 4. **Consolidate** — `pnpm gate`. Es corregeix el que falla. Si un test és incorrecte, es justifica al contracte.
-5. **Review** — `templates/review-checklist.md` abans del primer commit. Una troballa és un claim: s'obre el
-   fitxer i es confirma abans d'actuar.
-6. **Validate** — sortida **real** de `pnpm gate` / `gate:push` a `handoff.md` (N tests, 0 lint, 0 type errors)
-   i què NO cobreix la suite.
-7. **Handoff** — `handoff.md` = estat veritable de la branca + **Pendents de l'usuari** + quins subagents han fet
+5. **Validate** — sortida **real** de `pnpm gate` a `handoff.md` (N tests, 0 lint, 0 type errors) i què NO
+   cobreix la suite.
+6. **Handoff** — `handoff.md` = estat veritable de la branca + **Pendents de l'usuari** + quins subagents han fet
    què. S'actualitza quan alguna cosa deixa de ser certa, no només al final.
-8. **Commit / PR** — commits a `feat/<slug>` (pre-commit = gate). PR amb resum, criteris coberts i pendents.
-   La CI repeteix la gate, fa build + e2e i els escanejos de seguretat; la PR obté una URL de preview.
-9. **Merge / deploy** — l'humà revisa i fa merge (regla 06); GitHub només ho permet amb tots els checks en verd.
-   El merge a `main` desplega a producció automàticament (workflow `deploy.yml`).
-10. **Close** — promoure el que és durable (`docs/standards/`, `docs/decisions/`, `docs/catalog/`), esborrar
+7. **Commit** — commits a `feat/<slug>` (pre-commit = gate).
+8. **Review** (decisió 039) — just abans d'obrir la PR, no abans del primer commit: `templates/review-checklist.md`
+   (compliance) + `/code-review` (bugs/qualitat) sobre tot el diff de la branca. Una troballa és un claim: s'obre
+   el fitxer i es confirma abans d'actuar. Si hi ha correccions, es tornen a committar.
+9. **`gate:push`** — build + e2e sencer en verd abans de push (regla 09).
+10. **Push / PR (IA)** — amb permís explícit de l'usuari per aquell push concret (decisió 031), la IA fa
+    `git push` de la branca `feat/*` i obre la PR amb `gh pr create` (decisió 039: títol en anglès sense
+    prefix, cos amb seccions fixes Summary/Acceptance criteria/Review/User pendings/Test plan). La CI repeteix
+    la gate, fa build + e2e i els escanejos de seguretat; la PR obté una URL de preview.
+11. **Merge / deploy** — l'humà revisa i fa merge (regla 06); GitHub només ho permet amb tots els checks en
+    verd. El merge a `main` desplega a producció automàticament (workflow `deploy.yml`).
+12. **Close** — promoure el que és durable (`docs/standards/`, `docs/decisions/`, `docs/catalog/`), esborrar
     `.claude/tasks/<slug>/`, buidar `ACTIVE`, marcar `done` al backlog.
 
 ## Gates (què bloqueja què)
