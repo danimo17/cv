@@ -9,15 +9,15 @@ fets — només queda el push (regla 06/031, ho fas tu)._
 1. `CLAUDE.md` → `.claude/hard-rules.md` → `.claude/workflow.md` → aquest fitxer.
 2. `.claude/tasks/ACTIVE` = `post-launch`. Contracte a `.claude/tasks/post-launch/contract.md` — **8/8 criteris
    marcats ✅ o ⏳ pendent tu**, cap pendent de codi.
-3. La branca ja té 7 commits fets aquesta sessió (llista completa a "Fet", secció següent). Ningú n'ha fet
+3. La branca ja té 10 commits fets aquesta sessió (llista completa a "Fet", secció següent). Ningú n'ha fet
    `push` (regla 06/031): quan vulguis, `git push -u origin feat/post-launch` i obrir la PR contra `main`.
 4. No hi ha res més a preguntar sobre D1-D5 (decisions 034-038, totes tancades). Els únics punts oberts són
    accions manuals teves al dashboard de Cloudflare/GitHub — vegeu "Pendents de l'usuari".
 
 ## Fet (verificat)
 
-- **DNS**: `danimorales.dev` → 200 (verificat amb `curl -I`, real, avui). `www.danimorales.dev` encara no
-  resol — acció manual pendent (vegeu pendents).
+- **DNS**: `danimorales.dev` → 200 i `www.danimorales.dev` → 200 (Custom Domain afegit al Worker `cv`;
+  verificat amb `curl`, real).
 - **Dependabot — diagnòstic complet**: el job `npm_and_yarn Update` falla perquè `packageManager:
 "pnpm@12.4.1"` intenta autodescarregar el binari natiu `@pnpm/exe.linux-x64` i el `fetch` falla dins el
   sandbox de xarxa de Dependabot (evidència: log complet descarregat via `gh api .../logs`, no és
@@ -65,8 +65,6 @@ ad4d4f6 docs(post-launch): check off criteria 1,5-8; add dev preview launch conf
 - P3 (preview de PR) i P4 (contrast mesurat al navegador real, no només calculat) i P5 (radio/checkbox
   d'`CustomInput` sense pàgina real que els usi) segueixen igual que a la nit del bootstrap — baixa prioritat,
   ningú els ha tocat aquesta sessió.
-- No s'ha corregut `pnpm gate:push` (build + e2e) en cap moment d'aquesta sessió, només `pnpm gate`. Abans de
-  fer push caldria córrer-lo un cop (regla 09).
 - No s'ha obert cap PR ni fet `push` (regla 06/031: només ho fas tu).
 
 ## Subagents (regla 12)
