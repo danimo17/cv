@@ -6,3 +6,6 @@ Analytics → afegir zona `danimorales.dev`, sense "Manual Setup"): injecta el b
 el trànsit HTML de la zona, sense tocar codi ni afegir cap script al repo.
 **Conseqüències.** Acció manual al dashboard de Cloudflare (fora de l'abast de la IA, com el DNS de `www`).
 Res a `app/` ni a `nuxt.config.ts`.
+
+**Fet.** Zona `danimorales.dev` afegida amb Automatic Setup (2026-09-16); dades reals ja arribant (verificat
+captura del dashboard: 14 page views / 5 visits a les últimes 24h).

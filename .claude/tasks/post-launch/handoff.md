@@ -61,10 +61,6 @@ ad4d4f6 docs(post-launch): check off criteria 1,5-8; add dev preview launch conf
 
 ## En curs / no fet
 
-- `www.danimorales.dev` no resol — requereix acció manual al dashboard de Cloudflare (fora de l'abast de la
-  IA: no hi ha token/accés).
-- Dependabot segueix fallant fins al pròxim intent (automàtic, dilluns) o fins que es prengui l'acció manual.
-- Cloudflare Web Analytics (D3/036) no activat encara — acció manual de dashboard, no bloqueja res.
 - P3 (preview de PR) i P4 (contrast mesurat al navegador real, no només calculat) i P5 (radio/checkbox
   d'`CustomInput` sense pàgina real que els usi) segueixen igual que a la nit del bootstrap — baixa prioritat,
   ningú els ha tocat aquesta sessió.
@@ -111,14 +107,14 @@ No cobreix (i per què no bloqueja):
 
 ## Pendents de l'usuari
 
-| #   | Què                                                                                                                | Bloqueja                          | Estat                                                                       |
-| --- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------- |
-| 1   | Cloudflare → Worker `cv` → Domains → Add Domain `www.danimorales.dev` (o Redirect Rule)                            | criteri 2 del contracte           | pendent                                                                     |
-| 2   | Dependabot: esperar el reintent automàtic de dilluns, o baixar `packageManager` a `pnpm@11.17.0` si torna a fallar | criteri 3 del contracte           | pendent (triat: esperar primer)                                             |
-| 3   | Activar Cloudflare Web Analytics (Automatic Setup) al dashboard                                                    | D3/036, no bloqueja res           | pendent, sense pressa                                                       |
-| 4   | Revisar/aprovar el favicon i la resta de canvis visuals (foto, colors, "recent searches") abans de fer push        | push/PR                           | **fet dins la sessió** (vist a `pnpm dev`), falta el teu OK final per pujar |
-| 5   | `git push -u origin feat/post-launch` + obrir PR (la IA mai fa push, regla 06/031)                                 | merge a `main` / desplegament     | pendent tu                                                                  |
-| 6   | Córrer `pnpm gate:push` (build + e2e) abans del push, si vols la garantia extra                                    | res, però és la gate real de push | pendent tu (o demana-ho a la pròxima sessió)                                |
+| #   | Què                                                                                                         | Bloqueja                          | Estat                                                                                 |
+| --- | ----------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | Cloudflare → Worker `cv` → Domains → Add Domain `www.danimorales.dev` (o Redirect Rule)                     | criteri 2 del contracte           | **fet** — verificat `curl` → 200                                                      |
+| 2   | Dependabot: baixar `packageManager` a `pnpm@11.17.0`                                                        | criteri 3 del contracte           | **fet** — commit `d8af4ca`                                                            |
+| 3   | Activar Cloudflare Web Analytics (Automatic Setup) al dashboard                                             | D3/036, no bloqueja res           | **fet** — dades reals ja arribant                                                     |
+| 4   | Revisar/aprovar el favicon i la resta de canvis visuals (foto, colors, "recent searches") abans de fer push | push/PR                           | **descartat per l'usuari**: revisió estètica es farà a posteriori en una nova `feat/` |
+| 5   | `git push -u origin feat/post-launch` + obrir PR (la IA mai fa push, regla 06/031)                          | merge a `main` / desplegament     | pendent tu                                                                            |
+| 6   | Córrer `pnpm gate:push` (build + e2e) abans del push, si vols la garantia extra                             | res, però és la gate real de push | pendent tu (o demana-ho a la pròxima sessió)                                          |
 
 ## Decisions preses en aquesta tasca
 
