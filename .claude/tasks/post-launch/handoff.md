@@ -1,7 +1,8 @@
 # Handoff: post-launch
 
-_Actualitzat: 2026-09-15. Estat REAL de la branca `feat/post-launch` (7 commits per davant de `main`, sense
-pujar, working tree net)._
+_Actualitzat: 2026-09-16. Estat REAL de la branca `feat/post-launch` (10 commits per davant de `main`, sense
+pujar, working tree net). Els 3 pendents manuals (www domain, Dependabot, Web Analytics) i la gate:push són
+fets — només queda el push (regla 06/031, ho fas tu)._
 
 ## Com continuar (llegir primer)
 
@@ -80,21 +81,25 @@ Els tres van treballar en worktrees aïllats (`.claude/worktrees/agent-*`, ja ne
 remove` + `git branch -d` un cop fusionats). El fil principal ha escrit els tokens/decisions/favicon/foto/D4
 directament (canvis d'un sol fitxer o síntesi, excepció de la regla 12).
 
-## Validació (sortida real de la darrera gate)
+## Validació (sortida real de l'última `pnpm gate:push`)
 
 ```
-$ pnpm gate
+$ pnpm gate:push            → pnpm gate && pnpm build && pnpm test:e2e
 $ prettier --check .        → All matched files use Prettier code style!
 $ eslint .                  → (0 errors)
 $ nuxt typecheck             → 0 errors (soroll no fatal: warning "vue-router/volar/sfc-route-blocks"
                                 preexistent, no relacionat amb cap canvi d'aquesta sessió)
 $ vitest run                → Test Files 20 passed (20) · Tests 271 passed (271)
+$ nuxt build (preset cloudflare-module) → Build complete!
+$ playwright test (e2e/meme-flow.spec.ts) → 5 passed (10.4s)
 Exit code: 0
 ```
 
+Regla 09 complerta: `gate:push` corregut sencer (format+lint+typecheck+test+build+e2e) abans de deixar la
+branca a punt per pujar — no només `pnpm gate`.
+
 No cobreix (i per què no bloqueja):
 
-- **e2e (Playwright)**: no s'ha corregut `pnpm gate:push` aquesta sessió — cal fer-ho abans del push (regla 09).
 - **`www.danimorales.dev`**: no hi ha manera de testar-ho fins que existeixi el registre; és una comprovació
   manual (`curl -I`), no un test automatitzat.
 - **Contrast AA real al navegador**: recalculat matemàticament (oklch → sRGB → ràtio), mai mesurat amb una eina
@@ -114,7 +119,7 @@ No cobreix (i per què no bloqueja):
 | 3   | Activar Cloudflare Web Analytics (Automatic Setup) al dashboard                                             | D3/036, no bloqueja res           | **fet** — dades reals ja arribant                                                     |
 | 4   | Revisar/aprovar el favicon i la resta de canvis visuals (foto, colors, "recent searches") abans de fer push | push/PR                           | **descartat per l'usuari**: revisió estètica es farà a posteriori en una nova `feat/` |
 | 5   | `git push -u origin feat/post-launch` + obrir PR (la IA mai fa push, regla 06/031)                          | merge a `main` / desplegament     | pendent tu                                                                            |
-| 6   | Córrer `pnpm gate:push` (build + e2e) abans del push, si vols la garantia extra                             | res, però és la gate real de push | pendent tu (o demana-ho a la pròxima sessió)                                          |
+| 6   | Córrer `pnpm gate:push` (build + e2e) abans del push                                                        | res, però és la gate real de push | **fet** — verd sencer (veure "Validació")                                             |
 
 ## Decisions preses en aquesta tasca
 
