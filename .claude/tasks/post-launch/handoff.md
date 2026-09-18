@@ -1,7 +1,13 @@
 # Handoff: post-launch
 
-_Updated: 2026-09-18. Real state of `feat/post-launch`: **contract 12/12 done, code review FINISHED (all 8
-angles + fixes applied), `pnpm gate` green, about to push + open the PR.**_
+_Updated: 2026-09-18. Real state of `feat/post-launch`: **contract 12/12 done, code review FINISHED, pushed,
+PR OPEN: https://github.com/danimo17/cv/pull/2. Waiting on CI + the user's merge.**_
+
+Note: `gh pr create` initially failed with "must be a collaborator" — `gh` was authenticated as
+`danimoralespdp`, a different GitHub account than the repo owner `danimo17` (the SSH push worked because git
+uses a separate SSH key/host alias for that account, unrelated to `gh`'s API token). Fixed by the user running
+`gh auth login` and switching the active `gh` account to `danimo17`; both accounts stay logged in
+(`gh auth status` lists both, `danimo17` active) so this shouldn't recur.
 
 ## Status: review done, fixes applied, ready for push + PR
 
@@ -54,11 +60,8 @@ was either refuted or judged not worth the churn right now (logged to backlog in
 
 ## What's left
 
-1. `pnpm gate:push` (build + e2e) one more time to be sure, then commit these fixes.
-2. Push (needs explicit permission each time, rule 06/decision 031 — ask before pushing).
-3. Open the PR (`gh pr create`, decision 039 convention: English title no prefix; `Summary`/
-   `Acceptance criteria`/`Review`/`Test plan` sections). Give the user the URL.
-4. **User merges from GitHub themselves — the AI never merges to `main`, no exception.**
+PR open: https://github.com/danimo17/cv/pull/2. Wait for CI (gate + build + e2e + security) to go green, then
+**the user merges from GitHub themselves — the AI never merges to `main`, no exception.**
 
 ## Contract
 
@@ -74,10 +77,9 @@ itself.
 
 ## Pendents de l'usuari
 
-| #   | What                                                                      | Blocks            | Status  |
-| --- | ------------------------------------------------------------------------- | ----------------- | ------- |
-| 1   | Approve this push (per-push permission, rule 06/decision 031)             | opening the PR    | pending |
-| 2   | Merge the PR on GitHub once CI + security are green — only the user, ever | production deploy | pending |
+| #   | What                                                                     | Blocks            | Status  |
+| --- | ------------------------------------------------------------------------ | ----------------- | ------- |
+| 1   | Merge PR #2 on GitHub once CI + security are green — only the user, ever | production deploy | pending |
 
 ## Related work
 
