@@ -32,12 +32,12 @@ store's setup, inside the Nuxt context of the first view that calls it).
 |             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | State       | `query: string` (trimmed), `limit: number` (`DEFAULT_GIPHY_LIMIT = 12`), `offset: number` (current page, 0 = first), `items: Meme[]` (computed from `data.items`), `total: number` (computed from `data.total`, defaults to `0`), `status: AsyncDataRequestStatus`, `error`, `errorKey: string` (computed: `''` if there is no error; otherwise `giphyService.toUserErrorKey(error)`), `history: string[]` (last 5 searched terms, most recent first, no duplicates — decision 034; **not** the same concept as `hero.history`) |
-| Actions     | `search(q)` → trims, ignores empty values, resets `offset` to `0`, updates `history` (dedupe + `slice(0,5)`), `execute()`; `goToOffset(newOffset)` → changes `offset` (same `query`) and `execute()`, without touching `history`                                                                                                                                                                                                                                                                                                |
+| Actions     | `search(q)` → trims, ignores empty values, updates `history` (dedupe + `slice(0,5)`), then `goToOffset(0)`; `goToOffset(newOffset)` → sets `offset`, `execute()`, and rolls `offset` back to its previous value if the fetch fails (avoids a phantom page number, e.g. "page 6 of 5", staying reachable after a failed page change — fixed 2026-09-18)                                                                                                                                                                          |
 | Persistence | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Consumers   | `pages/meme.vue` (`items`, `status`, `errorKey`, `query`, `total`, `offset`, `history`, `search`, `goToOffset`)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Test        | `tests/unit/stores/giphy.spec.ts` (`registerEndpoint` simulating 200/400/503 depending on `q`; covers `history` dedupe/max 5/order)                                                                                                                                                                                                                                                                                                                                                                                             |
 
-## Services (`app/services/`, explicit import)
+## Services (`app/services/`, auto-import — decision 041)
 
 ### GiphyService
 
@@ -59,7 +59,7 @@ Test: `tests/unit/services/GiphyService.spec.ts`.
 (`tm` + `rt`) and returns the resolved messages; `[]` if the key isn't an array. Avoids the recursive typing of
 `Parameters<typeof rt>` (TS2589). Consumers: `ExperienceItem` (bullets), `pages/meme.vue` (`meme.how.steps`).
 
-## Domain (`app/domain/cv/`, explicit import, no framework)
+## Domain (`app/domain/cv/`, auto-import — decision 041, no framework)
 
 ### formatPeriod
 
@@ -72,7 +72,7 @@ Test: `tests/unit/services/GiphyService.spec.ts`.
 `app/domain/cv/types.ts` → `Section` (`experience | education | certifications`), `TimelineItem` (`id`, `section`,
 `org`, `url?`, `location?`, `start`, `end?`, `tags`), `StackGroup` (`id`, `icon`, `items`).
 
-## Data (`app/data/cv/`, explicit import from `~/data/cv`)
+## Data (`app/data/cv/`, auto-import — decision 041)
 
 ### Static data
 
@@ -84,11 +84,13 @@ Hardcoded tables, with no translatable text (text lives in i18n under the key `<
 | `experience.ts` | `experience: TimelineItem[]`                  | jobs                                                                |
 | `education.ts`  | `education`, `certifications: TimelineItem[]` | education and certificates                                          |
 | `stack.ts`      | `stack: StackGroup[]`                         | stack groups (id, icon, items)                                      |
-| `index.ts`      | re-export of everything                       | `import { profile, stack } from '~/data/cv'`                        |
+
+Each export auto-imports directly (`nuxt.config.ts` → `imports.dirs` includes `data/**`) — no barrel file
+(the former `index.ts` re-export was deleted, it collided with the auto-import config).
 
 Rule 04: `tests/arch/no-pii.spec.ts` scans `app/data/cv/*.ts`.
 
-## UI-config (`app/ui-config/`, explicit import)
+## UI-config (`app/ui-config/`, auto-import — decision 041)
 
 ### homeSections
 

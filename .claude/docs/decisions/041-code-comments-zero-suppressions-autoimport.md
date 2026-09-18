@@ -65,10 +65,18 @@ packages.** Grilled with the user: the actual intent of the existing `no-restric
 (code-style.md, decisions 026/038) is not "the package may only be imported from one file" — it's "no view or
 component ever renders a raw FontAwesome element; `<CustomIcon>` is the only door in." Auto-importing the
 FontAwesome component globally would make it invisible to that ESLint rule (there would be no `import`
-statement left to flag), silently breaking the primitive-wrapper barrier for this one package. So
-`@fortawesome/*` stays out of `imports.presets`; `CustomIcon.vue` and `app/plugins/fontawesome.ts` keep their
-explicit imports exactly as before, still covered by the existing `no-restricted-imports` override for those
-two files.
+statement left to flag), silently breaking the primitive-wrapper barrier for this one package.
+
+**Correction (2026-09-18, code review, conventions/altitude angles):** in practice, no external npm package
+gets auto-imported at all right now — `nuxt.config.ts`'s `imports.dirs` only lists the project's own `app/`
+subfolders (`domain/**`, `services/**`, `data/**`, `ui-config/**`, `types`), there is no `imports.presets` key
+in the config. The paragraph above originally implied a preset exclusion existed; it doesn't, because no
+preset was ever added for FontAwesome or anything else. The actual protection is simpler and already
+general: the pre-existing `no-restricted-imports` rule blocks `@fortawesome/vue-fontawesome` outside
+`CustomIcon.vue`/`app/plugins/fontawesome.ts`, and since there's no `imports.presets` entry for it, there's
+nothing to auto-import around that rule in the first place. If a future package genuinely needs
+auto-importing via `imports.presets`, the same reasoning applies then: check whether an ESLint import
+restriction depends on that package, and keep it off the preset list if so.
 
 **Still explicit, by design, not oversight:**
 
@@ -76,7 +84,15 @@ two files.
   `Record<HomeSectionConfig['component'], Component>` map using the section components as object values —
   confirmed by a failing `pnpm typecheck` that Nuxt's component auto-import only resolves a component when
   used as a template tag (`<AboutSection />`), not as a bare identifier in script code. The 5 explicit
-  `import ... from '~/components/cv/*.vue'` lines in that file stay.
+  `import ... from '~/components/cv/*.vue'` lines in that file stay. **Tried the obvious alternative and it
+  doesn't work**: a code-review pass suggested replacing `SECTION_COMPONENTS[section.component]` with
+  `resolveComponent(section.component)` (dynamic string) directly in the template, reasoning that
+  `HeroSection` renders fine as a bare `<HeroSection />` tag with no import. Tested it live in the browser —
+  it throws at runtime (`Cannot read properties of undefined (reading 'AboutSection')`): Vue's
+  `resolveComponent()` template-compiler sugar only resolves at compile time for a **literal** string
+  argument (that's how `<HeroSection />` itself gets compiled under the hood); called with a runtime
+  variable, it doesn't look up Nuxt's globally-registered components the way this needed. Reverted; the 5
+  explicit imports are confirmed necessary, not just assumed.
 - All `import type { ... }` for types that live in files outside the newly auto-imported dirs, when the
   auto-import mechanism doesn't reach them (e.g. types from `vue` itself inside `<script generic="...">`,
   where the generic type parameter isn't resolvable through auto-import) — kept explicit case by case, only

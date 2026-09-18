@@ -18,17 +18,18 @@ export const useGiphyStore = defineStore('giphy', () => {
   async function search(q: string) {
     query.value = q.trim()
     if (!query.value) return
-    offset.value = 0
     history.value = [query.value, ...history.value.filter((term) => term !== query.value)].slice(
       0,
       HISTORY_SIZE
     )
-    await execute()
+    await goToOffset(0)
   }
 
   async function goToOffset(newOffset: number) {
+    const previous = offset.value
     offset.value = newOffset
     await execute()
+    if (status.value === 'error') offset.value = previous
   }
 
   return {

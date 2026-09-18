@@ -146,4 +146,13 @@ describe('useGiphyStore · pagination', () => {
     await giphy.search('cat')
     expect(giphy.offset).toBe(0)
   })
+
+  it('a failed page change rolls back to the previous offset instead of leaving a phantom page', async () => {
+    const giphy = store()
+    await giphy.search('cat')
+    await giphy.goToOffset(12)
+    expect(giphy.offset).toBe(12)
+    await giphy.search('bad')
+    expect(giphy.offset).toBe(12)
+  })
 })
