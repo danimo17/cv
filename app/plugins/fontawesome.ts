@@ -5,6 +5,8 @@ import {
   faBriefcase,
   faCartShopping,
   faCertificate,
+  faChevronLeft,
+  faChevronRight,
   faCircleCheck,
   faCircleInfo,
   faCircleXmark,
@@ -26,7 +28,6 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 
-// Només les icones usades entren al bundle. El CSS s'importa a nuxt.config (autoAddCss off evita FOUC en SSR).
 export default defineNuxtPlugin(() => {
   config.autoAddCss = false
   library.add(
@@ -34,6 +35,8 @@ export default defineNuxtPlugin(() => {
     faBriefcase,
     faCartShopping,
     faCertificate,
+    faChevronLeft,
+    faChevronRight,
     faCircleCheck,
     faCircleInfo,
     faCircleXmark,

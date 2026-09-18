@@ -1,7 +1,3 @@
-/**
- * Formata un període del CV amb el locale actiu. Funció pura (domini, decisió 029).
- * `start`/`end` en `YYYY-MM` o `YYYY`. `end === null` = actualitat; `end === undefined` = data única.
- */
 export function formatPeriod(
   start: string,
   end: string | null | undefined,

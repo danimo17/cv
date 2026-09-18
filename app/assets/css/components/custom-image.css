@@ -1,0 +1,29 @@
+@layer components {
+  .custom-image {
+    @apply block max-w-full;
+  }
+  .custom-image--fit-cover {
+    @apply object-cover;
+  }
+  .custom-image--fit-contain {
+    @apply object-contain;
+  }
+  .custom-image--radius-none {
+    @apply rounded-none;
+  }
+  .custom-image--radius-md {
+    @apply rounded-md;
+  }
+  .custom-image--radius-lg {
+    @apply rounded-lg;
+  }
+  .custom-image--radius-xl {
+    @apply rounded-3xl;
+  }
+  .custom-image--radius-full {
+    @apply rounded-full;
+  }
+  .custom-image--frame {
+    @apply shadow-neu-sm;
+  }
+}

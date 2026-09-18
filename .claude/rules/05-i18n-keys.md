@@ -1,7 +1,7 @@
-# 05 · Tot text d'usuari és una clau i18n
+# 05 · Every user-facing string is an i18n key
 
-**Què.** Cap string visible hardcoded en templates (`vue/no-bare-strings-in-template`). Tota clau existeix a
-`i18n/locales/{en,ca,es}.json` amb la mateixa estructura. Claus: `<area>.<entity>.<field>` (vegeu
-`docs/standards/i18n.md`). Dates, URLs i noms propis viuen a `app/data/cv/*.ts`, no als JSON.
-**Per què.** Una clau que falta mostra la clau crua a l'usuari: pantalla incorrecta.
-**Com es comprova.** ESLint + `tests/unit/i18n-parity.spec.ts`.
+**What.** No visible string hardcoded in templates (`vue/no-bare-strings-in-template`). Every key exists in
+`i18n/locales/{en,ca,es}.json` with the same structure. Keys: `<area>.<entity>.<field>` (see
+`docs/standards/i18n.md`). Dates, URLs and proper names live in `app/data/cv/*.ts`, not in the JSON files.
+**Why.** A missing key shows the raw key to the user: a broken screen.
+**How it's checked.** ESLint + `tests/unit/i18n-parity.spec.ts`.

@@ -1,34 +1,34 @@
 # Handoff: <slug>
 
-_Actualitzat: YYYY-MM-DD HH:MM. Estat REAL de la branca `feat/<slug>`._
+_Updated: YYYY-MM-DD HH:MM. REAL state of the `feat/<slug>` branch._
 
-## Fet (verificat)
-
-- …
-
-## En curs / no fet
+## Done (verified)
 
 - …
 
-## Subagents (regla 12)
+## In progress / not done
 
-| Subagent | Què ha fet | Resultat |
-| -------- | ---------- | -------- |
+- …
 
-## Validació (sortida real de la darrera gate)
+## Subagents (rule 12)
+
+| Subagent | What it did | Result |
+| -------- | ----------- | ------ |
+
+## Validation (actual output of the last gate)
 
 ```
 pnpm gate → …
 ```
 
-No cobreix: …
+Not covered: …
 
-## Pendents de l'usuari
+## Pending on the user
 
-| #   | Què | Bloqueja | Estat   |
-| --- | --- | -------- | ------- |
-| 1   | …   | …        | pendent |
+| #   | What | Blocks | Status  |
+| --- | ---- | ------ | ------- |
+| 1   | …    | …      | pending |
 
-## Decisions preses en aquesta tasca
+## Decisions made in this task
 
 - → `.claude/docs/decisions/NNN-….md`

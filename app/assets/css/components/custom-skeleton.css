@@ -1,0 +1,14 @@
+@layer components {
+  .custom-skeleton {
+    @apply animate-pulse rounded-lg bg-surface-alt shadow-neu-inset-sm motion-reduce:animate-none;
+  }
+  .custom-skeleton--text {
+    @apply h-4 w-full;
+  }
+  .custom-skeleton--image {
+    @apply aspect-square w-full;
+  }
+  .custom-skeleton--circle {
+    @apply size-12 rounded-full;
+  }
+}

@@ -1,0 +1,87 @@
+@layer components {
+  .custom-text {
+    @apply m-0;
+  }
+
+  .custom-text--display {
+    @apply text-4xl font-extrabold tracking-tight sm:text-6xl;
+  }
+  .custom-text--h1 {
+    @apply text-3xl font-extrabold tracking-tight sm:text-5xl;
+  }
+  .custom-text--h2 {
+    @apply text-2xl font-bold tracking-tight sm:text-3xl;
+  }
+  .custom-text--h3 {
+    @apply text-xl font-semibold sm:text-2xl;
+  }
+  .custom-text--lead {
+    @apply text-lg;
+  }
+  .custom-text--body {
+    @apply text-base leading-relaxed;
+  }
+  .custom-text--small {
+    @apply text-sm;
+  }
+  .custom-text--caption {
+    @apply text-xs;
+  }
+  .custom-text--eyebrow {
+    @apply text-sm font-semibold tracking-wide uppercase;
+  }
+
+  .custom-text--tone-default {
+    @apply text-inherit;
+  }
+  .custom-text--tone-muted {
+    @apply text-text-muted;
+  }
+  .custom-text--tone-primary {
+    @apply text-primary;
+  }
+  .custom-text--tone-secondary {
+    @apply text-secondary;
+  }
+  .custom-text--tone-neutral {
+    @apply text-neutral;
+  }
+  .custom-text--tone-success {
+    @apply text-success;
+  }
+  .custom-text--tone-info {
+    @apply text-info;
+  }
+  .custom-text--tone-warning {
+    @apply text-warning;
+  }
+  .custom-text--tone-danger {
+    @apply text-danger;
+  }
+
+  .custom-text--normal {
+    @apply font-normal;
+  }
+  .custom-text--medium {
+    @apply font-medium;
+  }
+  .custom-text--semibold {
+    @apply font-semibold;
+  }
+  .custom-text--bold {
+    @apply font-bold;
+  }
+
+  .custom-text--align-start {
+    @apply text-start;
+  }
+  .custom-text--align-center {
+    @apply text-center;
+  }
+  .custom-text--align-end {
+    @apply text-end;
+  }
+  .custom-text--truncate {
+    @apply truncate;
+  }
+}

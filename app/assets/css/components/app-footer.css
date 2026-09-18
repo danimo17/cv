@@ -1,4 +1,3 @@
-/* Neumorphism: el peu és una franja enfonsada (inset) que tanca la pàgina. */
 @layer components {
   .app-footer {
     @apply mt-8 bg-surface-alt py-8 shadow-neu-inset-sm;

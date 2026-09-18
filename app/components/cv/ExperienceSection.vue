@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { experience } from '~/data/cv'
-import { getSectionConfig } from '~/ui-config/cv/sections'
-
 const config = getSectionConfig('experience')
 const { t } = useI18n()
 </script>
 
 <template>
-  <AppSection
+  <CustomSection
     :id="config.id"
     :title="t(config.titleKey)"
     :eyebrow="t(config.eyebrowKey)"
@@ -19,5 +16,5 @@ const { t } = useI18n()
         <ExperienceItem :item="item" variant="detailed" />
       </li>
     </ol>
-  </AppSection>
+  </CustomSection>
 </template>

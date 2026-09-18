@@ -10,7 +10,7 @@ const MEMES = [
   { id: 'm3', title: 'Monday mood', preview: GIF, full: GIF, width: 480, height: 480 },
 ]
 
-/** En mode dev la hidratació arriba després de `load`: esperem xarxa quieta abans d'interactuar. */
+/** In dev mode hydration arrives after `load`: we wait for network idle before interacting. */
 async function visit(page: Page, path: string) {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
@@ -58,7 +58,7 @@ test('search, pick and wear a meme', async ({ page }) => {
   await expect(hero).toHaveAttribute('src', MEMES[0].full)
   await expect(page.getByTestId('hero-reset')).toBeVisible()
 
-  // The store is in memory on purpose (decisió 004): a reload brings the real face back.
+  // The store is in memory on purpose (decision 004): a reload brings the real face back.
   await page.reload()
   await page.waitForLoadState('networkidle')
   await expect(hero).toBeVisible()

@@ -1,6 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-01',
   modules: [
@@ -11,10 +10,11 @@ export default defineNuxtConfig({
     '@nuxt/test-utils/module',
   ],
   css: ['~/assets/css/main.css', '@fortawesome/fontawesome-svg-core/styles.css'],
-  // Els components es registren pel nom del fitxer (AppButton, HeroSection), no per la carpeta.
   components: [{ path: '~/components', pathPrefix: false }],
+  imports: {
+    dirs: ['domain/**', 'services/**', 'data/**', 'ui-config/**', 'types'],
+  },
   vite: { plugins: [tailwindcss()] },
-  // Server-only. Set NUXT_GIPHY_API_KEY in .env (local) or as a Worker secret (prod). Regla 01.
   runtimeConfig: { giphyApiKey: '' },
   nitro: { preset: 'cloudflare_module' },
   colorMode: { preference: 'system', fallback: 'light', classSuffix: '' },

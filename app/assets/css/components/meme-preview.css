@@ -1,4 +1,3 @@
-/* Neumorphism: viu dins d'una AppCard elevated; la imatge surt en relleu del fons de la card. */
 @layer components {
   .meme-preview {
     @apply grid gap-6 md:grid-cols-[1fr_1.2fr];

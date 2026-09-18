@@ -1,39 +1,39 @@
-# Standard · Estat, serveis i dades (decisió 029)
+# Standard · State, services and data (decision 029)
 
 ```
 Giphy API ──► server/api/giphy/search.get.ts (API)
-              ──► app/services/giphy/GiphyService.ts (Service: defineix la petició, normalitza errors)
-              ──► app/stores/giphy.ts (Store: query/items/status/errorKey + acció search)
-              ──► app/pages/meme.vue (View prima) ──► components meme/ i cv/ (llegeixen stores/hero)
-app/ui-config/cv/sections.ts (UI-config) ──► pages/index.vue + components cv/
-app/domain/cv (tipus + regles pures)  ·  app/data/cv (taules)  ·  app/composables (helpers de framework)
+              ──► app/services/giphy/GiphyService.ts (Service: defines the request, normalizes errors)
+              ──► app/stores/giphy.ts (Store: query/items/status/errorKey + search action)
+              ──► app/pages/meme.vue (thin View) ──► meme/ and cv/ components (read stores/hero)
+app/ui-config/cv/sections.ts (UI-config) ──► pages/index.vue + cv/ components
+app/domain/cv (types + pure rules)  ·  app/data/cv (tables)  ·  app/composables (framework helpers)
 ```
 
-Dependència en un sol sentit: una capa només importa de les capes de la seva esquerra. Cap component ni pàgina
-crida un servei ni `/api/*` directament; cap servei coneix una store; cap store coneix un component.
+One-way dependency: a layer only imports from the layers to its left. No component or page
+calls a service or `/api/*` directly; no service knows about a store; no store knows about a component.
 
-- **Server** (`server/api`, `server/utils`): valida l'entrada (trust boundary), amaga la clau, normalitza la
-  resposta a `Meme` (`shared/types/giphy.ts`), cacheja. Errors: 400 entrada, 503 sense clau, 502 upstream (mai la resposta crua).
-- **Service** (`app/services/<api>/<Nom>Service.ts`): una classe per API amb una única instància exportada
-  (`giphyService`). Defineix la petició (`useFetch` amb `immediate: false`, `watch: false` via `createSearch`) i és
-  l'ÚNIC lloc que tradueix un error HTTP a la clau i18n del missatge d'usuari (`toUserErrorKey`). Sense estat.
-  Import explícit (`~/services/…`), no auto-import. Regla 03: `/api/giphy` només aquí.
-- **Store Pinia** (`app/stores/*.ts`, setup stores, auto-import): estat de l'aplicació. `useGiphyStore` crea el
-  handle del servei al setup (una sola vegada) i exposa `items`, `status`, `error`, `errorKey` i l'acció
-  `search()`. `useHeroStore` guarda el meme escollit i l'historial. Sense persistència (decisió 004).
-- **View** (`pages/*.vue`): compon components i delega a les stores; no conté regles de negoci ni crides HTTP.
-  `pages/index.vue` itera `homeSections` (UI-config) per l'ordre; `pages/meme.vue` connecta `useGiphyStore` i
-  `useHeroStore`.
-- **UI-config** (`app/ui-config/<entitat>/*.ts`): configuració declarativa (seccions de la home: id, component,
-  icona, claus de títol/eyebrow). Import explícit. Cap lògica.
-- **Domini** (`app/domain/<entitat>/`): tipus (`types.ts`) i funcions pures sense framework (`formatPeriod`).
-  Import explícit; es proven en `node`.
-- **Dades estàtiques** (`app/data/cv/*.ts`, re-export a `index.ts`): fets no traduïbles (dates ISO, empreses, URLs,
-  tags, `profile`). El text va per i18n amb la clau `<secció>.items.<id>.*`.
-- **Composables** (`app/composables/`, auto-import): helpers que necessiten el framework però no són estat
-  d'aplicació (`useMessageList` per a arrays i18n). Mai un `useFetch` (decisió 029).
-- **Preferències**: tema → `useColorMode()` (module, localStorage); idioma → `useI18n()` + cookie (module).
-- **Loading**: la pàgina decideix. La graella mostra skeletons durant `status === 'pending'`; la resta de la
-  pàgina segueix interactiva. Els errors es mostren amb la clau que dona la store (`errorKey`).
-- **Catàleg.** Cada store/servei/composable/funció de domini/export d'ui-config → `.claude/docs/catalog/state.md`
-  (bloc `### nom`, `tests/arch/docs-sync.spec.ts`).
+- **Server** (`server/api`, `server/utils`): validates input (trust boundary), hides the key, normalizes the
+  response to `Meme` (`shared/types/giphy.ts`), caches. Errors: 400 input, 503 missing key, 502 upstream (never the raw response).
+- **Service** (`app/services/<api>/<Name>Service.ts`): one class per API with a single exported
+  instance (`giphyService`). Defines the request (`useFetch` with `immediate: false`, `watch: false` via `createSearch`) and is
+  the ONLY place that translates an HTTP error into the user-facing i18n message key (`toUserErrorKey`). Stateless.
+  Explicit import (`~/services/…`), not auto-import. Rule 03: `/api/giphy` only here.
+- **Pinia store** (`app/stores/*.ts`, setup stores, auto-import): application state. `useGiphyStore` creates the
+  service handle in setup (once) and exposes `items`, `status`, `error`, `errorKey` and the `search()`
+  action. `useHeroStore` holds the chosen meme and its history. No persistence (decision 004).
+- **View** (`pages/*.vue`): composes components and delegates to the stores; contains no business rules or
+  HTTP calls. `pages/index.vue` iterates `homeSections` (UI-config) in order; `pages/meme.vue` wires up
+  `useGiphyStore` and `useHeroStore`.
+- **UI-config** (`app/ui-config/<entity>/*.ts`): declarative configuration (home sections: id, component,
+  icon, title/eyebrow keys). Explicit import. No logic.
+- **Domain** (`app/domain/<entity>/`): types (`types.ts`) and pure, framework-free functions (`formatPeriod`).
+  Explicit import; tested in `node`.
+- **Static data** (`app/data/cv/*.ts`, re-exported from `index.ts`): non-translatable facts (ISO dates, companies, URLs,
+  tags, `profile`). Text goes through i18n with the key `<section>.items.<id>.*`.
+- **Composables** (`app/composables/`, auto-import): helpers that need the framework but are not application
+  state (`useMessageList` for i18n arrays). Never a `useFetch` (decision 029).
+- **Preferences**: theme → `useColorMode()` (module, localStorage); language → `useI18n()` + cookie (module).
+- **Loading**: the page decides. The grid shows skeletons while `status === 'pending'`; the rest of the
+  page stays interactive. Errors are shown with the key the store provides (`errorKey`).
+- **Catalog.** Every store/service/composable/domain function/ui-config export → `.claude/docs/catalog/state.md`
+  (`### name` block, `tests/arch/docs-sync.spec.ts`).

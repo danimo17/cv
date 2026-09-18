@@ -10,7 +10,6 @@ export interface SearchParams {
 
 const MAX_QUERY_LENGTH = 50
 
-/** Trust boundary: valida la query string d'entrada. Llença GiphyQueryError (→ 400). */
 export function parseSearchQuery(input: Record<string, unknown>): SearchParams {
   const q = typeof input.q === 'string' ? input.q.trim() : ''
   if (!q || q.length > MAX_QUERY_LENGTH || /\p{Cc}/u.test(q)) {
@@ -49,7 +48,6 @@ export interface GiphyApiResponse {
   pagination: { total_count: number }
 }
 
-/** Normalitza la resposta de Giphy a la forma que coneix el client. */
 export function toMeme(gif: GiphyGif): Meme {
   return {
     id: gif.id,

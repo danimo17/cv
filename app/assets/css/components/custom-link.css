@@ -1,0 +1,52 @@
+@layer components {
+  .custom-link {
+    @apply transition-[color,box-shadow];
+  }
+
+  .custom-link--inline {
+    @apply underline-offset-4 hover:underline;
+  }
+  .custom-link--inline.custom-link--tone-default {
+    @apply hover:text-primary;
+  }
+
+  .custom-link--nav {
+    @apply rounded-lg px-3 py-2 text-sm font-medium text-text-muted hover:text-text hover:shadow-neu-sm;
+  }
+  .custom-link--nav.custom-link--active {
+    @apply bg-surface-alt text-text shadow-neu-inset-sm hover:shadow-neu-inset-sm;
+  }
+
+  .custom-link--subtle {
+    @apply text-text-muted hover:text-text;
+  }
+  .custom-link--subtle.custom-link--active {
+    @apply text-text;
+  }
+
+  .custom-link--icon {
+    @apply inline-flex size-9 items-center justify-center rounded-lg text-text-muted hover:text-text hover:shadow-neu-sm active:shadow-neu-inset-sm;
+  }
+
+  .custom-link--tone-primary {
+    @apply text-primary;
+  }
+  .custom-link--tone-secondary {
+    @apply text-secondary;
+  }
+  .custom-link--tone-neutral {
+    @apply text-text;
+  }
+  .custom-link--tone-success {
+    @apply text-success;
+  }
+  .custom-link--tone-info {
+    @apply text-info;
+  }
+  .custom-link--tone-warning {
+    @apply text-warning;
+  }
+  .custom-link--tone-danger {
+    @apply text-danger;
+  }
+}

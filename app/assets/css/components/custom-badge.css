@@ -1,0 +1,58 @@
+@layer components {
+  .custom-badge {
+    @apply inline-flex items-center gap-1 rounded-full whitespace-nowrap shadow-neu-sm;
+  }
+  .custom-badge--sm {
+    @apply px-2 py-0.5;
+  }
+  .custom-badge--md {
+    @apply px-2.5 py-1;
+  }
+  .custom-badge--lg {
+    @apply px-3 py-1.5;
+  }
+
+  .custom-badge--soft.custom-badge--primary {
+    @apply bg-primary-soft text-primary;
+  }
+  .custom-badge--soft.custom-badge--secondary {
+    @apply bg-secondary-soft text-secondary;
+  }
+  .custom-badge--soft.custom-badge--neutral {
+    @apply bg-neutral-soft text-text;
+  }
+  .custom-badge--soft.custom-badge--success {
+    @apply bg-success-soft text-success;
+  }
+  .custom-badge--soft.custom-badge--info {
+    @apply bg-info-soft text-info;
+  }
+  .custom-badge--soft.custom-badge--warning {
+    @apply bg-warning-soft text-warning;
+  }
+  .custom-badge--soft.custom-badge--danger {
+    @apply bg-danger-soft text-danger;
+  }
+
+  .custom-badge--solid.custom-badge--primary {
+    @apply bg-primary text-primary-fg;
+  }
+  .custom-badge--solid.custom-badge--secondary {
+    @apply bg-secondary text-secondary-fg;
+  }
+  .custom-badge--solid.custom-badge--neutral {
+    @apply bg-neutral text-neutral-fg;
+  }
+  .custom-badge--solid.custom-badge--success {
+    @apply bg-success text-success-fg;
+  }
+  .custom-badge--solid.custom-badge--info {
+    @apply bg-info text-info-fg;
+  }
+  .custom-badge--solid.custom-badge--warning {
+    @apply bg-warning text-warning-fg;
+  }
+  .custom-badge--solid.custom-badge--danger {
+    @apply bg-danger text-danger-fg;
+  }
+}

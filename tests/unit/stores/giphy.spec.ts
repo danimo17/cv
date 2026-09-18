@@ -13,8 +13,8 @@ const meme: Meme = {
   height: 480,
 }
 
-// El mateix endpoint simula els tres resultats del servidor segons la query (regla 03: només el
-// servei coneix la ruta; aquí només es registra el mock).
+// The same endpoint simulates the three server outcomes based on the query (rule 03: only the
+// service knows the route; here we just register the mock).
 registerEndpoint('/api/giphy/search', (event) => {
   const q = new URL(event.path, 'http://localhost').searchParams.get('q')
   if (q === 'bad') throw createError({ statusCode: 400, statusMessage: 'bad query' })
@@ -22,8 +22,8 @@ registerEndpoint('/api/giphy/search', (event) => {
   return { items: [meme], total: 1 }
 })
 
-// La store és un singleton dins de l'app Nuxt de test (el useFetch es crea una sola vegada):
-// els tests s'encadenen en ordre sobre la mateixa instància.
+// The store is a singleton within the test Nuxt app (useFetch is created only once):
+// the tests chain in order on the same instance.
 function store() {
   return useNuxtApp().runWithContext(() => useGiphyStore())
 }
@@ -77,5 +77,82 @@ describe('useGiphyStore', () => {
     expect(giphy.status).toBe('success')
     expect(giphy.errorKey).toBe('')
     expect(giphy.items).toHaveLength(1)
+  })
+
+  it('a successful search exposes the total from the response', async () => {
+    const giphy = store()
+    await giphy.search('cat')
+    expect(giphy.total).toBe(1)
+  })
+})
+
+// Search term history (decision 034): distinct from `useHeroStore.history` (worn memes).
+// Continues on the same singleton (file rule: the store is created only once).
+describe('useGiphyStore · history', () => {
+  it('starts with the entries accumulated so far and keeps deduping to the front', async () => {
+    const giphy = store()
+    // State inherited from the previous suite: ['cat', 'down', 'bad'] (cat moved to the front in the last search).
+    expect(giphy.history).toEqual(['cat', 'down', 'bad'])
+
+    await giphy.search('dog')
+    expect(giphy.history).toEqual(['dog', 'cat', 'down', 'bad'])
+
+    await giphy.search('bird')
+    expect(giphy.history).toEqual(['bird', 'dog', 'cat', 'down', 'bad'])
+  })
+
+  it('caps the history at 5 entries, dropping the oldest', async () => {
+    const giphy = store()
+    await giphy.search('fish')
+    expect(giphy.history).toEqual(['fish', 'bird', 'dog', 'cat', 'down'])
+    expect(giphy.history).toHaveLength(5)
+  })
+
+  it('re-searching an existing term moves it to the front without growing the list', async () => {
+    const giphy = store()
+    await giphy.search('cat')
+    expect(giphy.history).toEqual(['cat', 'fish', 'bird', 'dog', 'down'])
+    expect(giphy.history).toHaveLength(5)
+  })
+
+  it('a blank search does not touch the history', async () => {
+    const giphy = store()
+    const before = [...giphy.history]
+    await giphy.search('   ')
+    expect(giphy.history).toEqual(before)
+  })
+})
+
+describe('useGiphyStore · pagination', () => {
+  it('starts at offset 0', () => {
+    const giphy = store()
+    expect(giphy.offset).toBe(0)
+  })
+
+  it('goToOffset changes the page without touching the query or history', async () => {
+    const giphy = store()
+    const historyBefore = [...giphy.history]
+    const queryBefore = giphy.query
+    await giphy.goToOffset(12)
+    expect(giphy.offset).toBe(12)
+    expect(giphy.query).toBe(queryBefore)
+    expect(giphy.history).toEqual(historyBefore)
+  })
+
+  it('a new search resets the offset back to 0', async () => {
+    const giphy = store()
+    await giphy.goToOffset(24)
+    expect(giphy.offset).toBe(24)
+    await giphy.search('cat')
+    expect(giphy.offset).toBe(0)
+  })
+
+  it('a failed page change rolls back to the previous offset instead of leaving a phantom page', async () => {
+    const giphy = store()
+    await giphy.search('cat')
+    await giphy.goToOffset(12)
+    expect(giphy.offset).toBe(12)
+    await giphy.search('bad')
+    expect(giphy.offset).toBe(12)
   })
 })

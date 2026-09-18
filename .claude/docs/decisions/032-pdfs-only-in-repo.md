@@ -1,4 +1,4 @@
-# 032 · Els PDFs del CV només viuen al projecte
+# 032 · The CV PDFs live only in the project
 
-**Decisió.** Els PDFs del CV (`public/cv/cv-{en,ca,es}.pdf`) es MOUEN des de Downloads al projecte (no es copien): fora del repo no en queda cap còpia. Abans de moure'ls es verifica la capa de text (regla 04). Qualsevol versió nova segueix el mateix camí: exportar → verificar → moure → commit.
-**Conseqüències.** El repo (públic) és l'única font dels PDFs; per això no poden contenir telèfon ni adreça.
+**Decision.** The CV PDFs (`public/cv/cv-{en,ca,es}.pdf`) are MOVED from Downloads into the project (not copied): no copy remains outside the repo. Before moving them, the text layer is verified (rule 04). Any new version follows the same path: export → verify → move → commit.
+**Consequences.** The (public) repo is the sole source of the PDFs; that's why they cannot contain a phone number or postal address.

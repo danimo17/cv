@@ -1,0 +1,89 @@
+@layer components {
+  .custom-input {
+    @apply flex flex-col gap-1.5;
+  }
+  .custom-input--disabled {
+    @apply opacity-60;
+  }
+  .custom-input__label {
+    @apply block;
+  }
+  .custom-input__field {
+    @apply relative flex items-center;
+  }
+  .custom-input__icon {
+    @apply pointer-events-none absolute left-3 text-text-muted;
+  }
+  .custom-input__control {
+    @apply h-10 w-full rounded-lg bg-surface-alt px-3 text-sm shadow-neu-inset transition-shadow placeholder:text-text-muted focus:ring-2 focus:ring-primary/40 focus:outline-none disabled:cursor-not-allowed;
+  }
+  .custom-input--with-icon .custom-input__control {
+    @apply pl-10;
+  }
+  .custom-input--sm .custom-input__control {
+    @apply h-8;
+  }
+  .custom-input--lg .custom-input__control {
+    @apply h-12 text-base;
+  }
+  .custom-input--danger .custom-input__control {
+    @apply ring-1 ring-danger focus:ring-2 focus:ring-danger/40;
+  }
+
+  .custom-input--textarea .custom-input__control,
+  .custom-input--multiselect .custom-input__control {
+    @apply h-auto min-h-24 py-2;
+  }
+  .custom-input--select .custom-input__control {
+    @apply cursor-pointer appearance-none pr-8;
+  }
+
+  .custom-input__group {
+    @apply m-0 min-w-0 border-0 p-0;
+  }
+  .custom-input__options {
+    @apply mt-1.5 flex flex-wrap gap-x-4 gap-y-2;
+  }
+  .custom-input__option {
+    @apply inline-flex items-center gap-2;
+  }
+  .custom-input__radio,
+  .custom-input__checkbox {
+    @apply relative size-4 shrink-0 cursor-pointer appearance-none bg-surface-alt shadow-neu-inset-sm transition-shadow checked:bg-primary checked:shadow-neu-sm disabled:cursor-not-allowed;
+  }
+  .custom-input__radio {
+    @apply rounded-full;
+  }
+  .custom-input__checkbox {
+    @apply rounded-sm;
+  }
+  .custom-input__radio::after,
+  .custom-input__checkbox::after {
+    content: '';
+    @apply absolute hidden;
+  }
+  .custom-input__radio:checked::after,
+  .custom-input__checkbox:checked::after {
+    @apply block;
+  }
+  .custom-input__radio::after {
+    @apply top-1 left-1 size-2 rounded-full bg-primary-fg;
+  }
+  .custom-input__checkbox::after {
+    @apply top-[2px] left-[5px] h-2.5 w-1.5 rotate-45 border-r-2 border-b-2 border-primary-fg;
+  }
+  .custom-input--danger .custom-input__radio,
+  .custom-input--danger .custom-input__checkbox {
+    @apply ring-1 ring-danger checked:bg-danger;
+  }
+  .custom-input--danger .custom-input__radio::after {
+    @apply bg-danger-fg;
+  }
+  .custom-input--danger .custom-input__checkbox::after {
+    @apply border-danger-fg;
+  }
+
+  .custom-input__hint {
+    @apply block;
+  }
+}

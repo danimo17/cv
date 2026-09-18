@@ -1,3 +1,3 @@
-# 007 · Política de navegador
+# 007 · Browser policy
 
-**Decisió.** Mai el Chrome real de l'usuari (sessions personals). Per a webs amb login: navegador integrat de l'app i l'usuari escriu les credencials ell mateix. Brave i Firefox no es poden controlar (no hi ha extensió). Per obrir coses perquè les faci l'usuari: Brave incògnit (`open -na 'Brave Browser' --args --incognito URL`).
+**Decision.** Never the user's real Chrome (personal sessions). For sites with login: the app's built-in browser, and the user types their own credentials. Brave and Firefox cannot be controlled (no extension). To open things for the user to handle themselves: Brave incognito (`open -na 'Brave Browser' --args --incognito URL`).

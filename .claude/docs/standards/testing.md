@@ -1,13 +1,13 @@
 # Standard · Tests
 
-| Capa           | Eina                           | Cobreix                                                                                                            | On                               |
-| -------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------- |
-| Unit           | Vitest (env `nuxt`, happy-dom) | utils purs, `server/utils`, stores, composables (amb `registerEndpoint`), components amb lògica (`mountSuspended`) | `tests/unit/**`                  |
-| Arquitectura   | Vitest (env `node`)            | invariants que cap linter expressa: fronteres, secrets, docs-sync, css-per-component, PII                          | `tests/arch/**`                  |
-| E2E            | Playwright (chromium)          | el flux crític meme → home, tema, idioma, validació del server route. `/api/giphy/**` mockejat amb `page.route`    | `e2e/**`                         |
-| Seguretat (CI) | gitleaks, pnpm audit, CodeQL   | secrets al repo, deps vulnerables, patrons insegurs                                                                | `.github/workflows/security.yml` |
+| Layer         | Tool                           | Covers                                                                                                              | Where                            |
+| ------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Unit          | Vitest (`nuxt` env, happy-dom) | pure utils, `server/utils`, stores, composables (with `registerEndpoint`), components with logic (`mountSuspended`) | `tests/unit/**`                  |
+| Architecture  | Vitest (`node` env)            | invariants no linter expresses: boundaries, secrets, docs-sync, css-per-component, PII                              | `tests/arch/**`                  |
+| E2E           | Playwright (chromium)          | the critical meme → home flow, theme, language, server route validation. `/api/giphy/**` mocked with `page.route`   | `e2e/**`                         |
+| Security (CI) | gitleaks, pnpm audit, CodeQL   | secrets in the repo, vulnerable deps, insecure patterns                                                             | `.github/workflows/security.yml` |
 
-- Un criteri del contracte = un test amb nom. Una correcció demanada per l'humà = un test que falla si es desfà.
-- Els tests no coneixen Giphy real (mai la clau). Server utils es proven en pur; el handler via e2e (400 sense clau).
-- Es reporta la sortida real (`N passed`), i el que **no** cobreix la suite.
-- `// @vitest-environment node` als tests que no necessiten Nuxt (arquitectura, utils purs): més ràpids.
+- One contract criterion = one named test. A fix requested by a human = a test that fails if it is undone.
+- Tests never know the real Giphy key. Server utils are tested in isolation; the handler via e2e (400 without a key).
+- The actual output is reported (`N passed`), along with what the suite does **not** cover.
+- `// @vitest-environment node` on tests that don't need Nuxt (architecture, pure utils): faster.

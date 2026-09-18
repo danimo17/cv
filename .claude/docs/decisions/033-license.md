@@ -1,3 +1,3 @@
-# 033 · Llicència: MIT per al codi, drets reservats per al contingut personal
+# 033 · License: MIT for the code, all rights reserved for personal content
 
-**Decisió.** `LICENSE` MIT (codi, estructura, governança reutilitzables) amb una clàusula explícita: foto, textos del CV, PDFs i dades personals de Daniel Morales, tots els drets reservats. El README ho explica.
+**Decision.** `LICENSE` MIT (code, structure, reusable governance) with an explicit clause: photo, CV texts, PDFs, and personal data of Daniel Morales, all rights reserved. The README explains it.

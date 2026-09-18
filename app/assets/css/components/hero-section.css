@@ -1,4 +1,3 @@
-/* Neumorphism: la figura és un marc en relleu gran; la imatge (AppImage frame) hi seu a dins. */
 @layer components {
   .hero-section {
     @apply grid items-center gap-10 py-16 sm:py-24 md:grid-cols-[1.2fr_1fr];

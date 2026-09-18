@@ -8,7 +8,6 @@ withDefaults(
     status: AsyncDataRequestStatus
     selectedId?: string | null
     skeletons?: number
-    /** Clau i18n del missatge d'error (la produeix `GiphyService.toUserErrorKey`) */
     errorKey?: string
   }>(),
   { selectedId: null, skeletons: 8, errorKey: 'meme.results.error' }
@@ -21,23 +20,23 @@ const { t } = useI18n()
 <template>
   <div class="meme-grid" aria-live="polite">
     <div v-if="status === 'pending'" class="meme-grid__skeletons" data-testid="meme-skeletons">
-      <AppSkeleton v-for="n in skeletons" :key="n" shape="image" />
+      <CustomSkeleton v-for="n in skeletons" :key="n" shape="image" />
     </div>
-    <AppAlert
+    <CustomAlert
       v-else-if="status === 'error'"
       tone="danger"
       class="meme-grid__state"
       :title="t('meme.results.errorTitle')"
     >
       {{ t(errorKey) }}
-    </AppAlert>
-    <AppAlert
+    </CustomAlert>
+    <CustomAlert
       v-else-if="status === 'success' && items.length === 0"
       tone="info"
       class="meme-grid__state"
     >
       {{ t('meme.results.empty') }}
-    </AppAlert>
+    </CustomAlert>
     <ul v-else-if="items.length" class="meme-grid__list">
       <li v-for="meme in items" :key="meme.id">
         <MemeCard

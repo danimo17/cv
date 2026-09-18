@@ -1,20 +1,21 @@
-# Standard · Estil de codi (tot mecanitzat)
+# Standard · Code style (fully automated)
 
-Prettier (`.prettierrc`): sense `;`, cometes simples, 100 columnes, coma final es5. ESLint (`eslint.config.mjs`).
+Prettier (`.prettierrc`): no `;`, single quotes, 100 columns, es5 trailing commas. ESLint (`eslint.config.mjs`).
 
-| Regla                                   | Bo                                     | Dolent                                                                          |
-| --------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------- |
-| `vue/block-order` script → template     | `<script setup>` a dalt                | `<template>` a dalt                                                             |
-| `vue/define-macros-order`               | `defineProps` abans de `defineEmits`   | al revés                                                                        |
-| `vue/component-name-in-template-casing` | `<AppButton>`                          | `<app-button>`                                                                  |
-| `vue/require-explicit-emits`            | `defineEmits<{ select: [Meme] }>()`    | `$emit('foo')` sense declarar                                                   |
-| `vue/no-bare-strings-in-template`       | `{{ t('hero.cta.contact') }}`          | `Contact me`                                                                    |
-| `vue/no-restricted-class`               | `class="app-card app-card--outline"`   | `class="p-4 bg-white"`                                                          |
-| `@typescript-eslint/no-explicit-any`    | tipus concret o `unknown` + narrow     | `any`                                                                           |
-| `no-console`                            | llençar `createError` / retornar estat | `console.log` (a `server/` es permet `error`/`warn`)                            |
-| `no-restricted-imports`                 | `<AppIcon name="sun" />`               | `import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'` fora d'AppIcon |
-| `sort-imports` (membres)                | `import { a, b }`                      | `import { b, a }`                                                               |
+| Rule                                    | Good                                       | Bad                                                                                 |
+| --------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `vue/block-order` script → template     | `<script setup>` at the top                | `<template>` at the top                                                             |
+| `vue/define-macros-order`               | `defineProps` before `defineEmits`         | the other way around                                                                |
+| `vue/component-name-in-template-casing` | `<CustomButton>`                           | `<custom-button>`                                                                   |
+| `vue/require-explicit-emits`            | `defineEmits<{ select: [Meme] }>()`        | `$emit('foo')` without declaring it                                                 |
+| `vue/no-bare-strings-in-template`       | `{{ t('hero.cta.contact') }}`              | `Contact me`                                                                        |
+| `vue/no-restricted-class`               | `class="custom-card custom-card--outline"` | `class="p-4 bg-white"`                                                              |
+| `@typescript-eslint/no-explicit-any`    | a concrete type or `unknown` + narrow      | `any`                                                                               |
+| `no-console`                            | throw `createError` / return state         | `console.log` (`error`/`warn` allowed in `server/`)                                 |
+| `no-restricted-imports`                 | `<CustomIcon name="sun" />`                | `import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'` outside CustomIcon |
+| `sort-imports` (members)                | `import { a, b }`                          | `import { b, a }`                                                                   |
 
-Altres convencions (les revisa la review, no una eina): fitxers `kebab-case.ts`, components `PascalCase.vue`,
-composables `useX.ts`, stores `useXStore`, comentaris `// ponytail: …` per a simplificacions deliberades amb el
-sostre i el camí d'upgrade.
+Other conventions (checked in review, not by a tool): `kebab-case.ts` files, `PascalCase.vue` components,
+`useX.ts` composables, `useXStore` stores. No comments in code (rule 14) — a deliberate simplification that
+would once have been a `// ponytail: …` comment now goes in `.claude/docs/decisions/` instead. No
+`eslint-disable`/`@ts-expect-error`/`@ts-ignore` anywhere (rule 15).

@@ -8,6 +8,13 @@ const emit = defineEmits<{ search: [query: string] }>()
 const { t } = useI18n()
 const query = ref(props.initial)
 
+watch(
+  () => props.initial,
+  (value) => {
+    query.value = value
+  }
+)
+
 function submit() {
   const q = query.value.trim()
   if (q) emit('search', q)
@@ -16,7 +23,7 @@ function submit() {
 
 <template>
   <form class="meme-search" role="search" @submit.prevent="submit">
-    <AppInput
+    <CustomInput
       id="meme-query"
       v-model="query"
       class="meme-search__input"
@@ -26,7 +33,7 @@ function submit() {
       type="search"
       hide-label
     />
-    <AppButton
+    <CustomButton
       type="submit"
       icon="magnifying-glass"
       :loading="loading"
@@ -34,6 +41,6 @@ function submit() {
       data-testid="meme-search-submit"
     >
       {{ t('meme.search.button') }}
-    </AppButton>
+    </CustomButton>
   </form>
 </template>

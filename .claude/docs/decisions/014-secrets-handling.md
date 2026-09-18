@@ -1,3 +1,3 @@
-# 014 · Gestió de secrets
+# 014 · Secrets handling
 
-**Decisió.** Vegeu regla 01. La clau de Giphy que va aparèixer al xat el 2026-09-14 es considera compromesa i s'ha de regenerar (pendent de l'usuari). La IA no escriu mai la clau: l'usuari la posa a .env i als secrets de GitHub.
+**Decision.** See rule 01. The Giphy key that appeared in the chat on 2026-09-14 is considered compromised and must be regenerated (pending on the user). The AI never writes the key: the user puts it in .env and in GitHub secrets.

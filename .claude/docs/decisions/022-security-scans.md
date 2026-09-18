@@ -1,4 +1,4 @@
-# 022 · Escanejos de seguretat a la CI
+# 022 · Security scans in CI
 
-**Decisió.** `security.yml`: gitleaks (secrets al repo), `pnpm audit --audit-level=high`, CodeQL (JavaScript/TypeScript). `dependabot.yml`: deps npm i GitHub Actions setmanals. Tots són checks obligatoris per fer merge a `main` juntament amb `ci` (gate + build + e2e).
-**Conseqüències.** CodeQL és gratuït només en repos públics; si el repo és privat cal desactivar-lo o pagar GitHub Advanced Security.
+**Decision.** `security.yml`: gitleaks (secrets in the repo), `pnpm audit --audit-level=high`, CodeQL (JavaScript/TypeScript). `dependabot.yml`: weekly npm and GitHub Actions deps. All are required checks to merge into `main`, alongside `ci` (gate + build + e2e).
+**Consequences.** CodeQL is free only on public repos; if the repo goes private it must be disabled or GitHub Advanced Security paid for.

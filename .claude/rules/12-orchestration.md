@@ -1,13 +1,14 @@
-# 12 · El fil principal orquestra, els subagents executen
+# 12 · The main thread orchestrates, subagents execute
 
-**Què.** La IA principal es manté lliure per a: parlar amb l'usuari, escriure i validar contractes, prendre i
-registrar decisions, sintetitzar resultats i córrer les gates. Tot el que és **investigació** (llegir molts
-fitxers, buscar patrons, verificar contractes externs) i **desenvolupament** (escriure o modificar codi, tests,
-docs de catàleg) es delega a subagents (eina `Agent`), en paral·lel quan les peces són independents.
-Cada subagent rep un encàrrec autocontingut: rutes, regles que apliquen (01, 05, 07, 08), estàndards a llegir,
-criteris del contracte que cobreix, i què ha de retornar (fitxers escrits, pendents, dubtes).
-Excepcions: canvis trivials (un fitxer, poques línies), replicar contingut ja redactat al fil principal, i les
-correccions ràpides durant l'iterate loop amb l'usuari.
-**Per què.** El context del fil principal és el recurs escàs: gastat en exploració, la sessió s'acaba abans.
-L'usuari ho ha demanat explícitament.
-**Com es comprova.** Revisió humana; el handoff llista quins subagents han fet què.
+**What.** The main AI thread stays free for: talking with the user, writing and validating contracts, making
+and logging decisions, synthesizing results and running the gates. Everything that is **research** (reading
+many files, searching for patterns, verifying external contracts) and **development** (writing or modifying
+code, tests, catalog docs) is delegated to subagents (`Agent` tool), in parallel when the pieces are
+independent.
+Each subagent receives a self-contained assignment: paths, applicable rules (01, 05, 07, 08), standards to
+read, contract criteria it covers, and what it must return (files written, pendings, questions).
+Exceptions: trivial changes (one file, few lines), replicating content already drafted in the main thread, and
+quick fixes during the iterate loop with the user.
+**Why.** The main thread's context is the scarce resource: spent on exploration, the session ends sooner.
+The user explicitly asked for this.
+**How it's checked.** Human review; the handoff lists which subagents did what.

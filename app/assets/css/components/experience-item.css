@@ -1,4 +1,3 @@
-/* Neumorphism: el punt de la línia de temps és una bola en relleu. */
 @layer components {
   .experience-item {
     @apply relative grid gap-1 border-l-2 border-border pl-6 sm:grid-cols-[9rem_1fr] sm:gap-6;

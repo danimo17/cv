@@ -1,4 +1,4 @@
-# 004 · El meme escollit NO sobreviu a la recàrrega
+# 004 · The chosen meme does NOT survive a reload
 
-**Decisió.** L'estat del meme viu només a Pinia (memòria). Sobreviu a la navegació amb el router; una recàrrega restaura la foto. És deliberat: demostra estat client.
-**Conseqüències.** Cap persistència a la store `hero`. No tornar a proposar localStorage per a això.
+**Decision.** The meme state lives only in Pinia (memory). It survives navigation via the router; a reload restores the original photo. This is deliberate: it demonstrates client state.
+**Consequences.** No persistence in the `hero` store. Do not propose localStorage for this again.

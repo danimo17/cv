@@ -1,4 +1,3 @@
-/* Neumorphism: la franja enfonsada la posa AppMarquee; aquí només posició i espai dels ítems. */
 @layer components {
   .source-banner {
     @apply relative z-30;

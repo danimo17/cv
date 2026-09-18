@@ -1,3 +1,3 @@
-# 023 · El fil principal orquestra; subagents investiguen i desenvolupen
+# 023 · The main thread orchestrates; subagents investigate and develop
 
-**Decisió.** Regla 12. Vegeu `.claude/rules/12-orchestration.md`. Demanat explícitament per l'usuari el 2026-09-14.
+**Decision.** Rule 12. See `.claude/rules/12-orchestration.md`. Explicitly requested by the user on 2026-09-14.

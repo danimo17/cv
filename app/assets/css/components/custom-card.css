@@ -1,0 +1,29 @@
+@layer components {
+  .custom-card {
+    @apply rounded-xl transition-shadow;
+  }
+  .custom-card--outline {
+    @apply bg-surface shadow-neu-sm;
+  }
+  .custom-card--filled {
+    @apply bg-surface-alt shadow-neu-inset;
+  }
+  .custom-card--elevated {
+    @apply bg-surface shadow-neu-lg;
+  }
+  .custom-card--padding-sm {
+    @apply p-3;
+  }
+  .custom-card--padding-md {
+    @apply p-5;
+  }
+  .custom-card--padding-lg {
+    @apply p-8;
+  }
+  .custom-card__header {
+    @apply mb-3;
+  }
+  .custom-card__footer {
+    @apply mt-4;
+  }
+}

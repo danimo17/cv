@@ -1,0 +1,17 @@
+@layer components {
+  .custom-section {
+    @apply scroll-mt-20 py-12 sm:py-16;
+  }
+  .custom-section__header {
+    @apply mb-8;
+  }
+  .custom-section__eyebrow {
+    @apply mb-2 flex items-center gap-2;
+  }
+  .custom-section__title {
+    @apply block;
+  }
+  .custom-section__subtitle {
+    @apply mt-2 max-w-2xl;
+  }
+}

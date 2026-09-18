@@ -1,14 +1,14 @@
-# Catàleg · Estat, serveis, domini, dades i UI-config
+# Catalog · State, services, domain, data and UI-config
 
-Capes (decisió 029), dependència en un sol sentit:
+Layers (decision 029), one-way dependency:
 
 ```
 server/api/giphy (API) ◄── app/services/giphy (Service) ◄── app/stores (Store) ◄── app/pages + components (View) ◄── app/ui-config (UI-config)
-app/domain/cv (tipus i regles pures)  ·  app/data/cv (taules)  ·  app/composables (helpers de framework)
+app/domain/cv (types and pure rules)  ·  app/data/cv (tables)  ·  app/composables (framework helpers)
 ```
 
-`tests/arch/docs-sync.spec.ts` exigeix un bloc `### nom` per a cada store, composable, util, classe de servei,
-funció exportada de `domain/` i export de `ui-config/`.
+`tests/arch/docs-sync.spec.ts` requires a `### name` block for every store, composable, util, service class,
+exported function in `domain/` and export from `ui-config/`.
 
 ## Stores (`app/stores/`, Pinia setup stores, auto-import)
 
@@ -16,38 +16,38 @@ funció exportada de `domain/` i export de `ui-config/`.
 
 `app/stores/hero.ts`, id `hero`.
 
-|              |                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------- |
-| Estat        | `selected: Meme \| null` (meme que "porta" el hero), `history: Meme[]` (últims 5 seleccionats, sense duplicats) |
-| Getters      | `hasMeme: boolean`                                                                                              |
-| Accions      | `select(meme)` → selected + history; `reset()` → selected = null (history es manté)                             |
-| Persistència | cap (decisió 004: en memòria a propòsit)                                                                        |
-| Consumidors  | `HeroSection` (llegeix + reset), `pages/meme.vue` (select/reset)                                                |
+|             |                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| State       | `selected: Meme \| null` (meme the hero is "wearing"), `history: Meme[]` (last 5 selected, no duplicates) |
+| Getters     | `hasMeme: boolean`                                                                                        |
+| Actions     | `select(meme)` → selected + history; `reset()` → selected = null (history is kept)                        |
+| Persistence | none (decision 004: kept in memory on purpose)                                                            |
+| Consumers   | `HeroSection` (reads + reset), `pages/meme.vue` (select/reset)                                            |
 
 ### useGiphyStore
 
-`app/stores/giphy.ts`, id `giphy`. Únic lloc on es crea el `useFetch` (via `giphyService.createSearch`, al setup
-de la store, dins del context Nuxt de la primera vista que la crida).
+`app/stores/giphy.ts`, id `giphy`. The only place where the `useFetch` is created (via `giphyService.createSearch`, in the
+store's setup, inside the Nuxt context of the first view that calls it).
 
-|              |                                                                                                                                                                                                                                                                      |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Estat        | `query: string` (retallada), `limit: number` (`DEFAULT_GIPHY_LIMIT = 12`), `items: Meme[]` (computed de `data.items`), `status: AsyncDataRequestStatus`, `error`, `errorKey: string` (computed: `''` si no hi ha error; si no, `giphyService.toUserErrorKey(error)`) |
-| Accions      | `search(q)` → retalla, ignora buides, `execute()`                                                                                                                                                                                                                    |
-| Persistència | cap                                                                                                                                                                                                                                                                  |
-| Consumidors  | `pages/meme.vue` (`items`, `status`, `errorKey`, `query`, `search`)                                                                                                                                                                                                  |
-| Test         | `tests/unit/stores/giphy.spec.ts` (`registerEndpoint` que simula 200/400/503 segons `q`)                                                                                                                                                                             |
+|             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State       | `query: string` (trimmed), `limit: number` (`DEFAULT_GIPHY_LIMIT = 12`), `offset: number` (current page, 0 = first), `items: Meme[]` (computed from `data.items`), `total: number` (computed from `data.total`, defaults to `0`), `status: AsyncDataRequestStatus`, `error`, `errorKey: string` (computed: `''` if there is no error; otherwise `giphyService.toUserErrorKey(error)`), `history: string[]` (last 5 searched terms, most recent first, no duplicates — decision 034; **not** the same concept as `hero.history`) |
+| Actions     | `search(q)` → trims, ignores empty values, updates `history` (dedupe + `slice(0,5)`), then `goToOffset(0)`; `goToOffset(newOffset)` → sets `offset`, `execute()`, and rolls `offset` back to its previous value if the fetch fails (avoids a phantom page number, e.g. "page 6 of 5", staying reachable after a failed page change — fixed 2026-09-18)                                                                                                                                                                          |
+| Persistence | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Consumers   | `pages/meme.vue` (`items`, `status`, `errorKey`, `query`, `total`, `offset`, `history`, `search`, `goToOffset`)                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Test        | `tests/unit/stores/giphy.spec.ts` (`registerEndpoint` simulating 200/400/503 depending on `q`; covers `history` dedupe/max 5/order)                                                                                                                                                                                                                                                                                                                                                                                             |
 
-## Serveis (`app/services/`, import explícit)
+## Services (`app/services/`, auto-import — decision 041)
 
 ### GiphyService
 
-`app/services/giphy/GiphyService.ts`, classe amb una única instància exportada `giphyService`. Sense estat.
-Únic lloc del client que coneix `/api/giphy/*` (regla 03, `tests/arch/giphy-boundary.spec.ts`).
+`app/services/giphy/GiphyService.ts`, a class with a single exported instance `giphyService`. Stateless.
+The only place on the client that knows about `/api/giphy/*` (rule 03, `tests/arch/giphy-boundary.spec.ts`).
 
-| Mètode           | Signatura                                                                            | Fa                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| `createSearch`   | `(query: Ref<string>, limit: Ref<number> \| number) → useFetch<GiphySearchResponse>` | defineix la petició a la ruta de cerca amb `immediate: false`, `watch: false`; no l'executa     |
-| `toUserErrorKey` | `(error: { statusCode?: number } \| null \| undefined) → string`                     | 400 → `meme.results.badQuery`, 503 → `meme.results.notConfigured`, resta → `meme.results.error` |
+| Method           | Signature                                                                                                               | Does                                                                                                                                   |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `createSearch`   | `(query: Ref<string>, limit: Ref<number> \| number, offset: Ref<number> \| number = 0) → useFetch<GiphySearchResponse>` | defines the request to the search route (including `offset`, decision 034) with `immediate: false`, `watch: false`; doesn't execute it |
+| `toUserErrorKey` | `(error: { statusCode?: number } \| null \| undefined) → string`                                                        | 400 → `meme.results.badQuery`, 503 → `meme.results.notConfigured`, other → `meme.results.error`                                        |
 
 Test: `tests/unit/services/GiphyService.spec.ts`.
 
@@ -55,59 +55,61 @@ Test: `tests/unit/services/GiphyService.spec.ts`.
 
 ### useMessageList
 
-`useMessageList(key: MaybeRefOrGetter<string>): ComputedRef<string[]>`. Llegeix una clau i18n que és un array
-(`tm` + `rt`) i retorna els missatges resolts; `[]` si la clau no és un array. Evita el tipat recursiu de
-`Parameters<typeof rt>` (TS2589). Consumidors: `ExperienceItem` (bullets), `pages/meme.vue` (`meme.how.steps`).
+`useMessageList(key: MaybeRefOrGetter<string>): ComputedRef<string[]>`. Reads an i18n key that is an array
+(`tm` + `rt`) and returns the resolved messages; `[]` if the key isn't an array. Avoids the recursive typing of
+`Parameters<typeof rt>` (TS2589). Consumers: `ExperienceItem` (bullets), `pages/meme.vue` (`meme.how.steps`).
 
-## Domini (`app/domain/cv/`, import explícit, sense framework)
+## Domain (`app/domain/cv/`, auto-import — decision 041, no framework)
 
 ### formatPeriod
 
 `app/domain/cv/period.ts`. `formatPeriod(start, end, locale, presentLabel)` → `"Oct 2023 – Present"`.
-`start`/`end` en `YYYY-MM` o `YYYY`; `end === null` = present; `end === undefined` = data única. Funció pura amb
-`Intl.DateTimeFormat`. Test: `tests/unit/domain/period.spec.ts`. Consumidor: `ExperienceItem`.
+`start`/`end` in `YYYY-MM` or `YYYY`; `end === null` = present; `end === undefined` = a single date. A pure function using
+`Intl.DateTimeFormat`. Test: `tests/unit/domain/period.spec.ts`. Consumer: `ExperienceItem`.
 
-### Tipus del domini
+### Domain types
 
 `app/domain/cv/types.ts` → `Section` (`experience | education | certifications`), `TimelineItem` (`id`, `section`,
 `org`, `url?`, `location?`, `start`, `end?`, `tags`), `StackGroup` (`id`, `icon`, `items`).
 
-## Dades (`app/data/cv/`, import explícit des de `~/data/cv`)
+## Data (`app/data/cv/`, auto-import — decision 041)
 
-### Dades estàtiques
+### Static data
 
-Taules hardcoded, sense text traduïble (el text va a i18n amb la clau `<section>.items.<id>.{title,bullets|note}`):
+Hardcoded tables, with no translatable text (text lives in i18n under the key `<section>.items.<id>.{title,bullets|note}`):
 
-| Fitxer          | Export                                        | Contingut                                                               |
-| --------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
-| `profile.ts`    | `profile`                                     | nom, email, GitHub, LinkedIn, `repo`, codis d'idiomes, ids d'interessos |
-| `experience.ts` | `experience: TimelineItem[]`                  | feines                                                                  |
-| `education.ts`  | `education`, `certifications: TimelineItem[]` | formació i certificats                                                  |
-| `stack.ts`      | `stack: StackGroup[]`                         | grups del stack (id, icona, items)                                      |
-| `index.ts`      | re-export de tot                              | `import { profile, stack } from '~/data/cv'`                            |
+| File            | Export                                        | Content                                                             |
+| --------------- | --------------------------------------------- | ------------------------------------------------------------------- |
+| `profile.ts`    | `profile`                                     | name, email, GitHub, LinkedIn, `repo`, language codes, interest ids |
+| `experience.ts` | `experience: TimelineItem[]`                  | jobs                                                                |
+| `education.ts`  | `education`, `certifications: TimelineItem[]` | education and certificates                                          |
+| `stack.ts`      | `stack: StackGroup[]`                         | stack groups (id, icon, items)                                      |
 
-Regla 04: `tests/arch/no-pii.spec.ts` escaneja `app/data/cv/*.ts`.
+Each export auto-imports directly (`nuxt.config.ts` → `imports.dirs` includes `data/**`) — no barrel file
+(the former `index.ts` re-export was deleted, it collided with the auto-import config).
 
-## UI-config (`app/ui-config/`, import explícit)
+Rule 04: `tests/arch/no-pii.spec.ts` scans `app/data/cv/*.ts`.
+
+## UI-config (`app/ui-config/`, auto-import — decision 041)
 
 ### homeSections
 
-`app/ui-config/cv/sections.ts`. `readonly HomeSectionConfig[]` amb l'ordre de la home:
-`{ id, component, icon, titleKey, eyebrowKey }` per a `about`, `experience`, `stack`, `education`, `contact`.
-`pages/index.vue` itera aquest array i renderitza `component` amb un mapa explícit d'imports (no
-`resolveComponent` dinàmic).
+`app/ui-config/cv/sections.ts`. `readonly HomeSectionConfig[]` with the home page order:
+`{ id, component, icon, titleKey, eyebrowKey }` for `about`, `experience`, `stack`, `education`, `contact`.
+`pages/index.vue` iterates this array and renders `component` using an explicit import map (no
+dynamic `resolveComponent`).
 
 ### getSectionConfig
 
-`getSectionConfig(id: HomeSectionId): HomeSectionConfig`. Cada secció `cv/*` llegeix la seva entrada per passar
-`id`, `title`, `eyebrow` i `icon` a `AppSection`. Llença si l'id no existeix.
+`getSectionConfig(id: HomeSectionId): HomeSectionConfig`. Each `cv/*` section reads its own entry to pass
+`id`, `title`, `eyebrow` and `icon` to `CustomSection`. Throws if the id doesn't exist.
 
-## Servidor (`server/`)
+## Server (`server/`)
 
-- `server/utils/giphy.ts`: `parseSearchQuery` (validació: q 1-50 chars sense control chars, limit 1-25 def. 12, offset 0-4999; llença `GiphyQueryError`), `toMeme` (normalitza un GIF de Giphy a `Meme`).
-- `server/api/giphy/search.get.ts`: handler cachejat 1 h; 400 query invàlida, 503 sense clau, 502 upstream.
+- `server/utils/giphy.ts`: `parseSearchQuery` (validation: q 1-50 chars with no control chars, limit 1-25 default 12, offset 0-4999; throws `GiphyQueryError`), `toMeme` (normalizes a Giphy GIF into a `Meme`).
+- `server/api/giphy/search.get.ts`: handler cached for 1 h; 400 for an invalid query, 503 with no key, 502 upstream error.
 
-## Tipus compartits
+## Shared types
 
-`shared/types/giphy.ts` → `Meme`, `GiphySearchResponse` (servidor i client via `#shared/types/giphy`).
-`app/types/ui.ts` → `Tone`, `Size`, `TONES`, `SIZES`. Els tipus del CV són a `app/domain/cv/types.ts`.
+`shared/types/giphy.ts` → `Meme`, `GiphySearchResponse` (server and client via `#shared/types/giphy`).
+`app/types/ui.ts` → `Tone`, `Size`, `TONES`, `SIZES`. The CV types live in `app/domain/cv/types.ts`.

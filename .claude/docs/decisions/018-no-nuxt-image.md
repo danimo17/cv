@@ -1,4 +1,4 @@
-# 018 · Sense @nuxt/image
+# 018 · No @nuxt/image
 
-**Context.** IPX (el proveïdor per defecte) necessita Node; no corre a Cloudflare Workers.
-**Decisió.** Imatges estàtiques ja optimitzades (JPEG a mida). Si un dia calen mides responsive, generar-les al build o usar el proveïdor `cloudflare` de @nuxt/image.
+**Context.** IPX (the default provider) needs Node; it doesn't run on Cloudflare Workers.
+**Decision.** Static images, already optimized (JPEG at size). If responsive sizes are ever needed, generate them at build time or use the `cloudflare` provider of @nuxt/image.

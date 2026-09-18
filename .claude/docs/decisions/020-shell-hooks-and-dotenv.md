@@ -1,5 +1,5 @@
-# 020 · Els hooks protect-secrets i com escriure fitxers
+# 020 · The protect-secrets hook and how to write files
 
-**Context.** El hook global `protect-secrets` de l'usuari bloqueja qualsevol ordre Bash on aparegui una eina de lectura de text (les de mostrar o cercar fitxers) seguida, en qualsevol punt de l'ordre, del nom literal del fitxer d'entorn local (punt + env), encara que sigui dins d'un heredoc, un comentari o prosa.
-**Decisió.** Per escriure fitxers des de Bash s'usa `tee FITXER <<'EOF'` i el nom del fitxer d'entorn s'escriu com a placeholder `.env` que es substitueix amb Python al final (`'.' + 'env'`); per a lots grans, un script escrit amb l'eina Write i executat amb `sh`. Cap ordre Bash conté mai el nom literal d'aquell fitxer.
-**Conseqüències.** Als docs, si veus `.env` és que la substitució no s'ha fet. La IA tampoc no llegeix mai el fitxer d'entorn.
+**Context.** The user's global `protect-secrets` hook blocks any Bash command where a text-reading tool (those that display or search files) is followed, anywhere in the command, by the literal name of the local env file (dot + env), even inside a heredoc, a comment, or prose.
+**Decision.** To write files from Bash, use `tee FILE <<'EOF'`, and write the env file's name as a `.env` placeholder that gets substituted with Python at the end (`'.' + 'env'`); for large batches, a script written with the Write tool and run with `sh`. No Bash command ever contains the literal name of that file.
+**Consequences.** In the docs, if you see `.env` it means the substitution wasn't done. The AI also never reads the env file.

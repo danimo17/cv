@@ -5,7 +5,7 @@ import { PDFParse } from 'pdf-parse'
 import { describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
-// Sense salts de línia: '2021 - 2022' + '(11 mesos)' a la línia següent no és un telèfon.
+// No line breaks: '2021 - 2022' + '(11 months)' on the next line is not a phone number.
 const PHONE = /\+?\d[\d \t().-]{6,}\d/g
 const POSTAL_CODE = '17820'
 const MIN_DIGITS = 9
@@ -21,7 +21,7 @@ function findPii(text: string): string[] {
 }
 
 function textSources(): Array<{ label: string; text: string }> {
-  // Capa de dades (decisió 029): app/data/cv/*.ts
+  // Data layer (decision 029): app/data/cv/*.ts
   const dataDir = join(ROOT, 'app', 'data', 'cv')
   const data = readdirSync(dataDir)
     .filter((f) => f.endsWith('.ts'))
@@ -46,7 +46,7 @@ function pdfFiles(): string[] {
     .map((f) => join(dir, f))
 }
 
-// pdf-parse llegeix la capa de text real (fonts subset i CID incloses): és el que indexen els bots.
+// pdf-parse reads the real text layer (subset and CID fonts included): this is what bots index.
 async function pdfText(file: string): Promise<string> {
   const parser = new PDFParse({ data: readFileSync(file) })
   try {

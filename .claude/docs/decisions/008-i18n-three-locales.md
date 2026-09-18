@@ -1,3 +1,3 @@
-# 008 · Tres idiomes amb @nuxtjs/i18n
+# 008 · Three languages with @nuxtjs/i18n
 
-**Decisió.** `en` (default, sense prefix), `ca`, `es` (prefix). Fitxers `i18n/locales/*.json` amb estructura idèntica. Text d'usuari sempre per clau (regla 05).
+**Decision.** `en` (default, no prefix), `ca`, `es` (prefixed). `i18n/locales/*.json` files with identical structure. User text is always keyed (rule 05).

@@ -1,3 +1,3 @@
-# 012 · Tests i gates vinculants
+# 012 · Binding tests and gates
 
-**Decisió.** Vitest (unit + arquitectura) i Playwright (E2E del flux meme). Gates vinculants: pre-commit = `pnpm gate`, pre-push = `pnpm gate:push`, CI igual + seguretat, ruleset de main, hook de Claude per contracte i `--no-verify`. Vegeu `workflow.md`.
+**Decision.** Vitest (unit + architecture) and Playwright (E2E of the meme flow). Binding gates: pre-commit = `pnpm gate`, pre-push = `pnpm gate:push`, CI same + security, main ruleset, Claude hook for contract and `--no-verify`. See `workflow.md`.

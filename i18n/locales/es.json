@@ -188,7 +188,16 @@
     },
     "success": "¡Hecho! Tu nueva cara ya está en la página de inicio.",
     "goHome": "Verlo en la página de inicio",
-    "poweredBy": "Powered by GIPHY"
+    "poweredBy": "Powered by GIPHY",
+    "recentSearches": {
+      "title": "Búsquedas recientes"
+    }
+  },
+  "pagination": {
+    "title": "Paginación",
+    "previous": "Página anterior",
+    "next": "Página siguiente",
+    "page": "Página {page} de {total}"
   },
   "footer": {
     "built": "Hecho con Nuxt 4, Tailwind, Pinia y un poco de IA.",

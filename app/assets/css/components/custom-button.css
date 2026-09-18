@@ -1,0 +1,95 @@
+@layer components {
+  .custom-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-surface font-medium whitespace-nowrap shadow-neu transition-shadow select-none hover:shadow-neu-sm active:shadow-neu-inset disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-neu-sm;
+  }
+  .custom-button--block {
+    @apply flex w-full;
+  }
+  .custom-button--sm {
+    @apply h-8 px-3 text-sm;
+  }
+  .custom-button--md {
+    @apply h-10 px-4 text-sm;
+  }
+  .custom-button--lg {
+    @apply h-12 px-6 text-base;
+  }
+  .custom-button--loading {
+    @apply pointer-events-none opacity-70 shadow-neu-inset;
+  }
+  .custom-button__icon {
+    @apply shrink-0;
+  }
+
+  .custom-button--solid.custom-button--primary {
+    @apply bg-primary text-primary-fg;
+  }
+  .custom-button--solid.custom-button--secondary {
+    @apply bg-secondary text-secondary-fg;
+  }
+  .custom-button--solid.custom-button--neutral {
+    @apply bg-neutral text-neutral-fg;
+  }
+  .custom-button--solid.custom-button--success {
+    @apply bg-success text-success-fg;
+  }
+  .custom-button--solid.custom-button--info {
+    @apply bg-info text-info-fg;
+  }
+  .custom-button--solid.custom-button--warning {
+    @apply bg-warning text-warning-fg;
+  }
+  .custom-button--solid.custom-button--danger {
+    @apply bg-danger text-danger-fg;
+  }
+
+  .custom-button--outline {
+    @apply bg-surface ring-1;
+  }
+  .custom-button--outline.custom-button--primary {
+    @apply text-primary ring-primary/40;
+  }
+  .custom-button--outline.custom-button--secondary {
+    @apply text-secondary ring-secondary/40;
+  }
+  .custom-button--outline.custom-button--neutral {
+    @apply text-text ring-neutral/40;
+  }
+  .custom-button--outline.custom-button--success {
+    @apply text-success ring-success/40;
+  }
+  .custom-button--outline.custom-button--info {
+    @apply text-info ring-info/40;
+  }
+  .custom-button--outline.custom-button--warning {
+    @apply text-warning ring-warning/40;
+  }
+  .custom-button--outline.custom-button--danger {
+    @apply text-danger ring-danger/40;
+  }
+
+  .custom-button--ghost {
+    @apply bg-transparent shadow-neu-none;
+  }
+  .custom-button--ghost.custom-button--primary {
+    @apply text-primary;
+  }
+  .custom-button--ghost.custom-button--secondary {
+    @apply text-secondary;
+  }
+  .custom-button--ghost.custom-button--neutral {
+    @apply text-text-muted hover:text-text;
+  }
+  .custom-button--ghost.custom-button--success {
+    @apply text-success;
+  }
+  .custom-button--ghost.custom-button--info {
+    @apply text-info;
+  }
+  .custom-button--ghost.custom-button--warning {
+    @apply text-warning;
+  }
+  .custom-button--ghost.custom-button--danger {
+    @apply text-danger;
+  }
+}

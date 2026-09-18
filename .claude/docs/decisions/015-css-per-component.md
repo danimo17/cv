@@ -1,3 +1,3 @@
-# 015 · Un CSS per component amb estats semàntics
+# 015 · One CSS file per component with semantic states
 
-**Decisió.** Tokens semàntics a `tokens.css` (`primary, secondary, neutral, success, info, warning, danger` + `surface, text, border`, light i dark). Cada component té `assets/css/components/<kebab>.css` amb BEM-lite i `@apply`. Al template només classes pròpies. Vegeu regla 08 i `docs/standards/styling.md`.
+**Decision.** Semantic tokens in `tokens.css` (`primary, secondary, neutral, success, info, warning, danger` + `surface, text, border`, light and dark). Each component has `assets/css/components/<kebab>.css` with BEM-lite and `@apply`. Only its own classes in the template. See rule 08 and `docs/standards/styling.md`.

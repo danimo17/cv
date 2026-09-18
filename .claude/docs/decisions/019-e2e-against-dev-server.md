@@ -1,4 +1,4 @@
-# 019 · E2E contra nuxt dev
+# 019 · E2E against nuxt dev
 
-**Context.** El build amb preset Cloudflare no s'executa amb node.
-**Decisió.** Playwright aixeca `pnpm dev --port 3100`; les crides a `/api/giphy/**` es mockegen amb `page.route` (no cal clau). `gate:push` fa build (Cloudflare) + e2e (dev).
+**Context.** The build with the Cloudflare preset doesn't run under node.
+**Decision.** Playwright starts `pnpm dev --port 3100`; calls to `/api/giphy/**` are mocked with `page.route` (no key needed). `gate:push` does build (Cloudflare) + e2e (dev).

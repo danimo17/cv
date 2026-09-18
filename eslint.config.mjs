@@ -1,13 +1,18 @@
 // @ts-check
-// Regles d'estil vinculants: .claude/docs/standards/code-style.md explica cadascuna.
 import prettier from 'eslint-config-prettier'
 import withNuxt from './.nuxt/eslint.config.mjs'
 
 const STYLE_UTILITIES =
   '/^(bg|text|p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|rounded|border|shadow|font|w|h|max-w|max-h|size)-/'
 
-// Decisió 026: cada element natiu de text/formulari/enllaç/imatge té un únic primitiu propi.
-const PRIMITIVE_WRAPPERS = ['AppText', 'AppInput', 'AppButton', 'AppLink', 'AppImage', 'AppIcon']
+const PRIMITIVE_WRAPPERS = [
+  'CustomText',
+  'CustomInput',
+  'CustomButton',
+  'CustomLink',
+  'CustomImage',
+  'CustomIcon',
+]
 const RESTRICTED_ELEMENTS = [
   {
     element: [
@@ -26,15 +31,15 @@ const RESTRICTED_ELEMENTS = [
       'figcaption',
       'time',
     ],
-    message: 'Usa <AppText as="…" variant="…"> (app/components/shared/AppText.vue).',
+    message: 'Usa <CustomText as="…" variant="…"> (app/components/shared/CustomText.vue).',
   },
   {
     element: ['input', 'select', 'textarea'],
-    message: 'Usa <AppInput type="…"> (app/components/shared/AppInput.vue).',
+    message: 'Usa <CustomInput type="…"> (app/components/shared/CustomInput.vue).',
   },
-  { element: 'button', message: 'Usa <AppButton> (app/components/shared/AppButton.vue).' },
-  { element: 'a', message: 'Usa <AppLink to|href> (app/components/shared/AppLink.vue).' },
-  { element: 'img', message: 'Usa <AppImage> (app/components/shared/AppImage.vue).' },
+  { element: 'button', message: 'Usa <CustomButton> (app/components/shared/CustomButton.vue).' },
+  { element: 'a', message: 'Usa <CustomLink to|href> (app/components/shared/CustomLink.vue).' },
+  { element: 'img', message: 'Usa <CustomImage> (app/components/shared/CustomImage.vue).' },
 ]
 
 export default withNuxt(
@@ -52,9 +57,7 @@ export default withNuxt(
         { registeredComponentsOnly: false },
       ],
       'vue/require-explicit-emits': 'error',
-      // Regla 05: cap string d'usuari al template, tot passa per i18n.
       'vue/no-bare-strings-in-template': 'error',
-      // Regla 08: cap utilitat de color/espai/tipografia al template; només classes del CSS del component.
       'vue/no-restricted-class': ['error', STYLE_UTILITIES],
       '@typescript-eslint/no-explicit-any': 'error',
       'no-console': 'error',
@@ -64,7 +67,7 @@ export default withNuxt(
           paths: [
             {
               name: '@fortawesome/vue-fontawesome',
-              message: 'Usa <AppIcon> (app/components/shared/AppIcon.vue).',
+              message: 'Usa <CustomIcon> (app/components/shared/CustomIcon.vue).',
             },
           ],
         },
@@ -73,7 +76,6 @@ export default withNuxt(
     },
   },
   {
-    // Decisió 026: elements natius només dins del seu primitiu.
     files: ['app/**/*.vue'],
     rules: { 'vue/no-restricted-html-elements': ['error', ...RESTRICTED_ELEMENTS] },
   },
@@ -82,7 +84,7 @@ export default withNuxt(
     rules: { 'vue/no-restricted-html-elements': 'off' },
   },
   {
-    files: ['app/components/shared/AppIcon.vue', 'app/plugins/fontawesome.ts'],
+    files: ['app/components/shared/CustomIcon.vue', 'app/plugins/fontawesome.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
   {

@@ -4,7 +4,9 @@ const { t } = useI18n()
 
 <template>
   <div class="app-shell">
-    <AppLink href="#main" variant="subtle" class="skip-link">{{ t('nav.skipToContent') }}</AppLink>
+    <CustomLink href="#main" variant="subtle" class="skip-link">{{
+      t('nav.skipToContent')
+    }}</CustomLink>
     <AppHeader />
     <SourceBanner />
     <main id="main" class="app-shell__main">
