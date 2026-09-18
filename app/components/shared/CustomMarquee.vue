@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import type { Size, Tone } from '~/types/ui'
-
 export type MarqueeSpeed = 'slow' | 'normal' | 'fast'
 
-// Banner horitzontal infinit: el slot es renderitza dues vegades (la còpia és aria-hidden + inert)
-// i la pista es desplaça -50% en bucle. Respecta prefers-reduced-motion via custom-marquee.css.
 withDefaults(
   defineProps<{
-    /** Text accessible del contenidor (i18n) */
     label: string
     speed?: MarqueeSpeed
     pauseOnHover?: boolean
@@ -18,7 +13,6 @@ withDefaults(
 )
 
 defineSlots<{
-  /** `duplicate` és true a la segona còpia: posa-hi `tabindex="-1"` als enllaços */
   default(props: { duplicate: boolean }): unknown
 }>()
 </script>

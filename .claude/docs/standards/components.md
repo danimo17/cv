@@ -1,43 +1,44 @@
 # Standard · Components
 
-- **Abans de crear res, consulta el catàleg** (`.claude/docs/catalog/components.md` i `styles.md`, decisió 027):
-  reutilitza un component o una prop existent; només crea un primitiu nou si cap encaixa, i llavors documenta'l
-  al mateix canvi (regla 07).
-- **Ubicació i prefix.** `app/components/shared/Custom*` (primitius reutilitzables, no saben res del CV ni de les
-  stores), `layout/*` (capçalera, banner, peu, toggles), `cv/*` (seccions del CV), `meme/*` (funcionalitat meme).
-  PascalCase, multi-paraula. Es registren pel nom de fitxer sense prefix de carpeta (`pathPrefix: false`).
-- **Primitius obligatoris (decisió 026).** Els elements natius de text, formulari, enllaç i imatge estan prohibits
-  fora del seu primitiu (`vue/no-restricted-html-elements` a `app/**`):
-  - `p, span, h1-h6, small, strong, em, label, figcaption, time, li` amb text → `<CustomText as="…" variant="…">`
+- **Before creating anything, check the catalog** (`.claude/docs/catalog/components.md` and `styles.md`, decision 027):
+  reuse an existing component or prop; only create a new primitive if none fits, and then document it in the
+  same change (rule 07).
+- **Location and prefix.** `app/components/shared/Custom*` (reusable primitives, unaware of the CV or the
+  stores), `layout/*` (header, banner, footer, toggles), `cv/*` (CV sections), `meme/*` (meme functionality).
+  PascalCase, multi-word. Registered by filename without a folder prefix (`pathPrefix: false`).
+- **Mandatory primitives (decision 026).** Native text, form, link and image elements are forbidden
+  outside their primitive (`vue/no-restricted-html-elements` in `app/**`):
+  - `p, span, h1-h6, small, strong, em, label, figcaption, time, li` with text → `<CustomText as="…" variant="…">`
   - `input, select, textarea` → `<CustomInput type="…">` · `button` → `<CustomButton>` · `a`/`NuxtLink*` → `<CustomLink>` · `img` → `<CustomImage>`
-  - Estructurals natius: `div`, `section`, `article`, `header`, `footer`, `nav`, `ul`, `ol`, `li` (sense text propi),
-    `figure`, `form`, `fieldset`, `legend`.
-  - Els wrappers (`shared/Custom{Text,Input,Button,Link,Image,Icon}.vue`) són els únics amb l'excepció ESLint.
-- **SFC.** `<script setup lang="ts">` → `<template>` → sense `<style>` (el CSS viu a `assets/css/components/`, regla 08).
-- **Props.** `defineProps<{...}>()` tipat + `withDefaults`. Props de variació estàndard, sempre amb aquests noms:
-  - `tone?: Tone` (`primary | secondary | neutral | success | info | warning | danger`) → color semàntic
+  - Native structural elements: `div`, `section`, `article`, `header`, `footer`, `nav`, `ul`, `ol`, `li` (with no
+    text of their own), `figure`, `form`, `fieldset`, `legend`.
+  - The wrappers (`shared/Custom{Text,Input,Button,Link,Image,Icon}.vue`) are the only ones with the ESLint exception.
+- **SFC.** `<script setup lang="ts">` → `<template>` → no `<style>` (CSS lives in `assets/css/components/`, rule 08).
+- **Props.** Typed `defineProps<{...}>()` + `withDefaults`. Standard variation props, always with these names:
+  - `tone?: Tone` (`primary | secondary | neutral | success | info | warning | danger`) → semantic color
   - `size?: Size` (`sm | md | lg`)
-  - `variant?` → forma (`solid | outline | ghost`, `outline | filled | elevated`, `detailed | compact`…)
-  - estats booleans: `loading`, `disabled`, `selected`, `block`
-    Els tipus compartits són a `app/types/ui.ts`. Mai `any`. Cada valor d'una prop activa exactament una classe
-    `.bloc--<valor>` documentada al catàleg.
+  - `variant?` → shape (`solid | outline | ghost`, `outline | filled | elevated`, `detailed | compact`…)
+  - boolean states: `loading`, `disabled`, `selected`, `block`
+    Shared types live in `app/types/ui.ts`. Never `any`. Each prop value activates exactly one
+    `.block--<value>` class documented in the catalog.
 - **Classes.** `:class="['kebab-name', `kebab-name--${size}`, `kebab-name--${tone}`, { 'kebab-name--loading': loading }]"`.
-  Parts internes: `kebab-name__part`. Cap utilitat Tailwind al template. Tota secció té la classe arrel del seu
-  bloc (`class="about-section"` sobre `CustomSection`).
-- **Tipografia.** Només `CustomText` posa mida, pes i color de text. Els CSS de secció només tenen layout i espai.
-- **Slots.** Slot per defecte amb contingut de fallback quan té sentit; slots amb nom (`header`, `footer`); slots
-  amb props quan el consumidor ha de saber alguna cosa (`CustomMarquee` → `{ duplicate }`).
-- **Events.** `defineEmits<{ select: [meme: Meme] }>()` tipats; noms en present (`select`, `search`, `use`).
-- **Text.** Mai bare strings (regla 05). Els primitius `shared/` reben el text per props/slots; les seccions `cv/`
-  i `meme/` criden `useI18n()`. Les seccions de la home llegeixen `id`/`icon`/`titleKey`/`eyebrowKey` de
-  `ui-config/cv/sections.ts` amb `getSectionConfig(id)`.
-- **Estat.** `shared/` no toca stores ni serveis. `cv/` i `meme/` poden llegir stores; les accions les dispara la
-  pàgina o el component de secció, mai un primitiu. Cap component crida un servei directament (decisió 029).
-- **Accessibilitat.** Botons només-icona → `aria-label`; imatges → `alt` traduït; toggles → `aria-pressed`;
-  llistes de resultats → `<ul>/<li>`; alertes → `role="status"|"alert"`; contingut duplicat decoratiu →
-  `aria-hidden` + `inert`; `data-testid` només per a e2e.
-- **Reutilització.** Un component "reutilitzable" té almenys dos consumidors diferents (p. ex. `ExperienceItem`
-  a experiència, formació i certificacions). Un sol caller no és prova de res.
-- **Quan crear-ne un.** Quan el mateix markup+estat apareix dues vegades, o quan una secció supera ~80 línies.
-- **Catàleg.** Cada component nou/canviat → bloc a `.claude/docs/catalog/components.md` amb la taula de props
-  (nom, tipus, default, valors → classe CSS) (regla 07). Classes noves → `catalog/styles.md`.
+  Internal parts: `kebab-name__part`. No Tailwind utilities in the template. Every section carries the root class
+  of its block (`class="about-section"` on `CustomSection`).
+- **Typography.** Only `CustomText` sets text size, weight and color. Section CSS only handles layout and spacing.
+- **Slots.** Default slot with fallback content when it makes sense; named slots (`header`, `footer`); slots
+  with props when the consumer needs to know something (`CustomMarquee` → `{ duplicate }`).
+- **Events.** Typed `defineEmits<{ select: [meme: Meme] }>()`; present-tense names (`select`, `search`, `use`).
+- **Text.** Never bare strings (rule 05). `shared/` primitives receive text via props/slots; `cv/` and `meme/`
+  sections call `useI18n()`. Home sections read `id`/`icon`/`titleKey`/`eyebrowKey` from
+  `ui-config/cv/sections.ts` via `getSectionConfig(id)`.
+- **State.** `shared/` never touches stores or services. `cv/` and `meme/` may read stores; actions are
+  triggered by the page or the section component, never by a primitive. No component calls a service
+  directly (decision 029).
+- **Accessibility.** Icon-only buttons → `aria-label`; images → translated `alt`; toggles → `aria-pressed`;
+  result lists → `<ul>/<li>`; alerts → `role="status"|"alert"`; decorative duplicated content →
+  `aria-hidden` + `inert`; `data-testid` only for e2e.
+- **Reuse.** A "reusable" component has at least two distinct consumers (e.g. `ExperienceItem`
+  in experience, education and certifications). A single caller is not proof of anything.
+- **When to create one.** When the same markup+state appears twice, or when a section exceeds ~80 lines.
+- **Catalog.** Every new/changed component → a block in `.claude/docs/catalog/components.md` with the props
+  table (name, type, default, values → CSS class) (rule 07). New classes → `catalog/styles.md`.

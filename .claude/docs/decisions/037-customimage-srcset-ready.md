@@ -1,7 +1,7 @@
-# 037 · CustomImage preparat per a srcset, sense generar mides encara
+# 037 · CustomImage ready for srcset, not generating sizes yet
 
-**Decisió (D4 del handoff post-launch).** `CustomImage` (nom post-038) accepta props opcionals `srcset` i
-`sizes` que, si es passen, es reflecteixen tal qual a l'`<img>`. Sense aquestes props, es comporta com ara
-(un sol `src`). No es generen mides addicionals de la foto ara: es fa YAGNI fins que Lighthouse ho demani.
-**Conseqüències.** Canvi petit i additiu al primitiu; cap ús real de `srcset`/`sizes` de moment. Catàleg de
-components (`docs/catalog/components.md`) documenta les noves props.
+**Decision (D4 of the post-launch handoff).** `CustomImage` (post-038 name) accepts optional `srcset` and
+`sizes` props that, if passed, are reflected as-is onto the `<img>`. Without these props, it behaves as now
+(a single `src`). No additional photo sizes are generated for now: YAGNI until Lighthouse asks for it.
+**Consequences.** Small, additive change to the primitive; no real use of `srcset`/`sizes` for now. Component
+catalog (`docs/catalog/components.md`) documents the new props.

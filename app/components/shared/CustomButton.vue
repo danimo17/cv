@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Size, Tone } from '~/types/ui'
-
 const props = withDefaults(
   defineProps<{
     tone?: Tone
@@ -8,9 +6,7 @@ const props = withDefaults(
     variant?: 'solid' | 'outline' | 'ghost'
     icon?: string
     iconSet?: 'solid' | 'brands'
-    /** Ruta interna (NuxtLinkLocale) */
     to?: string
-    /** Enllaç extern o àncora */
     href?: string
     type?: 'button' | 'submit'
     loading?: boolean

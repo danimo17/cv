@@ -1,9 +1,9 @@
-# 029 · Capes de l'app segons ARCHITECTURE-TEMPLATE.md (substitueix la 009)
+# 029 · App layers per ARCHITECTURE-TEMPLATE.md (replaces 009)
 
-**Context.** El document demana API → Service → Store → View → UI-config amb dependència unidireccional i 'tota crida a l'API passa per una acció de store'. La 009 havia posat `useFetch` en un composable.
-**Decisió.**
+**Context.** The document calls for API → Service → Store → View → UI-config with unidirectional dependency and 'every API call goes through a store action'. 009 had put `useFetch` in a composable.
+**Decision.**
 
-- `server/api/giphy/*` (API) ← `app/services/giphy/GiphyService.ts` (una classe per API: defineix la petició amb `useFetch`/`$fetch`, normalitza errors i és l'ÚNIC lloc que produeix el missatge d'error d'usuari) ← `app/stores/giphy.ts` (estat de cerca: `query`, `items`, `status`, `error`; acció `search()` que crida el servei) i `app/stores/hero.ts` (selecció) ← `app/pages/*.vue` (views primes: composen components i deleguen a les stores) ← `app/ui-config/<entitat>/` (configuració declarativa: seccions de la home, grups del stack).
-- `app/domain/cv/` (tipus i regles de negoci del CV, sense framework: `formatPeriod`), `app/data/cv/` (taules hardcoded: experiència, formació, certificacions, stack, perfil), `app/components/shared/` (primitius `App*`, abans `ui/`), `app/components/{layout,cv,meme}/`.
-- El composable `useGiphySearch` desapareix; la regla 03 passa a: `/api/giphy` només a `app/services/giphy/`.
-  **Conseqüències.** `useFetch` viu al servei (definició de la petició, `immediate: false`); la store en manté l'estat i exposa l'acció. Tests d'arquitectura i catàleg actualitzats. La 009 queda substituïda.
+- `server/api/giphy/*` (API) ← `app/services/giphy/GiphyService.ts` (one class per API: defines the request with `useFetch`/`$fetch`, normalizes errors, and is the ONLY place that produces the user-facing error message) ← `app/stores/giphy.ts` (search state: `query`, `items`, `status`, `error`; `search()` action that calls the service) and `app/stores/hero.ts` (selection) ← `app/pages/*.vue` (thin views: compose components and delegate to the stores) ← `app/ui-config/<entity>/` (declarative configuration: home sections, stack groups).
+- `app/domain/cv/` (CV types and business rules, framework-free: `formatPeriod`), `app/data/cv/` (hardcoded tables: experience, education, certifications, stack, profile), `app/components/shared/` (`App*` primitives, formerly `ui/`), `app/components/{layout,cv,meme}/`.
+- The `useGiphySearch` composable goes away; rule 03 becomes: `/api/giphy` only in `app/services/giphy/`.
+  **Consequences.** `useFetch` lives in the service (request definition, `immediate: false`); the store holds its state and exposes the action. Architecture tests and catalog updated. 009 is superseded.

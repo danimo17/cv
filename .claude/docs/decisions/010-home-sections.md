@@ -1,3 +1,3 @@
-# 010 · Seccions de la home
+# 010 · Home page sections
 
-**Decisió.** Hero, About (amb idiomes i interessos), Experiència, Tech stack, Formació + certificacions, Contacte (email, GitHub, LinkedIn) i descàrrega del CV en PDF per idioma. Sense secció de projectes (LinkedIn no en té).
+**Decision.** Hero, About (with languages and interests), Experience, Tech stack, Education + certifications, Contact (email, GitHub, LinkedIn), and per-language CV PDF download. No projects section (LinkedIn has none).

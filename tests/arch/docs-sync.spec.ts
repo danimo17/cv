@@ -84,7 +84,7 @@ describe('living docs stay in sync (regla 07)', () => {
   })
 
   it('every util is documented in .claude/docs/catalog/state.md', () => {
-    // app/utils pot no existir (decisió 029: les regles pures viuen a app/domain).
+    // app/utils may not exist (decision 029: pure rules live in app/domain).
     const names = tsFiles(join(ROOT, 'app', 'utils')).flatMap((f) =>
       exportedNames(f, FUNCTION_EXPORT, CONST_EXPORT)
     )

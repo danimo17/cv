@@ -1,11 +1,8 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    /** Pàgina actual, 1-indexada. */
     page: number
-    /** Nombre total d'elements paginables (no de pàgines). */
     total: number
-    /** Elements per pàgina. */
     perPage?: number
   }>(),
   { perPage: 12 }

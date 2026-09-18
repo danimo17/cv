@@ -8,7 +8,6 @@ import {
 
 const GIPHY_SEARCH_URL = 'https://api.giphy.com/v1/gifs/search'
 
-// Única porta a Giphy (regla 03). La clau només viu aquí (regla 01). Cache 1 h per estalviar quota.
 export default defineCachedEventHandler(
   async (event): Promise<GiphySearchResponse> => {
     let params

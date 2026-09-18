@@ -1,66 +1,66 @@
-# Catàleg de components
+# Component catalog
 
-Documentació viva (regla 07): cada component de `app/components/` té un bloc `### <Nom>` aquí. El test
-`tests/arch/docs-sync.spec.ts` falla si se'n crea un sense bloc o si un bloc apunta a un component
-esborrat. **Abans de crear un component nou, busca'n un aquí que ja ho faci** (decisió 027).
+Living documentation (rule 07): every component in `app/components/` has a `### <Name>` block here. The
+`tests/arch/docs-sync.spec.ts` test fails if one is created without a block, or if a block points to a
+deleted component. **Before creating a new component, look for one here that already does it** (decision 027).
 
-Convencions comunes:
+Common conventions:
 
-- Primitius a `app/components/shared/Custom*` (decisions 026, 038): tot element natiu de text, formulari, enllaç o
-  imatge passa pel seu primitiu. ESLint (`vue/no-restricted-html-elements`) prohibeix a `app/**`
+- Primitives in `app/components/shared/Custom*` (decisions 026, 038): every native text, form, link, or
+  image element goes through its primitive. ESLint (`vue/no-restricted-html-elements`) forbids in `app/**`
   `p, span, h1-h6, small, strong, em, label` (→ `CustomText`), `input, select, textarea` (→ `CustomInput`),
-  `button` (→ `CustomButton`), `a` (→ `CustomLink`), `img` (→ `CustomImage`). Els estructurals (`div`, `section`,
-  `header`, `footer`, `nav`, `ul`, `ol`, `li`, `figure`, `form`, `fieldset`, `legend`, `article`) són natius.
-- La **tipografia** (mida, pes, color de text) només la posa `CustomText` (`custom-text.css`). Els CSS de la resta de
-  components només tenen layout/espai/fons/vores.
-- Cada component té un únic bloc CSS (BEM) a `app/assets/css/components/<kebab>.css`, importat des de
-  `main.css`. Al template només s'usen classes d'aquest bloc (regla 08, `tests/arch/css-per-component.spec.ts`).
-- Cap string d'usuari al template: tot passa per `useI18n()` (regla 05).
+  `button` (→ `CustomButton`), `a` (→ `CustomLink`), `img` (→ `CustomImage`). Structural elements (`div`, `section`,
+  `header`, `footer`, `nav`, `ul`, `ol`, `li`, `figure`, `form`, `fieldset`, `legend`, `article`) are native.
+- **Typography** (size, weight, text color) is set only by `CustomText` (`custom-text.css`). The CSS of the
+  rest of the components only carries layout/spacing/background/borders.
+- Each component has a single BEM CSS block at `app/assets/css/components/<kebab>.css`, imported from
+  `main.css`. Only classes from that block are used in the template (rule 08, `tests/arch/css-per-component.spec.ts`).
+- No user-facing string in the template: everything goes through `useI18n()` (rule 05).
 - `Tone` = `primary | secondary | neutral | success | info | warning | danger`; `Size` = `sm | md | lg`
   (`app/types/ui.ts`).
-- Les icones passen sempre per `CustomIcon` i han d'estar registrades a `app/plugins/fontawesome.ts`.
-- Els components es registren pel nom de fitxer sense prefix de carpeta (`nuxt.config.ts` →
+- Icons always go through `CustomIcon` and must be registered in `app/plugins/fontawesome.ts`.
+- Components are registered by filename without a folder prefix (`nuxt.config.ts` →
   `components: [{ path: '~/components', pathPrefix: false }]`).
 
-Plantilla d'un bloc:
+Block template:
 
 ```md
-### Nom del component
+### Component name
 
-- **Ruta**: `app/components/<carpeta>/NomComponent.vue`
-- **Propòsit**: una línia.
-- **Props**: taula nom / tipus / default / valors permesos → classe CSS que activa.
-- **Variants/classes**: bloc CSS i modificadors.
+- **Path**: `app/components/<folder>/ComponentName.vue`
+- **Purpose**: one line.
+- **Props**: table of name / type / default / allowed values → CSS class it activates.
+- **Variants/classes**: CSS block and modifiers.
 - **Slots**: …
 - **Events**: …
-- **Exemple**: snippet mínim.
-- **Consumidors**: on s'usa.
+- **Example**: minimal snippet.
+- **Consumers**: where it's used.
 ```
 
 ---
 
-## Primitius (`app/components/shared/`)
+## Primitives (`app/components/shared/`)
 
 ### CustomText
 
-- **Ruta**: `app/components/shared/CustomText.vue`
-- **Propòsit**: únic propietari de la tipografia. Renderitza l'etiqueta `as` amb l'escala de `custom-text.css`.
-  Tots els atributs (`id`, `datetime`, `for`, `aria-*`, `data-testid`, `class`) cauen a l'element.
+- **Path**: `app/components/shared/CustomText.vue`
+- **Purpose**: sole owner of typography. Renders the `as` tag with the scale from `custom-text.css`.
+  All attributes (`id`, `datetime`, `for`, `aria-*`, `data-testid`, `class`) fall through to the element.
 - **Props**:
 
-| Prop       | Tipus                                                                                                    | Default     | Valors permesos → classe                                                                                   |
-| ---------- | -------------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `as`       | `'p' \| 'span' \| 'h1'…'h6' \| 'small' \| 'strong' \| 'em' \| 'label' \| 'figcaption' \| 'time' \| 'li'` | `'p'`       | etiqueta HTML renderitzada (no afecta l'estil)                                                             |
-| `variant`  | `'display' \| 'h1' \| 'h2' \| 'h3' \| 'lead' \| 'body' \| 'small' \| 'caption' \| 'eyebrow'`             | `'body'`    | `.custom-text--<variant>` (mida + pes per defecte, veg. `styles.md`)                                       |
-| `tone`     | `'default' \| 'muted' \| Tone`                                                                           | `'default'` | `.custom-text--tone-<tone>` (`default` hereta el color, `muted` = `text-text-muted`, tons = `text-<tone>`) |
-| `weight`   | `'normal' \| 'medium' \| 'semibold' \| 'bold'`                                                           | —           | `.custom-text--<weight>` (sobreescriu el pes de la variant)                                                |
-| `align`    | `'start' \| 'center' \| 'end'`                                                                           | —           | `.custom-text--align-<align>`                                                                              |
-| `truncate` | `boolean`                                                                                                | `false`     | `.custom-text--truncate` (una línia amb el·lipsi)                                                          |
+| Prop       | Type                                                                                                     | Default     | Allowed values → class                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `as`       | `'p' \| 'span' \| 'h1'…'h6' \| 'small' \| 'strong' \| 'em' \| 'label' \| 'figcaption' \| 'time' \| 'li'` | `'p'`       | rendered HTML tag (does not affect the style)                                                                  |
+| `variant`  | `'display' \| 'h1' \| 'h2' \| 'h3' \| 'lead' \| 'body' \| 'small' \| 'caption' \| 'eyebrow'`             | `'body'`    | `.custom-text--<variant>` (default size + weight, see `styles.md`)                                             |
+| `tone`     | `'default' \| 'muted' \| Tone`                                                                           | `'default'` | `.custom-text--tone-<tone>` (`default` inherits the color, `muted` = `text-text-muted`, tones = `text-<tone>`) |
+| `weight`   | `'normal' \| 'medium' \| 'semibold' \| 'bold'`                                                           | —           | `.custom-text--<weight>` (overrides the variant's weight)                                                      |
+| `align`    | `'start' \| 'center' \| 'end'`                                                                           | —           | `.custom-text--align-<align>`                                                                                  |
+| `truncate` | `boolean`                                                                                                | `false`     | `.custom-text--truncate` (single line with ellipsis)                                                           |
 
-- **Variants/classes**: `.custom-text` + les anteriors. Mai s'hi afegeix mida/pes/color des d'un altre CSS.
+- **Variants/classes**: `.custom-text` + the above. Size/weight/color are never added from any other CSS.
 - **Slots**: `default`.
-- **Events**: cap.
-- **Exemple**:
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomText as="h1" variant="display">{{ profile.name }}</CustomText>
@@ -79,32 +79,32 @@ Plantilla d'un bloc:
 >{{ b }}</CustomText>
 ```
 
-- **Consumidors**: tots els components amb text (CustomAlert, CustomBadge, CustomInput, CustomSection, HeroSection,
+- **Consumers**: all components with text (CustomAlert, CustomBadge, CustomInput, CustomSection, HeroSection,
   AboutSection, ExperienceItem, TechStack, EducationSection, ContactSection, AppFooter, SourceBanner, MemeCard,
   MemePreview, `pages/meme.vue`).
 
 ### CustomLink
 
-- **Ruta**: `app/components/shared/CustomLink.vue`
-- **Propòsit**: únic embolcall d'enllaços de text/icona: `to` → `NuxtLinkLocale` (o `NuxtLink` si
-  `localize=false`), `href` → `<a>` (extern `https?://` → `target=_blank rel=noopener noreferrer`; àncora `#id`;
-  `mailto:`). Els atributs (`class`, `aria-*`, `title`, `lang`, `tabindex`, `data-testid`) cauen a l'element.
+- **Path**: `app/components/shared/CustomLink.vue`
+- **Purpose**: sole wrapper for text/icon links: `to` → `NuxtLinkLocale` (or `NuxtLink` if
+  `localize=false`), `href` → `<a>` (external `https?://` → `target=_blank rel=noopener noreferrer`; anchor `#id`;
+  `mailto:`). Attributes (`class`, `aria-*`, `title`, `lang`, `tabindex`, `data-testid`) fall through to the element.
 - **Props**:
 
-| Prop          | Tipus                                     | Default                 | Valors permesos → classe                                                                                                                      |
+| Prop          | Type                                      | Default                 | Allowed values → class                                                                                                                        |
 | ------------- | ----------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `to`          | `string`                                  | `''`                    | ruta interna                                                                                                                                  |
-| `href`        | `string`                                  | `''`                    | URL externa, àncora o `mailto:`                                                                                                               |
-| `variant`     | `'inline' \| 'nav' \| 'subtle' \| 'icon'` | `'inline'`              | `.custom-link--inline` (subratllat a hover), `--nav` (pill amb estat actiu), `--subtle` (només color a hover), `--icon` (caixa 36px centrada) |
-| `tone`        | `'default' \| Tone`                       | `'default'`             | `.custom-link--tone-<tone>` (`default` hereta el color)                                                                                       |
-| `activeClass` | `string`                                  | `'custom-link--active'` | classe d'actiu del router (només amb `to`); `.custom-link--nav.custom-link--active`                                                           |
-| `download`    | `boolean \| string`                       | —                       | passa a `<a download>`                                                                                                                        |
-| `localize`    | `boolean`                                 | `true`                  | `false` → `NuxtLink` sense prefix de locale (rutes ja localitzades)                                                                           |
+| `to`          | `string`                                  | `''`                    | internal route                                                                                                                                |
+| `href`        | `string`                                  | `''`                    | external URL, anchor, or `mailto:`                                                                                                            |
+| `variant`     | `'inline' \| 'nav' \| 'subtle' \| 'icon'` | `'inline'`              | `.custom-link--inline` (underline on hover), `--nav` (pill with active state), `--subtle` (color only on hover), `--icon` (centered 36px box) |
+| `tone`        | `'default' \| Tone`                       | `'default'`             | `.custom-link--tone-<tone>` (`default` inherits the color)                                                                                    |
+| `activeClass` | `string`                                  | `'custom-link--active'` | router's active class (only with `to`); `.custom-link--nav.custom-link--active`                                                               |
+| `download`    | `boolean \| string`                       | —                       | passed to `<a download>`                                                                                                                      |
+| `localize`    | `boolean`                                 | `true`                  | `false` → `NuxtLink` with no locale prefix (already-localized routes)                                                                         |
 
 - **Variants/classes**: `.custom-link`, `--inline/--nav/--subtle/--icon`, `--tone-*`, `--active`.
 - **Slots**: `default`.
-- **Events**: cap de propi (`@click` cau a l'element).
-- **Exemple**:
+- **Events**: none of its own (`@click` falls through to the element).
+- **Example**:
 
 ```vue
 <CustomLink to="/meme" variant="nav">{{ t('nav.meme') }}</CustomLink>
@@ -117,33 +117,33 @@ Plantilla d'un bloc:
 <CustomLink :to="switchLocalePath('ca')" :localize="false" variant="subtle">ca</CustomLink>
 ```
 
-- **Consumidors**: AppHeader (marca + nav), AppFooter, LocaleSwitcher, ExperienceItem (org), SourceBanner,
+- **Consumers**: AppHeader (brand + nav), AppFooter, LocaleSwitcher, ExperienceItem (org), SourceBanner,
   `layouts/default.vue` (skip link).
 
 ### CustomImage
 
-- **Ruta**: `app/components/shared/CustomImage.vue`
-- **Propòsit**: únic embolcall d'`<img>` (decisió 018: sense `@nuxt/image`). `inheritAttrs: false` + `v-bind="$attrs"`
-  sobre l'`<img>`: `class`, `fetchpriority`, `data-testid`… arriben a la imatge.
+- **Path**: `app/components/shared/CustomImage.vue`
+- **Purpose**: sole wrapper for `<img>` (decision 018: no `@nuxt/image`). `inheritAttrs: false` + `v-bind="$attrs"`
+  on the `<img>`: `class`, `fetchpriority`, `data-testid`… reach the image.
 - **Props**:
 
-| Prop      | Tipus                                      | Default   | Valors permesos → classe                                                       |
-| --------- | ------------------------------------------ | --------- | ------------------------------------------------------------------------------ |
-| `src`     | `string` (requerida)                       | —         |                                                                                |
-| `alt`     | `string` (requerida)                       | —         | text traduït o títol del meme                                                  |
-| `width`   | `number \| string`                         | —         |                                                                                |
-| `height`  | `number \| string`                         | —         |                                                                                |
-| `loading` | `'lazy' \| 'eager'`                        | `'lazy'`  |                                                                                |
-| `fit`     | `'cover' \| 'contain'`                     | `'cover'` | `.custom-image--fit-cover` / `--fit-contain`                                   |
-| `radius`  | `'none' \| 'md' \| 'lg' \| 'xl' \| 'full'` | `'none'`  | `.custom-image--radius-none/-md/-lg/-xl/-full` (`rounded-none/md/lg/3xl/full`) |
-| `frame`   | `boolean`                                  | `false`   | `.custom-image--frame` (vora `border` + `shadow-lg`)                           |
-| `srcset`  | `string \| undefined`                      | —         | reflectit tal qual a `<img srcset>`; sense ús real encara (decisió 037)        |
-| `sizes`   | `string \| undefined`                      | —         | reflectit tal qual a `<img sizes>`; només té efecte si `srcset` també es passa |
+| Prop      | Type                                       | Default   | Allowed values → class                                                          |
+| --------- | ------------------------------------------ | --------- | ------------------------------------------------------------------------------- |
+| `src`     | `string` (required)                        | —         |                                                                                 |
+| `alt`     | `string` (required)                        | —         | translated text or meme title                                                   |
+| `width`   | `number \| string`                         | —         |                                                                                 |
+| `height`  | `number \| string`                         | —         |                                                                                 |
+| `loading` | `'lazy' \| 'eager'`                        | `'lazy'`  |                                                                                 |
+| `fit`     | `'cover' \| 'contain'`                     | `'cover'` | `.custom-image--fit-cover` / `--fit-contain`                                    |
+| `radius`  | `'none' \| 'md' \| 'lg' \| 'xl' \| 'full'` | `'none'`  | `.custom-image--radius-none/-md/-lg/-xl/-full` (`rounded-none/md/lg/3xl/full`)  |
+| `frame`   | `boolean`                                  | `false`   | `.custom-image--frame` (`border` + `shadow-lg`)                                 |
+| `srcset`  | `string \| undefined`                      | —         | reflected as-is on `<img srcset>`; not yet actually used (decision 037)         |
+| `sizes`   | `string \| undefined`                      | —         | reflected as-is on `<img sizes>`; only has an effect if `srcset` is also passed |
 
-- **Variants/classes**: `.custom-image` (`block max-w-full`) + les anteriors.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Variants/classes**: `.custom-image` (`block max-w-full`) + the above.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomImage
@@ -158,41 +158,41 @@ Plantilla d'un bloc:
 />
 ```
 
-- **Consumidors**: HeroSection, MemeCard, MemePreview.
+- **Consumers**: HeroSection, MemeCard, MemePreview.
 
 ### CustomInput
 
-- **Ruta**: `app/components/shared/CustomInput.vue`
-- **Propòsit**: únic embolcall de formularis, només elements natius. `type` decideix el control; `v-model`
-  genèric (`T extends string | number | boolean | Array<string|number> | null`), tipat pel consumidor.
+- **Path**: `app/components/shared/CustomInput.vue`
+- **Purpose**: sole wrapper for forms, native elements only. `type` decides the control; generic `v-model`
+  (`T extends string | number | boolean | Array<string|number> | null`), typed by the consumer.
 - **Props**:
 
-| Prop               | Tipus                                                                                                           | Default     | Valors permesos → classe                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `id`               | `string` (requerida)                                                                                            | —           | id del control (i `for` del label); per a `radio`, prefix `<id>-<value>`           |
-| `label`            | `string` (requerida)                                                                                            | —           | label (`CustomText small medium`); `legend` a `radio`                              |
-| `type`             | `'text' \| 'search' \| 'email' \| 'number' \| 'textarea' \| 'select' \| 'multiselect' \| 'radio' \| 'checkbox'` | `'text'`    | `.custom-input--<type>`                                                            |
-| `options`          | `{ value: string \| number; label: string; disabled?: boolean }[]`                                              | `[]`        | `select`, `multiselect`, `radio`                                                   |
-| `placeholder`      | `string`                                                                                                        | `''`        | text/textarea/number; a `select` és una opció buida desactivada                    |
-| `icon`             | `string`                                                                                                        | `''`        | només `text/search/email` → `.custom-input--with-icon` (padding esquerre)          |
-| `size`             | `Size`                                                                                                          | `'md'`      | `.custom-input--sm/--md/--lg` (alçada 32/40/48)                                    |
-| `tone`             | `'neutral' \| 'danger'`                                                                                         | `'neutral'` | `.custom-input--danger` → vora vermella + `aria-invalid="true"` + hint en `danger` |
-| `hint`             | `string`                                                                                                        | `''`        | `CustomText caption` amb `id="<id>-hint"` → `aria-describedby`                     |
-| `hideLabel`        | `boolean`                                                                                                       | `false`     | label `sr-only`                                                                    |
-| `disabled`         | `boolean`                                                                                                       | `false`     | `.custom-input--disabled` + `disabled` al control                                  |
-| `required`         | `boolean`                                                                                                       | `false`     | `required` al control (`aria-required` al fieldset)                                |
-| `rows`             | `number`                                                                                                        | `4`         | només `textarea`                                                                   |
-| `min`/`max`/`step` | `number`                                                                                                        | —           | només `number`                                                                     |
-| `name`             | `string`                                                                                                        | `id`        | nom del grup `radio`                                                               |
+| Prop               | Type                                                                                                            | Default     | Allowed values → class                                                          |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| `id`               | `string` (required)                                                                                             | —           | control id (and label's `for`); for `radio`, prefix `<id>-<value>`              |
+| `label`            | `string` (required)                                                                                             | —           | label (`CustomText small medium`); `legend` for `radio`                         |
+| `type`             | `'text' \| 'search' \| 'email' \| 'number' \| 'textarea' \| 'select' \| 'multiselect' \| 'radio' \| 'checkbox'` | `'text'`    | `.custom-input--<type>`                                                         |
+| `options`          | `{ value: string \| number; label: string; disabled?: boolean }[]`                                              | `[]`        | `select`, `multiselect`, `radio`                                                |
+| `placeholder`      | `string`                                                                                                        | `''`        | text/textarea/number; for `select` it's an empty disabled option                |
+| `icon`             | `string`                                                                                                        | `''`        | only `text/search/email` → `.custom-input--with-icon` (left padding)            |
+| `size`             | `Size`                                                                                                          | `'md'`      | `.custom-input--sm/--md/--lg` (height 32/40/48)                                 |
+| `tone`             | `'neutral' \| 'danger'`                                                                                         | `'neutral'` | `.custom-input--danger` → red border + `aria-invalid="true"` + hint in `danger` |
+| `hint`             | `string`                                                                                                        | `''`        | `CustomText caption` with `id="<id>-hint"` → `aria-describedby`                 |
+| `hideLabel`        | `boolean`                                                                                                       | `false`     | `sr-only` label                                                                 |
+| `disabled`         | `boolean`                                                                                                       | `false`     | `.custom-input--disabled` + `disabled` on the control                           |
+| `required`         | `boolean`                                                                                                       | `false`     | `required` on the control (`aria-required` on the fieldset)                     |
+| `rows`             | `number`                                                                                                        | `4`         | `textarea` only                                                                 |
+| `min`/`max`/`step` | `number`                                                                                                        | —           | `number` only                                                                   |
+| `name`             | `string`                                                                                                        | `id`        | `radio` group name                                                              |
 
-- **Model**: `defineModel<T>()`. `number` emet `number` (o `null` si es buida); `select` emet el `value` tipat de
-  l'opció; `multiselect` un array; `checkbox` un `boolean`; `radio` el `value` de l'opció triada.
+- **Model**: `defineModel<T>()`. `number` emits `number` (or `null` when cleared); `select` emits the typed
+  `value` of the option; `multiselect` an array; `checkbox` a `boolean`; `radio` the `value` of the chosen option.
 - **Variants/classes**: `.custom-input`, `--<type>`, `--sm/--md/--lg`, `--neutral/--danger`, `--with-icon`,
   `--disabled`; elements `__label`, `__field`, `__icon`, `__control` (input/select/textarea), `__group`
   (fieldset), `__options`, `__option`, `__radio`, `__checkbox`, `__hint`.
-- **Slots**: cap.
+- **Slots**: none.
 - **Events**: `update:modelValue`.
-- **Exemple**:
+- **Example**:
 
 ```vue
 <CustomInput
@@ -222,33 +222,33 @@ Plantilla d'un bloc:
 />
 ```
 
-- **Consumidors**: MemeSearch. Test: `tests/unit/components/CustomInput.spec.ts`.
+- **Consumers**: MemeSearch. Test: `tests/unit/components/CustomInput.spec.ts`.
 
 ### CustomButton
 
-- **Ruta**: `app/components/shared/CustomButton.vue`
-- **Propòsit**: botó/enllaç polimòrfic: `<button>` per defecte, `<a>` amb `href`, `NuxtLinkLocale` amb `to`. És
-  l'únic lloc amb `<button>`/`<a>` de botó (els enllaços de text van per `CustomLink`).
+- **Path**: `app/components/shared/CustomButton.vue`
+- **Purpose**: polymorphic button/link: `<button>` by default, `<a>` with `href`, `NuxtLinkLocale` with `to`. It is
+  the only place with a button-style `<button>`/`<a>` (text links go through `CustomLink`).
 - **Props**:
 
-| Prop       | Tipus                             | Default     | Valors permesos → classe                                                               |
-| ---------- | --------------------------------- | ----------- | -------------------------------------------------------------------------------------- |
-| `tone`     | `Tone`                            | `'primary'` | `.custom-button--<tone>` (combinat amb la variant)                                     |
-| `size`     | `Size`                            | `'md'`      | `.custom-button--sm/--md/--lg` (alçada 32/40/48)                                       |
-| `variant`  | `'solid' \| 'outline' \| 'ghost'` | `'solid'`   | `.custom-button--solid/--outline/--ghost`                                              |
-| `icon`     | `string`                          | `''`        | `CustomIcon` davant del slot (`.custom-button__icon`)                                  |
-| `iconSet`  | `'solid' \| 'brands'`             | `'solid'`   |                                                                                        |
-| `to`       | `string`                          | `''`        | ruta interna → `NuxtLinkLocale`                                                        |
-| `href`     | `string`                          | `''`        | URL externa (`https?://` → `target=_blank` + `rel=noopener noreferrer`) o àncora `#id` |
-| `type`     | `'button' \| 'submit'`            | `'button'`  | només quan renderitza `<button>`                                                       |
-| `loading`  | `boolean`                         | `false`     | `.custom-button--loading` + `aria-busy="true"` + desactivat                            |
-| `disabled` | `boolean`                         | `false`     | `disabled` (button) o `aria-disabled` (enllaços)                                       |
-| `block`    | `boolean`                         | `false`     | `.custom-button--block` (amplada completa)                                             |
+| Prop       | Type                              | Default     | Allowed values → class                                                                   |
+| ---------- | --------------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `tone`     | `Tone`                            | `'primary'` | `.custom-button--<tone>` (combined with the variant)                                     |
+| `size`     | `Size`                            | `'md'`      | `.custom-button--sm/--md/--lg` (height 32/40/48)                                         |
+| `variant`  | `'solid' \| 'outline' \| 'ghost'` | `'solid'`   | `.custom-button--solid/--outline/--ghost`                                                |
+| `icon`     | `string`                          | `''`        | `CustomIcon` before the slot (`.custom-button__icon`)                                    |
+| `iconSet`  | `'solid' \| 'brands'`             | `'solid'`   |                                                                                          |
+| `to`       | `string`                          | `''`        | internal route → `NuxtLinkLocale`                                                        |
+| `href`     | `string`                          | `''`        | external URL (`https?://` → `target=_blank` + `rel=noopener noreferrer`) or `#id` anchor |
+| `type`     | `'button' \| 'submit'`            | `'button'`  | only when rendering `<button>`                                                           |
+| `loading`  | `boolean`                         | `false`     | `.custom-button--loading` + `aria-busy="true"` + disabled                                |
+| `disabled` | `boolean`                         | `false`     | `disabled` (button) or `aria-disabled` (links)                                           |
+| `block`    | `boolean`                         | `false`     | `.custom-button--block` (full width)                                                     |
 
-- **Variants/classes**: `.custom-button`, mides, variants × tons (`.custom-button--solid.custom-button--primary`…), estats `--loading`, `--block`; element `__icon`. El text del botó (`text-sm font-medium`) és propi del primitiu.
-- **Slots**: `default` (etiqueta; opcional per a botons només-icona amb `aria-label`).
-- **Events**: cap de propi; atributs/listeners (`@click`, `data-testid`, `download`, `aria-pressed`) cauen a l'arrel.
-- **Exemple**:
+- **Variants/classes**: `.custom-button`, sizes, variants × tones (`.custom-button--solid.custom-button--primary`…), states `--loading`, `--block`; element `__icon`. The button text (`text-sm font-medium`) belongs to the primitive.
+- **Slots**: `default` (label; optional for icon-only buttons with `aria-label`).
+- **Events**: none of its own; attributes/listeners (`@click`, `data-testid`, `download`, `aria-pressed`) fall through to the root.
+- **Example**:
 
 ```vue
 <CustomButton
@@ -268,103 +268,103 @@ Plantilla d'un bloc:
 />
 ```
 
-- **Consumidors**: `pages/meme.vue`, ContactSection, CvDownload, HeroSection, MemePreview, MemeSearch, MemeCard
-  (targeta = botó), ThemeToggle.
+- **Consumers**: `pages/meme.vue`, ContactSection, CvDownload, HeroSection, MemePreview, MemeSearch, MemeCard
+  (card = button), ThemeToggle.
 
 ### CustomIcon
 
-- **Ruta**: `app/components/shared/CustomIcon.vue`
-- **Propòsit**: únic embolcall de Font Awesome; la resta del codi té prohibit importar `@fortawesome/vue-fontawesome`.
+- **Path**: `app/components/shared/CustomIcon.vue`
+- **Purpose**: sole wrapper for Font Awesome; the rest of the code is forbidden from importing `@fortawesome/vue-fontawesome`.
 - **Props**:
 
-| Prop    | Tipus                 | Default   | Valors permesos → classe                                    |
-| ------- | --------------------- | --------- | ----------------------------------------------------------- |
-| `name`  | `string` (requerida)  | —         | nom sense prefix registrat a `plugins/fontawesome.ts`       |
-| `set`   | `'solid' \| 'brands'` | `'solid'` |                                                             |
-| `size`  | `Size`                | `'md'`    | `.custom-icon--sm/--md/--lg` (`text-sm/base/2xl`)           |
-| `label` | `string`              | `''`      | si es passa → `aria-label` + `title`; si no → `aria-hidden` |
+| Prop    | Type                  | Default   | Allowed values → class                                        |
+| ------- | --------------------- | --------- | ------------------------------------------------------------- |
+| `name`  | `string` (required)   | —         | name without prefix, registered in `plugins/fontawesome.ts`   |
+| `set`   | `'solid' \| 'brands'` | `'solid'` |                                                               |
+| `size`  | `Size`                | `'md'`    | `.custom-icon--sm/--md/--lg` (`text-sm/base/2xl`)             |
+| `label` | `string`              | `''`      | if passed → `aria-label` + `title`; otherwise → `aria-hidden` |
 
 - **Variants/classes**: `.custom-icon`, `--sm/--md/--lg`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomIcon name="github" set="brands" size="sm" />
 <CustomIcon name="envelope" :label="t('contact.email')" />
 ```
 
-- **Consumidors**: CustomAlert, CustomBadge, CustomButton, CustomInput, CustomSection, AppFooter, EducationSection, HeroSection,
+- **Consumers**: CustomAlert, CustomBadge, CustomButton, CustomInput, CustomSection, AppFooter, EducationSection, HeroSection,
   TechStack, SourceBanner.
 
 ### CustomBadge
 
-- **Ruta**: `app/components/shared/CustomBadge.vue`
-- **Propòsit**: etiqueta inline (tags, idiomes, "open to work"). És un `CustomText as="span"` (`caption` per `sm`,
-  `small` per `md`/`lg`, `weight="medium"`) amb fons i forma pròpies.
+- **Path**: `app/components/shared/CustomBadge.vue`
+- **Purpose**: inline label (tags, languages, "open to work"). It is a `CustomText as="span"` (`caption` for `sm`,
+  `small` for `md`/`lg`, `weight="medium"`) with its own background and shape.
 - **Props**:
 
-| Prop      | Tipus               | Default     | Valors permesos → classe                                                 |
-| --------- | ------------------- | ----------- | ------------------------------------------------------------------------ |
-| `tone`    | `Tone`              | `'neutral'` | `.custom-badge--<tone>` (combinat amb la variant)                        |
-| `variant` | `'soft' \| 'solid'` | `'soft'`    | `.custom-badge--soft` (fons `-soft`, text del to) / `--solid` (fons ple) |
-| `size`    | `Size`              | `'sm'`      | `.custom-badge--sm/--md/--lg` (padding) + variant d'`CustomText`         |
-| `icon`    | `string`            | `''`        | icona davant del text                                                    |
+| Prop      | Type                | Default     | Allowed values → class                                                                 |
+| --------- | ------------------- | ----------- | -------------------------------------------------------------------------------------- |
+| `tone`    | `Tone`              | `'neutral'` | `.custom-badge--<tone>` (combined with the variant)                                    |
+| `variant` | `'soft' \| 'solid'` | `'soft'`    | `.custom-badge--soft` (`-soft` background, tone's text) / `--solid` (solid background) |
+| `size`    | `Size`              | `'sm'`      | `.custom-badge--sm/--md/--lg` (padding) + `CustomText` variant                         |
+| `icon`    | `string`            | `''`        | icon before the text                                                                   |
 
-- **Variants/classes**: `.custom-badge`, `--sm/--md/--lg`, `--soft`/`--solid` × tons.
+- **Variants/classes**: `.custom-badge`, `--sm/--md/--lg`, `--soft`/`--solid` × tones.
 - **Slots**: `default`.
-- **Events**: cap.
-- **Exemple**:
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomBadge tone="success" icon="circle-check">{{ t('hero.openToWork') }}</CustomBadge>
 <CustomBadge size="md">Vue 3</CustomBadge>
 ```
 
-- **Consumidors**: AboutSection, ExperienceItem, HeroSection, TechStack.
+- **Consumers**: AboutSection, ExperienceItem, HeroSection, TechStack.
 
 ### CustomAlert
 
-- **Ruta**: `app/components/shared/CustomAlert.vue`
-- **Propòsit**: missatge d'estat amb icona; `role="alert"` per a `danger`/`warning`, `role="status"` per a la resta.
-  El títol és `CustomText small semibold`; el contingut del slot és `text-sm` (propi del primitiu).
+- **Path**: `app/components/shared/CustomAlert.vue`
+- **Purpose**: status message with icon; `role="alert"` for `danger`/`warning`, `role="status"` for the rest.
+  The title is `CustomText small semibold`; the slot content is `text-sm` (belongs to the primitive).
 - **Props**:
 
-| Prop    | Tipus    | Default  | Valors permesos → classe                                            |
-| ------- | -------- | -------- | ------------------------------------------------------------------- |
-| `tone`  | `Tone`   | `'info'` | `.custom-alert--<tone>` (vora + fons `-soft`, icona i títol del to) |
-| `title` | `string` | `''`     | `.custom-alert__title`                                              |
-| `icon`  | `string` | `''`     | sobreescriu la icona per defecte del to                             |
+| Prop    | Type     | Default  | Allowed values → class                                                             |
+| ------- | -------- | -------- | ---------------------------------------------------------------------------------- |
+| `tone`  | `Tone`   | `'info'` | `.custom-alert--<tone>` (border + `-soft` background, tone-colored icon and title) |
+| `title` | `string` | `''`     | `.custom-alert__title`                                                             |
+| `icon`  | `string` | `''`     | overrides the tone's default icon                                                  |
 
-Icones per defecte: `circle-info` (primary/secondary/neutral/info), `circle-check` (success), `triangle-exclamation` (warning), `circle-xmark` (danger).
+Default icons: `circle-info` (primary/secondary/neutral/info), `circle-check` (success), `triangle-exclamation` (warning), `circle-xmark` (danger).
 
 - **Variants/classes**: `.custom-alert`, `--primary … --danger`; elements `__icon`, `__body`, `__title`, `__content`.
-- **Slots**: `default` (contingut, admet `CustomText` i botons en línia).
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: `default` (content, supports `CustomText` and inline buttons).
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomAlert tone="danger" :title="t('meme.results.errorTitle')">{{ t(errorKey) }}</CustomAlert>
 ```
 
-- **Consumidors**: `pages/meme.vue`, MemeGrid.
+- **Consumers**: `pages/meme.vue`, MemeGrid.
 
 ### CustomCard
 
-- **Ruta**: `app/components/shared/CustomCard.vue`
-- **Propòsit**: contenidor amb vora/fons/ombra i padding configurables; etiqueta arrel configurable.
+- **Path**: `app/components/shared/CustomCard.vue`
+- **Purpose**: container with border/background/shadow and configurable padding; configurable root tag.
 - **Props**:
 
-| Prop      | Tipus                                 | Default     | Valors permesos → classe                            |
-| --------- | ------------------------------------- | ----------- | --------------------------------------------------- |
-| `as`      | `string`                              | `'div'`     | etiqueta estructural (`div`, `section`, `article`…) |
-| `variant` | `'outline' \| 'filled' \| 'elevated'` | `'outline'` | `.custom-card--outline/--filled/--elevated`         |
-| `padding` | `Size`                                | `'md'`      | `.custom-card--padding-sm/-md/-lg` (`p-3/p-5/p-8`)  |
+| Prop      | Type                                  | Default     | Allowed values → class                             |
+| --------- | ------------------------------------- | ----------- | -------------------------------------------------- |
+| `as`      | `string`                              | `'div'`     | structural tag (`div`, `section`, `article`…)      |
+| `variant` | `'outline' \| 'filled' \| 'elevated'` | `'outline'` | `.custom-card--outline/--filled/--elevated`        |
+| `padding` | `Size`                                | `'md'`      | `.custom-card--padding-sm/-md/-lg` (`p-3/p-5/p-8`) |
 
 - **Variants/classes**: `.custom-card` (`rounded-xl`), variants, paddings; elements `__header`, `__footer`.
-- **Slots**: `default`, `header` (opcional), `footer` (opcional).
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: `default`, `header` (optional), `footer` (optional).
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomCard variant="filled" padding="md">
@@ -373,28 +373,28 @@ Icones per defecte: `circle-info` (primary/secondary/neutral/info), `circle-chec
 </CustomCard>
 ```
 
-- **Consumidors**: `pages/meme.vue`, MemePreview.
+- **Consumers**: `pages/meme.vue`, MemePreview.
 
 ### CustomSection
 
-- **Ruta**: `app/components/shared/CustomSection.vue`
-- **Propòsit**: secció del CV amb `id` (àncora), eyebrow (`CustomText eyebrow primary` + icona), títol
-  (`CustomText h2`) i subtítol (`CustomText body muted`); `aria-labelledby` automàtic. Les seccions `cv/*` en llegeixen
-  el títol/eyebrow/icona de `ui-config/cv/sections.ts`.
+- **Path**: `app/components/shared/CustomSection.vue`
+- **Purpose**: CV section with `id` (anchor), eyebrow (`CustomText eyebrow primary` + icon), title
+  (`CustomText h2`), and subtitle (`CustomText body muted`); automatic `aria-labelledby`. `cv/*` sections read
+  their title/eyebrow/icon from `ui-config/cv/sections.ts`.
 - **Props**:
 
-| Prop       | Tipus                | Default | Valors permesos → classe                         |
-| ---------- | -------------------- | ------- | ------------------------------------------------ |
-| `id`       | `string` (requerida) | —       | id de secció (`about`, `stack`…)                 |
-| `title`    | `string` (requerida) | —       | `.custom-section__title` (`h2`, id `<id>-title`) |
-| `eyebrow`  | `string`             | `''`    | `.custom-section__eyebrow`                       |
-| `icon`     | `string`             | `''`    | només es mostra si hi ha eyebrow                 |
-| `subtitle` | `string`             | `''`    | `.custom-section__subtitle`                      |
+| Prop       | Type                | Default | Allowed values → class                           |
+| ---------- | ------------------- | ------- | ------------------------------------------------ |
+| `id`       | `string` (required) | —       | section id (`about`, `stack`…)                   |
+| `title`    | `string` (required) | —       | `.custom-section__title` (`h2`, id `<id>-title`) |
+| `eyebrow`  | `string`            | `''`    | `.custom-section__eyebrow`                       |
+| `icon`     | `string`            | `''`    | only shown when an eyebrow is present            |
+| `subtitle` | `string`            | `''`    | `.custom-section__subtitle`                      |
 
-- **Variants/classes**: `.custom-section` (padding vertical + `scroll-mt`); elements `__header`, `__eyebrow`, `__title`, `__subtitle`.
+- **Variants/classes**: `.custom-section` (vertical padding + `scroll-mt`); elements `__header`, `__eyebrow`, `__title`, `__subtitle`.
 - **Slots**: `default`.
-- **Events**: cap.
-- **Exemple**:
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomSection
@@ -406,50 +406,50 @@ Icones per defecte: `circle-info` (primary/secondary/neutral/info), `circle-chec
 >…</CustomSection>
 ```
 
-- **Consumidors**: AboutSection, ContactSection, EducationSection, ExperienceSection, TechStack.
+- **Consumers**: AboutSection, ContactSection, EducationSection, ExperienceSection, TechStack.
 
 ### CustomSkeleton
 
-- **Ruta**: `app/components/shared/CustomSkeleton.vue`
-- **Propòsit**: placeholder animat mentre carrega (`aria-hidden`).
+- **Path**: `app/components/shared/CustomSkeleton.vue`
+- **Purpose**: animated placeholder while loading (`aria-hidden`).
 - **Props**:
 
-| Prop    | Tipus                           | Default  | Valors permesos → classe                                          |
-| ------- | ------------------------------- | -------- | ----------------------------------------------------------------- |
-| `shape` | `'text' \| 'image' \| 'circle'` | `'text'` | `.custom-skeleton--text` (línia), `--image` (quadrat), `--circle` |
+| Prop    | Type                            | Default  | Allowed values → class                                          |
+| ------- | ------------------------------- | -------- | --------------------------------------------------------------- |
+| `shape` | `'text' \| 'image' \| 'circle'` | `'text'` | `.custom-skeleton--text` (line), `--image` (square), `--circle` |
 
 - **Variants/classes**: `.custom-skeleton`, `--text`, `--image`, `--circle`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomSkeleton v-for="n in 8" :key="n" shape="image" />
 ```
 
-- **Consumidors**: MemeGrid.
+- **Consumers**: MemeGrid.
 
 ### CustomMarquee
 
-- **Ruta**: `app/components/shared/CustomMarquee.vue`
-- **Propòsit**: banner horitzontal infinit. Renderitza el slot dues vegades dins d'una pista que es desplaça
-  `translateX(-50%)` en bucle (`@keyframes custom-marquee-scroll`). La segona còpia és `aria-hidden="true"` + `inert`;
-  el slot rep `duplicate` perquè els enllaços de la còpia posin `tabindex="-1"`. Amb `prefers-reduced-motion:
-reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` amb `aria-label` (no `role`).
+- **Path**: `app/components/shared/CustomMarquee.vue`
+- **Purpose**: infinite horizontal banner. Renders the slot twice inside a track that loops
+  `translateX(-50%)` (`@keyframes custom-marquee-scroll`). The second copy is `aria-hidden="true"` + `inert`;
+  the slot receives `duplicate` so the copy's links can set `tabindex="-1"`. With `prefers-reduced-motion:
+reduce` there is no animation and only the first copy is visible. `div` container with `aria-label` (no `role`).
 - **Props**:
 
-| Prop           | Tipus                          | Default     | Valors permesos → classe                                         |
-| -------------- | ------------------------------ | ----------- | ---------------------------------------------------------------- |
-| `label`        | `string` (requerida)           | —           | `aria-label` (i18n)                                              |
-| `speed`        | `'slow' \| 'normal' \| 'fast'` | `'normal'`  | `.custom-marquee--slow/--normal/--fast` (durada 70s / 40s / 20s) |
-| `pauseOnHover` | `boolean`                      | `true`      | `.custom-marquee--pause` (pausa a `:hover` i `:focus-within`)    |
-| `tone`         | `Tone`                         | `'primary'` | `.custom-marquee--<tone>` (fons `-soft` + text del to)           |
-| `size`         | `Size`                         | `'md'`      | `.custom-marquee--sm/--md/--lg` (padding vertical de la còpia)   |
+| Prop           | Type                           | Default     | Allowed values → class                                             |
+| -------------- | ------------------------------ | ----------- | ------------------------------------------------------------------ |
+| `label`        | `string` (required)            | —           | `aria-label` (i18n)                                                |
+| `speed`        | `'slow' \| 'normal' \| 'fast'` | `'normal'`  | `.custom-marquee--slow/--normal/--fast` (duration 70s / 40s / 20s) |
+| `pauseOnHover` | `boolean`                      | `true`      | `.custom-marquee--pause` (pauses on `:hover` and `:focus-within`)  |
+| `tone`         | `Tone`                         | `'primary'` | `.custom-marquee--<tone>` (`-soft` background + tone's text)       |
+| `size`         | `Size`                         | `'md'`      | `.custom-marquee--sm/--md/--lg` (copy's vertical padding)          |
 
-- **Variants/classes**: `.custom-marquee`, `__track`, `__copy` + modificadors anteriors.
-- **Slots**: `default` amb prop `{ duplicate: boolean }`.
-- **Events**: cap.
-- **Exemple**:
+- **Variants/classes**: `.custom-marquee`, `__track`, `__copy` + the above modifiers.
+- **Slots**: `default` with `{ duplicate: boolean }` prop.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CustomMarquee :label="t('banner.label')" speed="normal" tone="primary" size="sm">
@@ -459,33 +459,33 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 </CustomMarquee>
 ```
 
-- **Consumidors**: SourceBanner. Test: `tests/unit/components/CustomMarquee.spec.ts`.
+- **Consumers**: SourceBanner. Test: `tests/unit/components/CustomMarquee.spec.ts`.
 
 ### CustomPagination
 
-- **Ruta**: `app/components/shared/CustomPagination.vue`
-- **Propòsit**: navegació genèrica de resultats paginats (decisió 034). Es calcula `pageCount` a partir de
-  `total`/`perPage` i es renderitza dins un `<nav>`; s'amaga sola quan només hi ha una pàgina. Botons
-  anterior/següent (`CustomButton` ghost, només icona) desactivats als extrems.
+- **Path**: `app/components/shared/CustomPagination.vue`
+- **Purpose**: generic navigation for paginated results (decision 034). `pageCount` is computed from
+  `total`/`perPage` and rendered inside a `<nav>`; it hides itself when there is only one page. Previous/next
+  buttons (`CustomButton` ghost, icon-only) disabled at the extremes.
 - **Props**:
 
-| Prop      | Tipus                | Default | Valors permesos → classe                                         |
-| --------- | -------------------- | ------- | ---------------------------------------------------------------- |
-| `page`    | `number` (requerida) | —       | pàgina actual, **1-indexada**                                    |
-| `total`   | `number` (requerida) | —       | nombre total d'elements paginables (no de pàgines)               |
-| `perPage` | `number`             | `12`    | elements per pàgina; `pageCount = max(1, ceil(total / perPage))` |
+| Prop      | Type                | Default | Allowed values → class                                      |
+| --------- | ------------------- | ------- | ----------------------------------------------------------- |
+| `page`    | `number` (required) | —       | current page, **1-indexed**                                 |
+| `total`   | `number` (required) | —       | total number of paginable items (not pages)                 |
+| `perPage` | `number`            | `12`    | items per page; `pageCount = max(1, ceil(total / perPage))` |
 
-- **Variants/classes**: `.custom-pagination` (`<nav>`, ocult si `pageCount <= 1`); element `__status`.
-- **Slots**: cap.
-- **Events**: `update:page: [page: number]` (permet `v-model:page`); només s'emet si la pàgina de destí
-  (retallada a `[1, pageCount]`) és diferent de l'actual.
-- **Exemple**:
+- **Variants/classes**: `.custom-pagination` (`<nav>`, hidden if `pageCount <= 1`); element `__status`.
+- **Slots**: none.
+- **Events**: `update:page: [page: number]` (supports `v-model:page`); only emitted if the target page
+  (clamped to `[1, pageCount]`) differs from the current one.
+- **Example**:
 
 ```vue
 <CustomPagination v-model:page="page" :total="giphy.total" :per-page="giphy.limit" />
 ```
 
-- **Consumidors**: `pages/meme.vue`. Test: `tests/unit/components/CustomPagination.spec.ts`.
+- **Consumers**: `pages/meme.vue`. Test: `tests/unit/components/CustomPagination.spec.ts`.
 
 ---
 
@@ -493,90 +493,91 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 
 ### AppHeader
 
-- **Ruta**: `app/components/layout/AppHeader.vue`
-- **Propòsit**: capçalera fixa amb marca (`CustomLink subtle neutral`), navegació (`/`, `/meme`) amb `CustomLink nav`
-  (estat actiu `.custom-link--active`) i eines (idioma, tema).
-- **Props**: cap.
+- **Path**: `app/components/layout/AppHeader.vue`
+- **Purpose**: fixed header with brand (`CustomLink subtle neutral`), navigation (`/`, `/meme`) via `CustomLink nav`
+  (active state `.custom-link--active`), and tools (language, theme).
+- **Props**: none.
 - **Variants/classes**: `.app-header`; elements `__inner`, `__brand` (`font-bold`), `__nav`, `__link`, `__tools`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <AppHeader />
 ```
 
-- **Consumidors**: `layouts/default.vue`.
+- **Consumers**: `layouts/default.vue`.
 
 ### SourceBanner
 
-- **Ruta**: `app/components/layout/SourceBanner.vue`
-- **Propòsit**: marquesina (`CustomMarquee` `primary`/`sm`) que anuncia que el codi és públic: 4 còpies de
-  `CustomIcon code` + `banner.source` + `CustomLink` a `profile.repo` (`banner.repo`). `data-testid="source-banner"`.
-  Va a `layouts/default.vue` entre `AppHeader` i `main`.
-- **Props**: cap.
-- **Variants/classes**: `.source-banner` (vora inferior); elements `__item`, `__icon`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/layout/SourceBanner.vue`
+- **Purpose**: marquee (`CustomMarquee` `primary`/`sm`) announcing that the code is public: 4 copies of a
+  single `CustomLink` (`variant="inline"`) to `profile.repo`, wrapping `CustomIcon code` + `CustomText`
+  (`banner.source` + `banner.repo`) — the whole item is clickable, not just the repo name (fixed 2026-09-18).
+  `data-testid="source-banner"`. Sits in `layouts/default.vue` between `AppHeader` and `main`.
+- **Props**: none.
+- **Variants/classes**: `.source-banner` (bottom border); elements `__item`, `__icon`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <SourceBanner />
 ```
 
-- **Consumidors**: `layouts/default.vue`. E2E: "home renders CV sections".
+- **Consumers**: `layouts/default.vue`. E2E: "home renders CV sections".
 
 ### AppFooter
 
-- **Ruta**: `app/components/layout/AppFooter.vue`
-- **Propòsit**: peu amb crèdit (`CustomText small muted`), enllaç al codi font (`CustomLink inline`) i icones de contacte
-  (`CustomLink icon`: GitHub, LinkedIn, correu) de `data/cv`.
-- **Props**: cap.
+- **Path**: `app/components/layout/AppFooter.vue`
+- **Purpose**: footer with credit (`CustomText small muted`), source link (`CustomLink inline`), and contact icons
+  (`CustomLink icon`: GitHub, LinkedIn, email) from `data/cv`.
+- **Props**: none.
 - **Variants/classes**: `.app-footer`; elements `__inner`, `__source`, `__links`, `__link`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <AppFooter />
 ```
 
-- **Consumidors**: `layouts/default.vue`.
+- **Consumers**: `layouts/default.vue`.
 
 ### ThemeToggle
 
-- **Ruta**: `app/components/layout/ThemeToggle.vue`
-- **Propòsit**: `CustomButton ghost neutral` només-icona (`sun`/`moon`) sobre `useColorMode()` (`ClientOnly`, fallback
-  `div` buit per evitar mismatch d'hidratació). `data-testid="theme-toggle"`, `aria-pressed` quan és fosc.
-- **Props**: cap.
-- **Variants/classes**: `.theme-toggle` (caixa 40×40 sense padding, sobre `.custom-button`).
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/layout/ThemeToggle.vue`
+- **Purpose**: icon-only `CustomButton ghost neutral` (`sun`/`moon`) over `useColorMode()` (`ClientOnly`, empty
+  `div` fallback to avoid hydration mismatch). `data-testid="theme-toggle"`, `aria-pressed` when dark.
+- **Props**: none.
+- **Variants/classes**: `.theme-toggle` (40×40 box with no padding, over `.custom-button`).
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <ThemeToggle />
 ```
 
-- **Consumidors**: AppHeader.
+- **Consumers**: AppHeader.
 
 ### LocaleSwitcher
 
-- **Ruta**: `app/components/layout/LocaleSwitcher.vue`
-- **Propòsit**: enllaços `en / ca / es` (`CustomLink subtle` amb `localize=false` sobre `useSwitchLocalePath()`);
-  `aria-current` a l'actiu; `data-testid="locale-<code>"`.
-- **Props**: cap.
-- **Variants/classes**: `.locale-switcher`; elements `__item` (pill `text-xs uppercase`, propi de l'enllaç),
+- **Path**: `app/components/layout/LocaleSwitcher.vue`
+- **Purpose**: `en / ca / es` links (`CustomLink subtle` with `localize=false` over `useSwitchLocalePath()`);
+  `aria-current` on the active one; `data-testid="locale-<code>"`.
+- **Props**: none.
+- **Variants/classes**: `.locale-switcher`; elements `__item` (`text-xs uppercase` pill, belongs to the link),
   `__item--active`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <LocaleSwitcher />
 ```
 
-- **Consumidors**: AppHeader.
+- **Consumers**: AppHeader.
 
 ---
 
@@ -584,154 +585,154 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 
 ### HeroSection
 
-- **Ruta**: `app/components/cv/HeroSection.vue`
-- **Propòsit**: capçalera del CV: salutació (`CustomText lead muted`), nom (`CustomText h1 display`), headline
-  (`CustomText h3 primary`), tagline (`body muted`), ubicació (`small muted` + icona), badge, CTA de contacte,
-  descàrrega del CV i retrat (`CustomImage radius=xl frame`, `data-testid="hero-image"`). El retrat es substitueix
-  pel meme de `useHeroStore` (`hero.selected.full`) i el `figcaption` (`CustomText small muted`) mostra el botó de
-  reset (`data-testid="hero-reset"`).
-- **Props**: cap.
-- **Variants/classes**: `.hero-section`; elements `__content`, `__greeting`, `__name`, `__headline`, `__tagline`, `__meta`, `__meta-item`, `__actions`, `__figure`, `__image` (`aspect-square`), `__image--meme` (vora `primary`), `__caption`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/cv/HeroSection.vue`
+- **Purpose**: CV header: greeting (`CustomText lead muted`), name (`CustomText h1 display`), headline
+  (`CustomText h3 primary`), tagline (`body muted`), location (`small muted` + icon), badge, contact CTA,
+  CV download, and portrait (`CustomImage radius=xl frame`, `data-testid="hero-image"`). The portrait is replaced
+  by the meme from `useHeroStore` (`hero.selected.full`) and the `figcaption` (`CustomText small muted`) shows the
+  reset button (`data-testid="hero-reset"`).
+- **Props**: none.
+- **Variants/classes**: `.hero-section`; elements `__content`, `__greeting`, `__name`, `__headline`, `__tagline`, `__meta`, `__meta-item`, `__actions`, `__figure`, `__image` (`aspect-square`), `__image--meme` (`primary` border), `__caption`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <HeroSection />
 ```
 
-- **Consumidors**: `pages/index.vue`.
+- **Consumers**: `pages/index.vue`.
 
 ### AboutSection
 
-- **Ruta**: `app/components/cv/AboutSection.vue`
-- **Propòsit**: secció `#about` (config `getSectionConfig('about')`): dos paràgrafs (`CustomText body muted`), idiomes
-  i interessos (títols `CustomText h3 eyebrow muted` + badges) de `profile`.
-- **Props**: cap.
-- **Variants/classes**: `.about-section` (arrel), `__grid`, `__text`, `__aside`, `__aside-title`, `__list`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/cv/AboutSection.vue`
+- **Purpose**: `#about` section (config `getSectionConfig('about')`): two paragraphs (`CustomText body muted`), languages
+  and interests (titles `CustomText h3 eyebrow muted` + badges) from `profile`.
+- **Props**: none.
+- **Variants/classes**: `.about-section` (root), `__grid`, `__text`, `__aside`, `__aside-title`, `__list`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <AboutSection />
 ```
 
-- **Consumidors**: `pages/index.vue` (via `homeSections`).
+- **Consumers**: `pages/index.vue` (via `homeSections`).
 
 ### ExperienceSection
 
-- **Ruta**: `app/components/cv/ExperienceSection.vue`
-- **Propòsit**: secció `#experience`: llista `experience` de `data/cv` amb `ExperienceItem` en variant `detailed`.
-- **Props**: cap.
-- **Variants/classes**: `.experience-section` (arrel), `__list`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/cv/ExperienceSection.vue`
+- **Purpose**: `#experience` section: lists `experience` from `data/cv` with `ExperienceItem` in `detailed` variant.
+- **Props**: none.
+- **Variants/classes**: `.experience-section` (root), `__list`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <ExperienceSection />
 ```
 
-- **Consumidors**: `pages/index.vue` (via `homeSections`).
+- **Consumers**: `pages/index.vue` (via `homeSections`).
 
 ### ExperienceItem
 
-- **Ruta**: `app/components/cv/ExperienceItem.vue`
-- **Propòsit**: entrada de línia de temps (feina, formació o certificat). Text per i18n a `<section>.items.<id>`
-  (`title`, `bullets[]` via `useMessageList`, `note`); període amb `formatPeriod` (`~/domain/cv/period`) i el
-  locale actiu. Tipografia: període `CustomText small muted` (+ `time`), títol `h3 body semibold`, org `body muted`
-  (`CustomLink inline` si té URL), ubicació `span small muted`, bullets `li small muted`, nota `small muted`.
+- **Path**: `app/components/cv/ExperienceItem.vue`
+- **Purpose**: timeline entry (job, education, or certification). Text via i18n at `<section>.items.<id>`
+  (`title`, `bullets[]` via `useMessageList`, `note`); period via `formatPeriod` (`~/domain/cv/period`) and the
+  active locale. Typography: period `CustomText small muted` (+ `time`), title `h3 body semibold`, org `body muted`
+  (`CustomLink inline` if it has a URL), location `span small muted`, bullets `li small muted`, note `small muted`.
 - **Props**:
 
-| Prop      | Tipus                      | Default      | Valors permesos → classe                                                 |
-| --------- | -------------------------- | ------------ | ------------------------------------------------------------------------ |
-| `item`    | `TimelineItem` (requerida) | —            | `app/domain/cv/types.ts`                                                 |
-| `variant` | `'detailed' \| 'compact'`  | `'detailed'` | `.experience-item--detailed` (bullets) / `--compact` (nota, punt neutre) |
+| Prop      | Type                      | Default      | Allowed values → class                                                   |
+| --------- | ------------------------- | ------------ | ------------------------------------------------------------------------ |
+| `item`    | `TimelineItem` (required) | —            | `app/domain/cv/types.ts`                                                 |
+| `variant` | `'detailed' \| 'compact'` | `'detailed'` | `.experience-item--detailed` (bullets) / `--compact` (note, neutral dot) |
 
 - **Variants/classes**: `.experience-item`, `--detailed`, `--compact`; elements `__period`, `__body`, `__title`, `__org`, `__org-link`, `__bullets`, `__note`, `__tags`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <ExperienceItem :item="item" variant="compact" />
 ```
 
-- **Consumidors**: ExperienceSection, EducationSection.
+- **Consumers**: ExperienceSection, EducationSection.
 
 ### TechStack
 
-- **Ruta**: `app/components/cv/TechStack.vue`
-- **Propòsit**: secció `#stack`: grups de `stack` (`data/cv`) amb títol (`CustomText h3 body semibold` + icona) i badges.
-- **Props**: cap.
-- **Variants/classes**: `.tech-stack` (arrel), `__groups`, `__group`, `__group-title`, `__list`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/cv/TechStack.vue`
+- **Purpose**: `#stack` section: `stack` groups (`data/cv`) with a title (`CustomText h3 body semibold` + icon) and badges.
+- **Props**: none.
+- **Variants/classes**: `.tech-stack` (root), `__groups`, `__group`, `__group-title`, `__list`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <TechStack />
 ```
 
-- **Consumidors**: `pages/index.vue` (via `homeSections`).
+- **Consumers**: `pages/index.vue` (via `homeSections`).
 
 ### EducationSection
 
-- **Ruta**: `app/components/cv/EducationSection.vue`
-- **Propòsit**: secció `#education`: formació i, sota un subtítol (`CustomText h3 lead semibold` + icona
-  `certificate`), certificacions; tot amb `ExperienceItem` `compact`.
-- **Props**: cap.
-- **Variants/classes**: `.education-section` (arrel), `__list`, `__subtitle`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/cv/EducationSection.vue`
+- **Purpose**: `#education` section: education and, under a subtitle (`CustomText h3 lead semibold` + `certificate`
+  icon), certifications; all via `ExperienceItem` `compact`.
+- **Props**: none.
+- **Variants/classes**: `.education-section` (root), `__list`, `__subtitle`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <EducationSection />
 ```
 
-- **Consumidors**: `pages/index.vue` (via `homeSections`).
+- **Consumers**: `pages/index.vue` (via `homeSections`).
 
 ### ContactSection
 
-- **Ruta**: `app/components/cv/ContactSection.vue`
-- **Propòsit**: secció `#contact`: intro (`CustomText body muted`) i botons de correu, LinkedIn, GitHub i descàrrega del CV.
-- **Props**: cap.
-- **Variants/classes**: `.contact-section` (arrel), `__intro`, `__actions`.
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Path**: `app/components/cv/ContactSection.vue`
+- **Purpose**: `#contact` section: intro (`CustomText body muted`) and buttons for email, LinkedIn, GitHub, and CV download.
+- **Props**: none.
+- **Variants/classes**: `.contact-section` (root), `__intro`, `__actions`.
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <ContactSection />
 ```
 
-- **Consumidors**: `pages/index.vue` (via `homeSections`).
+- **Consumers**: `pages/index.vue` (via `homeSections`).
 
 ### CvDownload
 
-- **Ruta**: `app/components/cv/CvDownload.vue`
-- **Propòsit**: botó de descàrrega del PDF del CV per idioma (`/cv/cv-<locale>.pdf`, atribut `download`). Regla 04: el PDF no porta telèfon ni adreça.
+- **Path**: `app/components/cv/CvDownload.vue`
+- **Purpose**: download button for the per-language CV PDF (`/cv/cv-<locale>.pdf`, `download` attribute). Rule 04: the PDF carries no phone or address.
 - **Props**:
 
-| Prop      | Tipus                             | Default     | Valors permesos → classe |
+| Prop      | Type                              | Default     | Allowed values → class   |
 | --------- | --------------------------------- | ----------- | ------------------------ |
-| `variant` | `'solid' \| 'outline' \| 'ghost'` | `'solid'`   | passa a `CustomButton`   |
-| `tone`    | `Tone`                            | `'primary'` | passa a `CustomButton`   |
-| `size`    | `Size`                            | `'md'`      | passa a `CustomButton`   |
+| `variant` | `'solid' \| 'outline' \| 'ghost'` | `'solid'`   | passed to `CustomButton` |
+| `tone`    | `Tone`                            | `'primary'` | passed to `CustomButton` |
+| `size`    | `Size`                            | `'md'`      | passed to `CustomButton` |
 
-- **Variants/classes**: `.cv-download` (`div` inline-flex; l'estil visual és el d'`CustomButton`).
-- **Slots**: cap.
-- **Events**: cap.
-- **Exemple**:
+- **Variants/classes**: `.cv-download` (inline-flex `div`; the visual style is `CustomButton`'s).
+- **Slots**: none.
+- **Events**: none.
+- **Example**:
 
 ```vue
 <CvDownload variant="outline" />
 <CvDownload variant="ghost" tone="neutral" />
 ```
 
-- **Consumidors**: HeroSection, ContactSection.
+- **Consumers**: HeroSection, ContactSection.
 
 ---
 
@@ -739,49 +740,49 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 
 ### MemeSearch
 
-- **Ruta**: `app/components/meme/MemeSearch.vue`
-- **Propòsit**: formulari `role="search"` amb `CustomInput type=search` (`id="meme-query"`) i botó de cerca
-  (`data-testid="meme-search-submit"`, desactivat si la query és buida). Emet la query retallada en fer submit.
-  `initial` és reactiu: un `watch` torna a sincronitzar el camp si canvia després del muntatge (p. ex. en clicar
-  una recent search a `MemeRecentSearches`).
+- **Path**: `app/components/meme/MemeSearch.vue`
+- **Purpose**: `role="search"` form with `CustomInput type=search` (`id="meme-query"`) and a search button
+  (`data-testid="meme-search-submit"`, disabled if the query is empty). Emits the trimmed query on submit.
+  `initial` is reactive: a `watch` re-syncs the field if it changes after mount (e.g. when clicking a
+  recent search in `MemeRecentSearches`).
 - **Props**:
 
-| Prop      | Tipus     | Default | Valors permesos                    |
-| --------- | --------- | ------- | ---------------------------------- |
-| `loading` | `boolean` | `false` | passa a `CustomButton` (`loading`) |
-| `initial` | `string`  | `''`    | valor del camp (inicial i reactiu) |
+| Prop      | Type      | Default | Allowed values                       |
+| --------- | --------- | ------- | ------------------------------------ |
+| `loading` | `boolean` | `false` | passed to `CustomButton` (`loading`) |
+| `initial` | `string`  | `''`    | field value (initial and reactive)   |
 
 - **Variants/classes**: `.meme-search`, `__input`.
-- **Slots**: cap.
+- **Slots**: none.
 - **Events**: `search: [query: string]`.
-- **Exemple**:
+- **Example**:
 
 ```vue
 <MemeSearch :loading="giphy.status === 'pending'" :initial="giphy.query" @search="onSearch" />
 ```
 
-- **Consumidors**: `pages/meme.vue`.
+- **Consumers**: `pages/meme.vue`.
 
 ### MemeGrid
 
-- **Ruta**: `app/components/meme/MemeGrid.vue`
-- **Propòsit**: graella de resultats segons `status` (`pending` → skeletons `data-testid="meme-skeletons"`;
-  `error` → `CustomAlert danger` amb `t(errorKey)`; `success` sense resultats → `CustomAlert info`; altrament llista de
+- **Path**: `app/components/meme/MemeGrid.vue`
+- **Purpose**: results grid based on `status` (`pending` → skeletons `data-testid="meme-skeletons"`;
+  `error` → `CustomAlert danger` with `t(errorKey)`; `success` with no results → `CustomAlert info`; otherwise a list of
   `MemeCard`). `aria-live="polite"`.
 - **Props**:
 
-| Prop         | Tipus                                | Default                | Valors permesos                                      |
-| ------------ | ------------------------------------ | ---------------------- | ---------------------------------------------------- |
-| `items`      | `Meme[]` (requerida)                 | —                      | `#shared/types/giphy`                                |
-| `status`     | `AsyncDataRequestStatus` (requerida) | —                      | `idle`, `pending`, `success`, `error`                |
-| `selectedId` | `string \| null`                     | `null`                 | id del meme marcat com a seleccionat                 |
-| `skeletons`  | `number`                             | `8`                    | nombre de placeholders                               |
-| `errorKey`   | `string`                             | `'meme.results.error'` | clau i18n del missatge (de `useGiphyStore.errorKey`) |
+| Prop         | Type                                | Default                | Allowed values                                           |
+| ------------ | ----------------------------------- | ---------------------- | -------------------------------------------------------- |
+| `items`      | `Meme[]` (required)                 | —                      | `#shared/types/giphy`                                    |
+| `status`     | `AsyncDataRequestStatus` (required) | —                      | `idle`, `pending`, `success`, `error`                    |
+| `selectedId` | `string \| null`                    | `null`                 | id of the meme marked as selected                        |
+| `skeletons`  | `number`                            | `8`                    | number of placeholders                                   |
+| `errorKey`   | `string`                            | `'meme.results.error'` | i18n key for the message (from `useGiphyStore.errorKey`) |
 
 - **Variants/classes**: `.meme-grid`, `__skeletons`, `__list`, `__state`.
-- **Slots**: cap.
-- **Events**: `select: [meme: Meme]` (reemès des de `MemeCard`).
-- **Exemple**:
+- **Slots**: none.
+- **Events**: `select: [meme: Meme]` (re-emitted from `MemeCard`).
+- **Example**:
 
 ```vue
 <MemeGrid
@@ -793,74 +794,74 @@ reduce` no hi ha animació i només es veu la primera còpia. Contenidor `div` a
 />
 ```
 
-- **Consumidors**: `pages/meme.vue`.
+- **Consumers**: `pages/meme.vue`.
 
 ### MemeCard
 
-- **Ruta**: `app/components/meme/MemeCard.vue`
-- **Propòsit**: targeta-botó d'un GIF: `CustomButton ghost neutral` amb `CustomImage` (`preview`, lazy) i títol
-  (`CustomText span caption truncate`, visible a hover/focus/selected); `aria-pressed` i `aria-label` traduït;
+- **Path**: `app/components/meme/MemeCard.vue`
+- **Purpose**: GIF card-button: `CustomButton ghost neutral` with `CustomImage` (`preview`, lazy) and a title
+  (`CustomText span caption truncate`, visible on hover/focus/selected); translated `aria-pressed` and `aria-label`;
   `data-testid="meme-card"`.
 - **Props**:
 
-| Prop       | Tipus              | Default | Valors permesos → classe                       |
-| ---------- | ------------------ | ------- | ---------------------------------------------- |
-| `meme`     | `Meme` (requerida) | —       | `#shared/types/giphy`                          |
-| `selected` | `boolean`          | `false` | `.meme-card--selected` + `aria-pressed="true"` |
+| Prop       | Type              | Default | Allowed values → class                         |
+| ---------- | ----------------- | ------- | ---------------------------------------------- |
+| `meme`     | `Meme` (required) | —       | `#shared/types/giphy`                          |
+| `selected` | `boolean`         | `false` | `.meme-card--selected` + `aria-pressed="true"` |
 
-- **Variants/classes**: `.meme-card` (quadrat, sobre `.custom-button`), `--selected`; elements `__image`, `__title`.
-- **Slots**: cap.
+- **Variants/classes**: `.meme-card` (square, over `.custom-button`), `--selected`; elements `__image`, `__title`.
+- **Slots**: none.
 - **Events**: `select: [meme: Meme]`.
-- **Exemple**:
+- **Example**:
 
 ```vue
 <MemeCard :meme="meme" :selected="meme.id === selectedId" @select="onSelect" />
 ```
 
-- **Consumidors**: MemeGrid. Test: `tests/unit/components/MemeCard.spec.ts`.
+- **Consumers**: MemeGrid. Test: `tests/unit/components/MemeCard.spec.ts`.
 
 ### MemePreview
 
-- **Ruta**: `app/components/meme/MemePreview.vue`
-- **Propòsit**: previsualització a mida completa (`CustomImage full radius=lg`) dins d'un `CustomCard elevated`, amb títol
-  (`CustomText lead semibold`), mides (`small muted`) i botons "posar-me'l" (`data-testid="meme-use"`) / "triar-ne
-  un altre". Contenidor `data-testid="meme-preview"`.
+- **Path**: `app/components/meme/MemePreview.vue`
+- **Purpose**: full-size preview (`CustomImage full radius=lg`) inside a `CustomCard elevated`, with a title
+  (`CustomText lead semibold`), size (`small muted`), and "wear it" (`data-testid="meme-use"`) / "choose another"
+  buttons. Container `data-testid="meme-preview"`.
 - **Props**:
 
-| Prop   | Tipus              | Default | Valors permesos       |
-| ------ | ------------------ | ------- | --------------------- |
-| `meme` | `Meme` (requerida) | —       | `#shared/types/giphy` |
+| Prop   | Type              | Default | Allowed values        |
+| ------ | ----------------- | ------- | --------------------- |
+| `meme` | `Meme` (required) | —       | `#shared/types/giphy` |
 
 - **Variants/classes**: `.meme-preview`; elements `__image`, `__body`, `__title`, `__meta`, `__actions`.
-- **Slots**: cap.
+- **Slots**: none.
 - **Events**: `use: [meme: Meme]`, `cancel: []`.
-- **Exemple**:
+- **Example**:
 
 ```vue
 <MemePreview v-if="candidate" :meme="candidate" @use="wear" @cancel="candidate = null" />
 ```
 
-- **Consumidors**: `pages/meme.vue`.
+- **Consumers**: `pages/meme.vue`.
 
 ### MemeRecentSearches
 
-- **Ruta**: `app/components/meme/MemeRecentSearches.vue`
-- **Propòsit**: apartat "recent searches" a sota de la graella de `/meme` (decisió 034). Mostra els termes de
-  `useGiphyStore.history` (màxim 5, més recent primer) com a botons clicables; en clicar-ne un s'emet `select`
-  amb el terme. S'amaga sencer (`v-if="terms.length"`) quan encara no hi ha historial.
+- **Path**: `app/components/meme/MemeRecentSearches.vue`
+- **Purpose**: "recent searches" section below the `/meme` grid (decision 034). Shows the terms from
+  `useGiphyStore.history` (max 5, most recent first) as clickable buttons; clicking one emits `select`
+  with the term. Hides entirely (`v-if="terms.length"`) while there is no history yet.
 - **Props**:
 
-| Prop    | Tipus                  | Default | Valors permesos         |
-| ------- | ---------------------- | ------- | ----------------------- |
-| `terms` | `string[]` (requerida) | —       | `useGiphyStore.history` |
+| Prop    | Type                  | Default | Allowed values          |
+| ------- | --------------------- | ------- | ----------------------- |
+| `terms` | `string[]` (required) | —       | `useGiphyStore.history` |
 
 - **Variants/classes**: `.meme-recent-searches`; element `__list`.
-- **Slots**: cap.
+- **Slots**: none.
 - **Events**: `select: [term: string]`.
-- **Exemple**:
+- **Example**:
 
 ```vue
 <MemeRecentSearches :terms="giphy.history" @select="onSearch" />
 ```
 
-- **Consumidors**: `pages/meme.vue`. Test: `tests/unit/components/MemeRecentSearches.spec.ts`.
+- **Consumers**: `pages/meme.vue`. Test: `tests/unit/components/MemeRecentSearches.spec.ts`.

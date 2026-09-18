@@ -1,78 +1,78 @@
-# Catàleg · AI workflow (scripts, gates, hooks i workflows)
+# Catalog · AI workflow (scripts, gates, hooks and workflows)
 
-Documentació viva (regla 07): cada script, gate, hook o workflow nou o canviat s'actualitza aquí al mateix commit.
+Living documentation (rule 07): every new or changed script, gate, hook or workflow is updated here in the same commit.
 
 ## Scripts (`package.json`)
 
-| Script                            | Fa                                                                                             | Qui el crida           |
-| --------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------- |
-| `dev` / `build` / `preview`       | `nuxt dev` / `nuxt build` (preset `cloudflare_module`) / `nuxt preview`                        | tu, CI                 |
-| `gate`                            | `format:check` + `lint` + `typecheck` + `test` (unit + arch)                                   | `pre-commit`, `ci.yml` |
-| `gate:push`                       | `gate` + `build` + `test:e2e`                                                                  | `pre-push`             |
-| `test` / `test:arch` / `test:e2e` | vitest / només `tests/arch` / Playwright (chromium, contra `nuxt dev`, decisió 019)            | tu, CI                 |
-| `cf:dev` / `cf:deploy`            | `wrangler dev` / `wrangler deploy` (només per a proves locals; el deploy real és `deploy.yml`) | tu                     |
-| `prepare` / `postinstall`         | `git config core.hooksPath .githooks` / `nuxt prepare`                                         | `pnpm install`         |
+| Script                            | Does                                                                                     | Who calls it           |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------- |
+| `dev` / `build` / `preview`       | `nuxt dev` / `nuxt build` (preset `cloudflare_module`) / `nuxt preview`                  | you, CI                |
+| `gate`                            | `format:check` + `lint` + `typecheck` + `test` (unit + arch)                             | `pre-commit`, `ci.yml` |
+| `gate:push`                       | `gate` + `build` + `test:e2e`                                                            | `pre-push`             |
+| `test` / `test:arch` / `test:e2e` | vitest / only `tests/arch` / Playwright (chromium, against `nuxt dev`, decision 019)     | you, CI                |
+| `cf:dev` / `cf:deploy`            | `wrangler dev` / `wrangler deploy` (local testing only; the real deploy is `deploy.yml`) | you                    |
+| `prepare` / `postinstall`         | `git config core.hooksPath .githooks` / `nuxt prepare`                                   | `pnpm install`         |
 
-## Gates i hooks
+## Gates and hooks
 
-| Hook                                                          | Executa                                                              | Bloqueja                                                                                                         |
-| ------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `.githooks/pre-commit`                                        | `pnpm gate`                                                          | el commit                                                                                                        |
-| `.githooks/pre-push`                                          | `pnpm gate:push`                                                     | el push                                                                                                          |
-| `.claude/hooks/require-contract.sh` (PreToolUse Bash, Claude) | `require-contract.py`: cerca `git commit`/`git push` reals a l'ordre | `--no-verify`/`-n` (regla 09) i `git commit` sense `.claude/tasks/ACTIVE` + `contract.md` amb «Given» (regla 10) |
+| Hook                                                          | Runs                                                                               | Blocks                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.githooks/pre-commit`                                        | `pnpm gate`                                                                        | the commit                                                                                                                                                                                                                                                                  |
+| `.githooks/pre-push`                                          | `pnpm gate:push`                                                                   | the push                                                                                                                                                                                                                                                                    |
+| `.claude/hooks/require-contract.sh` (PreToolUse Bash, Claude) | `require-contract.py`: looks for real `git commit`/`git push` calls in the command | `--no-verify`/`-n` (rule 09); `git commit` without `.claude/tasks/ACTIVE` + `contract.md` with "Given" (rule 10); `git commit` staging `nuxt.config.ts` or `eslint.config.mjs` without also staging a file under `.claude/docs/decisions/` (rule 11, added in decision 041) |
 
-Comprovació manual del hook (criteri 11 del contracte `bootstrap`): des de Claude, amb `ACTIVE` buit, `git commit -m x` ha de sortir amb «Regla 10: cap commit sense contracte actiu»; amb contracte vàlid, `git commit --no-verify -m x` ha de sortir amb «Regla 09: --no-verify / -n no esta permes». Només mira invocacions reals de git (inici de línia o després de `;`, `&&`, `||`, `|`), no prosa dins de heredocs.
+Manual check of the hook (criterion 11 of the `bootstrap` contract): from Claude, with `ACTIVE` empty, `git commit -m x` must fail with "Rule 10: no commit without an active contract"; with a valid contract, `git commit --no-verify -m x` must fail with "Rule 09: --no-verify / -n is not allowed". It only looks at actual git invocations (start of line or after `;`, `&&`, `||`, `|`), not prose inside heredocs. Staging `nuxt.config.ts`/`eslint.config.mjs` alone (no decision file staged) must fail with "Rule 11: this commit changes nuxt.config.ts or eslint.config.mjs...".
 
-## Entorns i deploy
+## Environments and deploy
 
-Decisions: 021 (entorns), 022 (escanejos), 024 (GitHub environment, secrets, ruleset).
+Decisions: 021 (environments), 022 (scans), 024 (GitHub environment, secrets, ruleset).
 
-### Entorns
+### Environments
 
-| Entorn         | Com                                                                                  | Secret Giphy                                     |
-| -------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| **local**      | `pnpm dev` + `.env` local (`NUXT_GIPHY_API_KEY`)                                     | `.env`, mai versionat                            |
-| **preview**    | una URL efímera per PR: `pr-<n>-cv.<subdomini>.workers.dev` (àlies) i `<versió>-cv…` | hereta els secrets del Worker de producció       |
-| **production** | Worker `cv` a `danimorales.dev` (`workers_dev: false`)                               | el puja `deploy.yml` des de GitHub a cada deploy |
+| Environment    | How                                                                                      | Giphy secret                                         |
+| -------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **local**      | `pnpm dev` + local `.env` (`NUXT_GIPHY_API_KEY`)                                         | `.env`, never committed                              |
+| **preview**    | an ephemeral URL per PR: `pr-<n>-cv.<subdomain>.workers.dev` (alias) and `<version>-cv…` | inherits the secrets from the production Worker      |
+| **production** | Worker `cv` at `danimorales.dev` (`workers_dev: false`)                                  | uploaded by `deploy.yml` from GitHub on every deploy |
 
-No hi ha staging. Les previews no funcionen fins que el Worker existeix (primer merge a `main`).
+There is no staging. Previews don't work until the Worker exists (first merge to `main`).
 
 ### Workflows (`.github/workflows/`)
 
-| Workflow       | Trigger                                            | Jobs (= nom del check)              | Què fa                                                                                               |
-| -------------- | -------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `ci.yml`       | `pull_request`, `push` a `main`                    | `gate`                              | `pnpm gate` + `build` + e2e (chromium). Puja `playwright-report` si falla.                           |
-| `security.yml` | `pull_request`, `push` a `main`, dilluns 06:00 UTC | `gitleaks`, `audit`, `CodeQL`       | secrets a tot l'historial, `pnpm audit --audit-level=high`, CodeQL javascript-typescript.            |
-| `preview.yml`  | `pull_request`                                     | `preview`                           | `wrangler versions upload --preview-alias pr-<n>` i comenta la URL al PR. Salta si no hi ha secrets. |
-| `deploy.yml`   | `workflow_run` de `ci` acabat en verd sobre `main` | `deploy` (environment `production`) | checkout del `head_sha` exacte, build, `wrangler deploy` + puja `NUXT_GIPHY_API_KEY`.                |
+| Workflow       | Trigger                                            | Jobs (= check name)                 | What it does                                                                                                     |
+| -------------- | -------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`       | `pull_request`, `push` to `main`                   | `gate`                              | `pnpm gate` + `build` + e2e (chromium). Uploads `playwright-report` on failure.                                  |
+| `security.yml` | `pull_request`, `push` to `main`, Monday 06:00 UTC | `gitleaks`, `audit`, `CodeQL`       | secrets across the whole history, `pnpm audit --audit-level=high`, CodeQL javascript-typescript.                 |
+| `preview.yml`  | `pull_request`                                     | `preview`                           | `wrangler versions upload --preview-alias pr-<n>` and comments the URL on the PR. Skips if there are no secrets. |
+| `deploy.yml`   | `workflow_run` of `ci` finishing green on `main`   | `deploy` (environment `production`) | checkout of the exact `head_sha`, build, `wrangler deploy` + uploads `NUXT_GIPHY_API_KEY`.                       |
 
-Dependabot (`.github/dependabot.yml`): npm (pnpm-lock) setmanal amb minor+patch agrupats, GitHub Actions setmanal agrupat.
+Dependabot (`.github/dependabot.yml`): npm (pnpm-lock) weekly with minor+patch grouped, GitHub Actions weekly grouped.
 
-Versions d'actions (verificades 2026-09-14): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6` (llegeix `packageManager` de `package.json`), `actions/upload-artifact@v7`, `actions/github-script@v9`, `cloudflare/wrangler-action@v4`, `gitleaks/gitleaks-action@v3`, `github/codeql-action@v4`. Dependabot les manté.
+Action versions (verified 2026-09-14): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6` (reads `packageManager` from `package.json`), `actions/upload-artifact@v7`, `actions/github-script@v9`, `cloudflare/wrangler-action@v4`, `gitleaks/gitleaks-action@v3`, `github/codeql-action@v4`. Dependabot keeps them up to date.
 
-Per què `workflow_run` i no `push`: només desplega el commit que ja ha passat la gate, sense repetir-la ni duplicar-ne la definició. Contrapartida: el workflow ha d'existir a `main` per disparar-se, i el run de deploy no surt al PR (surt a Actions → deploy).
+Why `workflow_run` and not `push`: it only deploys the commit that has already passed the gate, without re-running it or duplicating its definition. Trade-off: the workflow has to already exist on `main` to trigger, and the deploy run doesn't show up on the PR (it shows up under Actions → deploy).
 
-### pnpm 12 a la CI
+### pnpm 12 in CI
 
-- `pnpm install --frozen-lockfile` sempre: la CI no resol versions noves, només instal·la el lockfile. Node surt de `.node-version` (24), no d'`engines`.
-- `minimumReleaseAge` (per defecte 1440 min = 1 dia) també s'aplica al lockfile: una versió publicada fa menys d'un dia fa fallar l'install, també a la CI. Excepcions puntuals a `minimumReleaseAgeExclude` de `pnpm-workspace.yaml` (ara: `wrangler`, `miniflare`), i es treuen quan ja no calen.
-- `allowBuilds` (`pnpm-workspace.yaml`) és la llista de deps amb scripts de build permesos (`esbuild`, `unrs-resolver`, `workerd`). Una dep nova amb `postinstall` fa fallar l'install fins que s'hi afegeix; mai `dangerouslyAllowAllBuilds`.
+- `pnpm install --frozen-lockfile` always: CI never resolves new versions, it only installs the lockfile. Node comes from `.node-version` (24), not from `engines`.
+- `minimumReleaseAge` (default 1440 min = 1 day) also applies to the lockfile: a version published less than a day ago makes the install fail, including in CI. One-off exceptions in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude` (currently: `wrangler`, `miniflare`), removed once no longer needed.
+- `allowBuilds` (`pnpm-workspace.yaml`) is the list of deps allowed to run build scripts (`esbuild`, `unrs-resolver`, `workerd`). A new dep with a `postinstall` makes the install fail until it's added there; never `dangerouslyAllowAllBuilds`.
 
 ### Secrets
 
-| Secret                  | On viu (GitHub)                       | Qui el crea               | Per a què                                 | Rotació                                                            |
-| ----------------------- | ------------------------------------- | ------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
-| `CLOUDFLARE_API_TOKEN`  | environment `production` i repositori | tu (Cloudflare dashboard) | `deploy.yml` (env) i `preview.yml` (repo) | nou token a Cloudflare → actualitza els dos llocs → revoca l'antic |
-| `CLOUDFLARE_ACCOUNT_ID` | environment `production` i repositori | tu                        | idem                                      | no rota                                                            |
-| `NUXT_GIPHY_API_KEY`    | environment `production`              | tu (developers.giphy.com) | `deploy.yml` la puja al Worker            | canvia-la a GitHub → següent deploy (o re-run de deploy)           |
+| Secret                  | Where it lives (GitHub)                 | Who creates it             | What for                                    | Rotation                                                          |
+| ----------------------- | --------------------------------------- | -------------------------- | ------------------------------------------- | ----------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | `production` environment and repository | you (Cloudflare dashboard) | `deploy.yml` (env) and `preview.yml` (repo) | new token in Cloudflare → update both places → revoke the old one |
+| `CLOUDFLARE_ACCOUNT_ID` | `production` environment and repository | you                        | same                                        | doesn't rotate                                                    |
+| `NUXT_GIPHY_API_KEY`    | `production` environment                | you (developers.giphy.com) | `deploy.yml` uploads it to the Worker       | change it on GitHub → next deploy (or re-run deploy)              |
 
-Els dos secrets de repositori (previews) poden tenir els mateixos valors que els de l'environment. Mai al xat, mai al repo (regla 01). El Worker no es toca a mà: si algú posa un secret al dashboard, el següent deploy el sobreescriu.
+The two repository secrets (previews) can hold the same values as the environment ones. Never in chat, never in the repo (rule 01). The Worker is never touched by hand: if someone sets a secret in the dashboard, the next deploy overwrites it.
 
-### Protecció de `main` (ruleset)
+### Protection of `main` (ruleset)
 
-Checks requerits, amb el nom exacte del job: `gate`, `gitleaks`, `audit`, `CodeQL` (font: GitHub Actions, app id 15368). A més: PR obligatori, sense force push, sense esborrar la branca, i regla «code scanning» amb CodeQL.
+Required checks, with the exact job name: `gate`, `gitleaks`, `audit`, `CodeQL` (source: GitHub Actions, app id 15368). Plus: PR required, no force push, no branch deletion, and a "code scanning" rule with CodeQL.
 
-UI: Settings → Rules → Rulesets → New branch ruleset (target: default branch). O bé, amb `gh` autenticat com a admin del repo:
+UI: Settings → Rules → Rulesets → New branch ruleset (target: default branch). Or, with `gh` authenticated as a repo admin:
 
 ```bash
 gh api -X POST repos/danimo17/cv/rulesets --input ruleset.json
@@ -129,4 +129,4 @@ gh api -X POST repos/danimo17/cv/rulesets --input ruleset.json
 }
 ```
 
-Sense `bypass_actors`: ni l'admin pot saltar-se la gate. Si un dia cal, s'afegeix des de la UI.
+No `bypass_actors`: not even the admin can skip the gate. If that's ever needed, it's added from the UI.

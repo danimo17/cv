@@ -1,4 +1,4 @@
-# 011 · Estil visual: minimalista developer (SUBSTITUÏDA per 025)
+# 011 · Visual style: minimalist developer (SUPERSEDED by 025)
 
-**Decisió original.** Tipografia de sistema, molt espai, un color d'accent, mode fosc de veritat. Sense webfonts externes.
-**Estat.** Substituïda el 2026-09-14 per la decisió 025 (neumorphism). Es manté la tipografia de sistema, el mode fosc real i l'absència de webfonts.
+**Original decision.** System typography, lots of space, one accent color, true dark mode. No external webfonts.
+**Status.** Superseded on 2026-09-14 by decision 025 (neumorphism). System typography, true dark mode, and the absence of webfonts are kept.

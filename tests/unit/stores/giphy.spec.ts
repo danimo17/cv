@@ -13,8 +13,8 @@ const meme: Meme = {
   height: 480,
 }
 
-// El mateix endpoint simula els tres resultats del servidor segons la query (regla 03: només el
-// servei coneix la ruta; aquí només es registra el mock).
+// The same endpoint simulates the three server outcomes based on the query (rule 03: only the
+// service knows the route; here we just register the mock).
 registerEndpoint('/api/giphy/search', (event) => {
   const q = new URL(event.path, 'http://localhost').searchParams.get('q')
   if (q === 'bad') throw createError({ statusCode: 400, statusMessage: 'bad query' })
@@ -22,8 +22,8 @@ registerEndpoint('/api/giphy/search', (event) => {
   return { items: [meme], total: 1 }
 })
 
-// La store és un singleton dins de l'app Nuxt de test (el useFetch es crea una sola vegada):
-// els tests s'encadenen en ordre sobre la mateixa instància.
+// The store is a singleton within the test Nuxt app (useFetch is created only once):
+// the tests chain in order on the same instance.
 function store() {
   return useNuxtApp().runWithContext(() => useGiphyStore())
 }
@@ -86,12 +86,12 @@ describe('useGiphyStore', () => {
   })
 })
 
-// Historial de termes cercats (decisió 034): distint de `useHeroStore.history` (memes portats).
-// Continua sobre el mateix singleton (regla del fitxer: la store es crea una sola vegada).
+// Search term history (decision 034): distinct from `useHeroStore.history` (worn memes).
+// Continues on the same singleton (file rule: the store is created only once).
 describe('useGiphyStore · history', () => {
   it('starts with the entries accumulated so far and keeps deduping to the front', async () => {
     const giphy = store()
-    // Estat heretat de la suite anterior: ['cat', 'down', 'bad'] (cat mogut al davant en el darrer search).
+    // State inherited from the previous suite: ['cat', 'down', 'bad'] (cat moved to the front in the last search).
     expect(giphy.history).toEqual(['cat', 'down', 'bad'])
 
     await giphy.search('dog')

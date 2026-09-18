@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Size, Tone } from '~/types/ui'
-
 const props = withDefaults(
   defineProps<{
     tone?: Tone
@@ -11,7 +9,6 @@ const props = withDefaults(
   { tone: 'neutral', variant: 'soft', size: 'sm', icon: '' }
 )
 
-// La tipografia (mida, pes) la posa CustomText; el badge només aporta fons, color i forma.
 const textVariant = computed(() => (props.size === 'sm' ? 'caption' : 'small'))
 </script>
 

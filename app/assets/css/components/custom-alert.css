@@ -1,4 +1,3 @@
-/* Neumorphism: relleu sobre fons -soft del to; icona i títol amb el color del to (mai només ombra). */
 @layer components {
   .custom-alert {
     @apply flex gap-3 rounded-xl p-4 text-sm shadow-neu;

@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { formatPeriod } from '~/domain/cv/period'
-import type { TimelineItem } from '~/domain/cv/types'
-
 const props = withDefaults(
   defineProps<{
     item: TimelineItem
-    /** `detailed` mostra els bullets; `compact` mostra la nota (formació, certificats) */
     variant?: 'detailed' | 'compact'
   }>(),
   { variant: 'detailed' }

@@ -2,7 +2,6 @@
 export type ImageFit = 'cover' | 'contain'
 export type ImageRadius = 'none' | 'md' | 'lg' | 'xl' | 'full'
 
-// Únic embolcall d'imatges (decisió 026, sense @nuxt/image per decisió 018).
 defineOptions({ inheritAttrs: false })
 
 withDefaults(
@@ -14,11 +13,8 @@ withDefaults(
     loading?: 'lazy' | 'eager'
     fit?: ImageFit
     radius?: ImageRadius
-    /** Vora + ombra al voltant de la imatge */
     frame?: boolean
-    /** `srcset` de l'`<img>` natiu; opcional, decisió 037 (sense mides generades encara) */
     srcset?: string
-    /** `sizes` de l'`<img>` natiu; només té efecte si `srcset` també es passa */
     sizes?: string
   }>(),
   {

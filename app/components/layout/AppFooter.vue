@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { profile } from '~/data/cv'
-
 const { t } = useI18n()
 </script>
 

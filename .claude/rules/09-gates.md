@@ -1,10 +1,10 @@
-# 09 · Gates vinculants
+# 09 · Binding gates
 
-**Què.** `pnpm gate` (format:check, lint, typecheck, unit+arch) ha d'estar en verd abans de cada commit;
-`pnpm gate:push` (gate + build + e2e) abans de cada push; la CI (gate + build + e2e + seguretat) en verd abans
-de cada merge a `main`; el deploy a producció només surt de `main` i només si la CI hi és verda. Mai
-`--no-verify` ni `-n`. Un test que molesta es corregeix o es justifica al contracte, no s'omet.
-**Per què.** "He provat" no és evidència; la gate sí.
-**Com es comprova.** `.githooks/pre-commit`, `.githooks/pre-push` (activats per `pnpm install` → script
-`prepare`), workflows de `.github/workflows/`, ruleset de `main` amb checks obligatoris, i el hook de Claude
-`.claude/hooks/require-contract.sh` que bloqueja `--no-verify`.
+**What.** `pnpm gate` (format:check, lint, typecheck, unit+arch) must be green before every commit;
+`pnpm gate:push` (gate + build + e2e) before every push; CI (gate + build + e2e + security) green before
+every merge to `main`; production deploy only comes from `main` and only if CI is green there. Never
+`--no-verify` or `-n`. A test that's bothersome gets fixed or justified in the contract, not skipped.
+**Why.** "I tested it" is not evidence; the gate is.
+**How it's checked.** `.githooks/pre-commit`, `.githooks/pre-push` (enabled by `pnpm install` → `prepare`
+script), workflows in `.github/workflows/`, `main` ruleset with required checks, and the Claude hook
+`.claude/hooks/require-contract.sh` that blocks `--no-verify`.

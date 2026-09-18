@@ -1,5 +1,5 @@
-# 002 · Domini: danimorales.dev
+# 002 · Domain: danimorales.dev
 
-**Context.** L'usuari volia `danielmorales.dev`; està registrat (Namecheap, 2021, caduca 05/2027, no en venda).
-**Decisió.** `danimorales.dev` a Cloudflare Registrar (12,20 $/any, preu de cost). No es contacta el propietari de danielmorales.dev. **Registrat i pagat el 2026-09-14.**
-**Conseqüències.** `wrangler.jsonc` porta la ruta `custom_domain` activa.
+**Context.** The user wanted `danielmorales.dev`; it's already registered (Namecheap, 2021, expires 05/2027, not for sale).
+**Decision.** `danimorales.dev` via Cloudflare Registrar ($12.20/year, at-cost price). The owner of danielmorales.dev is not contacted. **Registered and paid on 2026-09-14.**
+**Consequences.** `wrangler.jsonc` carries the active `custom_domain` route.

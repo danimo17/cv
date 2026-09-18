@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Claude Code PreToolUse hook (Bash). Fa vinculants les regles 09 (gates) i 10 (contracte primer).
+"""Claude Code PreToolUse hook (Bash). Enforces rules 09 (gates), 10 (contract first) and 11 (decisions
+logged for architecturally-significant config changes).
 
-Nomes mira invocacions REALS de git (inici de linia o despres de ; && || |), no prosa dins de heredocs.
-Exit 2 = bloqueja l'ordre i mostra el motiu.
+Only looks at REAL git invocations (start of line or after ; && || |), not prose inside heredocs.
+Exit 2 = blocks the command and shows the reason.
 """
 
 import json
 import os
 import re
+import subprocess
 import sys
 
 data = json.load(sys.stdin)
@@ -22,7 +24,7 @@ if not hits:
 
 for _sub, rest in hits:
     if re.search(r"--no-verify|(?:^|\s)-n\b", rest):
-        print("Regla 09: --no-verify / -n no esta permes. Passa la gate (pnpm gate).", file=sys.stderr)
+        print("Rule 09: --no-verify / -n is not allowed. Pass the gate (pnpm gate).", file=sys.stderr)
         sys.exit(2)
 
 if any(sub == "commit" for sub, _ in hits):
@@ -39,8 +41,27 @@ if any(sub == "commit" for sub, _ in hits):
             ok = "given" in f.read().lower()
     if not ok:
         print(
-            "Regla 10: cap commit sense contracte actiu. Escriu .claude/tasks/ACTIVE (slug) i "
-            ".claude/tasks/<slug>/contract.md amb criteris Given/When/Then.",
+            "Rule 10: no commit without an active contract. Write .claude/tasks/ACTIVE (slug) and "
+            ".claude/tasks/<slug>/contract.md with Given/When/Then criteria.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    DECISION_WORTHY = ("nuxt.config.ts", "eslint.config.mjs")
+    try:
+        staged = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            cwd=root, capture_output=True, text=True, check=True,
+        ).stdout.splitlines()
+    except (OSError, subprocess.CalledProcessError):
+        staged = []
+    touches_config = any(f in DECISION_WORTHY for f in staged)
+    touches_decision = any(f.startswith(".claude/docs/decisions/") for f in staged)
+    if touches_config and not touches_decision:
+        print(
+            "Rule 11: this commit changes nuxt.config.ts or eslint.config.mjs but stages no file under "
+            ".claude/docs/decisions/. Architecture/config changes need a decision record in the same "
+            "commit — write one (see decision 041 for the pattern) and stage it.",
             file=sys.stderr,
         )
         sys.exit(2)

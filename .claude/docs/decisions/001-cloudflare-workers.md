@@ -1,5 +1,5 @@
 # 001 · Hosting: Cloudflare Workers
 
-**Context.** Cal SSR/rutes de servidor per amagar la clau de Giphy. L'usuari no tenia cap hosting.
-**Decisió.** Cloudflare Workers (preset Nitro `cloudflare_module`, static assets). Desplegat des de GitHub Actions amb wrangler (decisió 021), no amb Workers Builds.
-**Conseqüències.** Sense IPX (`@nuxt/image`) → 018. El build `.output` no es pot servir amb node: e2e contra `nuxt dev` → 019.
+**Context.** SSR/server routes are needed to hide the Giphy key. The user had no hosting.
+**Decision.** Cloudflare Workers (Nitro preset `cloudflare_module`, static assets). Deployed from GitHub Actions with wrangler (decision 021), not with Workers Builds.
+**Consequences.** No IPX (`@nuxt/image`) → 018. The `.output` build cannot be served with node: e2e runs against `nuxt dev` → 019.

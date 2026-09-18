@@ -1,6 +1,5 @@
 <script setup lang="ts" generic="T extends InputValue">
 import type { Ref } from 'vue'
-import type { Size } from '~/types/ui'
 
 export type InputValue = string | number | boolean | Array<string | number> | null
 export type InputType =
@@ -19,13 +18,11 @@ export interface InputOption {
   disabled?: boolean
 }
 
-// Únic embolcall de formularis (decisió 026): només elements natius, sense llibreries.
 const props = withDefaults(
   defineProps<{
     id: string
     label: string
     type?: InputType
-    /** Opcions per a `select`, `multiselect` i `radio` */
     options?: InputOption[]
     placeholder?: string
     icon?: string
@@ -35,12 +32,10 @@ const props = withDefaults(
     hideLabel?: boolean
     disabled?: boolean
     required?: boolean
-    /** Files del `textarea` */
     rows?: number
     min?: number
     max?: number
     step?: number
-    /** Nom del grup de `radio` (per defecte l'`id`) */
     name?: string
   }>(),
   {
@@ -62,9 +57,7 @@ const props = withDefaults(
   }
 )
 
-// eslint-disable-next-line vue/require-default-prop -- el default depèn del tipus genèric T
 const model = defineModel<T>()
-/** Vista no genèrica del model per escriure-hi des dels handlers natius. */
 const raw = model as Ref<InputValue | undefined>
 
 const TEXT_TYPES = new Set<InputType>(['text', 'search', 'email'])
@@ -73,7 +66,6 @@ const hintId = computed(() => (props.hint ? `${props.id}-hint` : undefined))
 const invalid = computed(() => (props.tone === 'danger' ? 'true' : undefined))
 const groupName = computed(() => props.name || props.id)
 
-/** Únic punt on el valor natiu torna al model tipat. */
 function set(value: InputValue) {
   raw.value = value
 }
@@ -124,7 +116,6 @@ const stringValue = computed(() =>
       { 'custom-input--with-icon': icon && isText, 'custom-input--disabled': disabled },
     ]"
   >
-    <!-- radio: fieldset + legend -->
     <fieldset
       v-if="type === 'radio'"
       class="custom-input__group"
@@ -156,7 +147,6 @@ const stringValue = computed(() =>
       </div>
     </fieldset>
 
-    <!-- checkbox: control + label a la dreta -->
     <div v-else-if="type === 'checkbox'" class="custom-input__option">
       <input
         :id="id"
@@ -180,7 +170,6 @@ const stringValue = computed(() =>
       </CustomText>
     </div>
 
-    <!-- resta: label a sobre + control -->
     <template v-else>
       <CustomText
         as="label"

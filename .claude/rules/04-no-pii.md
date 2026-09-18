@@ -1,7 +1,7 @@
-# 04 · Cap dada personal sensible
+# 04 · No sensitive personal data
 
-**Què.** A la web i als PDFs de `public/cv/` no hi ha telèfon ni adreça postal. Contacte: email, GitHub, LinkedIn.
-Els PDFs es comproven a la **capa de text** (un telèfon amagat visualment però present al text s'indexa igual).
-**Per què.** El lloc és públic i indexable per bots.
-**Com es comprova.** `tests/arch/no-pii.spec.ts` (text real dels PDFs via `pdf-parse` + fonts de dades) i review checklist.
-Abans d'afegir un PDF: extreure'n el text (eina Read del PDF o `mdls -name kMDItemTextContent`) i buscar-hi números.
+**What.** Neither the website nor the PDFs in `public/cv/` contain a phone number or postal address. Contact: email, GitHub, LinkedIn.
+The PDFs are checked at the **text layer** (a phone number hidden visually but present in the text is indexed all the same).
+**Why.** The site is public and indexable by bots.
+**How it's checked.** `tests/arch/no-pii.spec.ts` (actual PDF text via `pdf-parse` + data sources) and the review checklist.
+Before adding a PDF: extract its text (the PDF's Read tool or `mdls -name kMDItemTextContent`) and search it for numbers.

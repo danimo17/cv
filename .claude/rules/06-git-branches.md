@@ -1,14 +1,14 @@
-# 06 · La IA treballa en branca
+# 06 · The AI works on a branch
 
-**Què.** Tota feina de la IA va a `feat/<slug>` (slug = tasca activa). Mai commits, merges, rebases, resets ni
-pushes amb `main` com a branca actual o destí. Per defecte, la IA deixa la branca a punt i és l'usuari qui fa
-push, PR i merge. **Excepció (decisió 031, 2026-09-14):** si l'usuari ho demana explícitament en aquell
-moment, la IA pot fer `git push` d'una branca `feat/*` (mai de `main`) — el permís és per aquell push concret,
-no un blanc-i-negre permanent; cal tornar-lo a donar cada vegada. El merge a `main` continua sent sempre
-exclusiu de l'usuari, i GitHub només el permet amb la CI i els escanejos de seguretat en verd (branch
+**What.** All AI work goes to `feat/<slug>` (slug = active task). Never commits, merges, rebases, resets or
+pushes with `main` as the current or target branch. By default, the AI leaves the branch ready and it's the
+user who does the push, PR and merge. **Exception (decision 031, 2026-09-14):** if the user explicitly asks
+for it at that moment, the AI can `git push` a `feat/*` branch (never `main`) — the permission is for that
+specific push, not a permanent blank check; it must be given again every time. Merging to `main` remains
+always exclusive to the user, and GitHub only allows it with CI and security scans green (branch
 protection).
-**Per què.** `main` és el que es desplega a producció; la revisió humana és l'última gate. El merge és
-irreversible de cara al desplegament, per això mai es delega; el push d'una branca de treball és reversible
-(es pot esborrar) i per això es pot delegar puntualment amb permís exprés.
-**Com es comprova.** Hook global `git-safety` del Claude Code de l'usuari (bloqueja force-push i push directe
-a `main`/`master`, però no push d'una branca `feat/*`) + ruleset de `main` a GitHub.
+**Why.** `main` is what deploys to production; human review is the final gate. The merge is irreversible from
+a deployment standpoint, so it's never delegated; pushing a working branch is reversible (it can be deleted)
+and so it can be delegated punctually with express permission.
+**How it's checked.** The user's global Claude Code `git-safety` hook (blocks force-push and direct push to
+`main`/`master`, but not push of a `feat/*` branch) + `main` ruleset on GitHub.

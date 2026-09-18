@@ -1,5 +1,5 @@
-# 021 · Entorns: local + producció + previews de PR; deploy des de GitHub Actions
+# 021 · Environments: local + production + PR previews; deploy from GitHub Actions
 
-**Context.** L'usuari vol un entorn local i un de producció, amb secrets ben gestionats, i escanejos abans de desplegar.
-**Decisió.** Local = `nuxt dev` amb `.env`. Producció = Worker `cv` a `danimorales.dev`, desplegat només per `.github/workflows/deploy.yml` en push a `main` i només si la CI hi és verda. Cada PR obté una URL de preview efímera (`wrangler versions upload`). Sense staging ni branca develop. Secrets a GitHub (entorn `production`): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `NUXT_GIPHY_API_KEY`; el workflow els injecta al Worker. Sense aprovació manual: el merge de la PR és l'aprovació.
-**Conseqüències.** Workers Builds no s'usa. Rotar una clau = canviar el secret a GitHub i redesplegar.
+**Context.** The user wants a local environment and a production one, with well-managed secrets, and scans before deploying.
+**Decision.** Local = `nuxt dev` with `.env`. Production = `cv` Worker at `danimorales.dev`, deployed only by `.github/workflows/deploy.yml` on push to `main` and only if CI is green. Each PR gets an ephemeral preview URL (`wrangler versions upload`). No staging and no develop branch. Secrets in GitHub (`production` environment): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `NUXT_GIPHY_API_KEY`; the workflow injects them into the Worker. No manual approval: the PR merge is the approval.
+**Consequences.** Workers Builds is not used. Rotating a key = change the secret in GitHub and redeploy.

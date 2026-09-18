@@ -1,23 +1,23 @@
-# Contract: <títol>
+# Contract: <title>
 
-**Story:** `story.md` · **Fonts de dades declarades (regla 02):** …
+**Story:** `story.md` · **Declared data sources (rule 02):** …
 
-## Criteris d'acceptació
+## Acceptance criteria
 
-| #   | Given / When / Then   | Test que ho cobreix          |
+| #   | Given / When / Then   | Test that covers it          |
 | --- | --------------------- | ---------------------------- |
 | 1   | Given … When … Then … | `tests/unit/….spec.ts` › "…" |
 
-## Encàrrecs a subagents (regla 12)
+## Subagent assignments (rule 12)
 
-| Subagent | Abast | Criteris |
+| Subagent | Scope | Criteria |
 | -------- | ----- | -------- |
 | …        | …     | …        |
 
-## Estàndards a consultar
+## Standards to consult
 
 - `.claude/docs/standards/….md`
 
-## Preguntes obertes (cada una amb destinació)
+## Open questions (each with a destination)
 
-- … → `decided:` … / `.claude/docs/decisions/NNN-….md` / `owner: <nom>`
+- … → `decided:` … / `.claude/docs/decisions/NNN-….md` / `owner: <name>`

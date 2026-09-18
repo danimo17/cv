@@ -1,4 +1,3 @@
-/* Mida i pes del text els posa CustomText (caption per sm, small per md/lg). Neumorphism: relleu curt. */
 @layer components {
   .custom-badge {
     @apply inline-flex items-center gap-1 rounded-full whitespace-nowrap shadow-neu-sm;
@@ -13,7 +12,6 @@
     @apply px-3 py-1.5;
   }
 
-  /* soft: fons -soft del to en relleu */
   .custom-badge--soft.custom-badge--primary {
     @apply bg-primary-soft text-primary;
   }
@@ -36,7 +34,6 @@
     @apply bg-danger-soft text-danger;
   }
 
-  /* solid: fons ple del to en relleu */
   .custom-badge--solid.custom-badge--primary {
     @apply bg-primary text-primary-fg;
   }

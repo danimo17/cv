@@ -1,4 +1,4 @@
-# 035 · Sense secció "Projectes" a la home
+# 035 · No "Projects" section on the home page
 
-**Decisió (D2 del handoff post-launch).** Descartada de manera definitiva ("no la vull mai"). No es torna a
-proposar.
+**Decision (D2 of the post-launch handoff).** Discarded for good ("never want it"). Not to be
+proposed again.

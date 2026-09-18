@@ -1,6 +1,7 @@
-# 02 · Cap codi ni recurs intern d'empresa
+# 02 · No company code or internal resources
 
-**Què.** Res copiat de repositoris, documents, dissenys o eines internes de cap empresa on hagi treballat l'usuari
-(PDPAOLA inclosa). Es pot **descriure** la feina feta amb el que és públic (LinkedIn, web pública, CV).
-**Per què.** Propietat intel·lectual i confidencialitat. Aquest repo és públic.
-**Com es comprova.** Revisió humana: cada contracte declara les fonts; la review checklist ho pregunta.
+**What.** Nothing copied from repositories, documents, designs or internal tools of any company the user has
+worked at (PDPAOLA included). The work done can be **described** using what is public (LinkedIn, public
+website, CV).
+**Why.** Intellectual property and confidentiality. This repo is public.
+**How it's checked.** Human review: every contract declares its sources; the review checklist asks about it.

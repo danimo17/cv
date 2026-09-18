@@ -1,3 +1,3 @@
-# 016 · Prettier + ESLint explícits
+# 016 · Explicit Prettier + ESLint
 
-**Decisió.** Prettier per format (`.prettierrc`), ESLint (`@nuxt/eslint` sense stylistic + regles explícites) per convencions. Tots dos a la gate. Cap regla d'estil que no la comprovi una eina. Vegeu `docs/standards/code-style.md`.
+**Decision.** Prettier for formatting (`.prettierrc`), ESLint (`@nuxt/eslint` without stylistic + explicit rules) for conventions. Both in the gate. No style rule that isn't checked by a tool. See `docs/standards/code-style.md`.

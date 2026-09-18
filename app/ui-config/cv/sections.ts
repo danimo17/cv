@@ -1,13 +1,9 @@
-// Configuració declarativa de les seccions de la home (capa UI-config, decisió 029).
-// `pages/index.vue` en llegeix l'ordre; cada secció llegeix la seva entrada amb `getSectionConfig`.
 export type HomeSectionId = 'about' | 'experience' | 'stack' | 'education' | 'contact'
 
 export interface HomeSectionConfig {
   id: HomeSectionId
-  /** Nom del component de `app/components/cv/` que la renderitza */
   component:
     'AboutSection' | 'ExperienceSection' | 'TechStack' | 'EducationSection' | 'ContactSection'
-  /** Icona (registrada a `plugins/fontawesome.ts`) de l'eyebrow */
   icon: string
   titleKey: string
   eyebrowKey: string

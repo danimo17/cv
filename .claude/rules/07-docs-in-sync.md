@@ -1,13 +1,14 @@
-# 07 · Documentació viva al mateix commit
+# 07 · Living documentation in the same commit
 
-**Què.** Quan es crea o canvia un component, store, composable, util, token, classe CSS, clau i18n, script, gate o
-workflow, s'actualitza el fitxer corresponent de `.claude/docs/catalog/` **en el mateix canvi**, no "després".
+**What.** When a component, store, composable, util, token, CSS class, i18n key, script, gate or workflow is
+created or changed, the corresponding file in `.claude/docs/catalog/` is updated **in the same change**, not
+"later."
 
-- Component → `docs/catalog/components.md` (bloc `### NomComponent` amb TOTES les props, els seus valors possibles i la classe CSS que activa cadascun: és l'estàndard d'ús del component)
-- Store/composable/util → `docs/catalog/state.md` (bloc `### nom`)
-- Token/classe/estat → `docs/catalog/styles.md`
-- Àrea de claus → `docs/catalog/i18n.md`
+- Component → `docs/catalog/components.md` (block `### ComponentName` with ALL props, their possible values, and the CSS class each one activates: this is the component's usage standard)
+- Store/composable/util → `docs/catalog/state.md` (block `### name`)
+- Token/class/state → `docs/catalog/styles.md`
+- Key area → `docs/catalog/i18n.md`
 - Script/gate/hook/workflow → `docs/catalog/ai-workflow.md`
-  **Per què.** El catàleg és el context que permet mantenir coherència entre sessions; si menteix és pitjor que no tenir-lo.
-  **Abans de desenvolupar** una pàgina o component nou, es llegeix el catàleg i es reutilitza el que hi ha (decisió 027).
-  **Com es comprova.** `tests/arch/docs-sync.spec.ts` (cada `.vue`, store, composable i util ha de tenir el seu bloc).
+  **Why.** The catalog is the context that keeps coherence between sessions; if it lies it's worse than not having one.
+  **Before developing** a new page or component, the catalog is read and what already exists is reused (decision 027).
+  **How it's checked.** `tests/arch/docs-sync.spec.ts` (every `.vue`, store, composable and util must have its block).

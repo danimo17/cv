@@ -1,12 +1,12 @@
-# 026 · Tot passa per components propis (primitius)
+# 026 · Everything goes through our own components (primitives)
 
-**Context.** L'usuari vol que tot el que una llibreria com PrimeVue oferiria (inputs, text, botons, enllaços, imatges, targetes, badges, alertes, skeletons) passi per un únic component propi per tipus, per poder canviar d'estil o de plantilla en un sol lloc.
-**Decisió.** Primitius a `app/components/shared/` (prefix `App`; el 'CustomInput'/'CustomText' de l'usuari són `AppInput`/`AppText`):
+**Context.** The user wants everything a library like PrimeVue would offer (inputs, text, buttons, links, images, cards, badges, alerts, skeletons) to go through a single component of our own per type, so style or template can be changed in one place.
+**Decision.** Primitives in `app/components/shared/` (prefix `App`; the user's 'CustomInput'/'CustomText' are `AppInput`/`AppText`):
 
-- `AppText`: tot `p`, `span`, `h1`..`h6`, `small`, `strong`, `em`, `label` de text. Props: `as`, `variant` (escala tipogràfica), `tone`, `weight`, `align`, `truncate`.
-- `AppInput`: tot input. Props: `type` (`text|search|email|number|textarea|select|multiselect|radio|checkbox`), `options`, `label`, `hint`, `tone`, `size`, `icon`; `v-model` tipat.
-- `AppLink`: tot `a` i `NuxtLinkLocale` de text. `AppImage`: tot `img`. Ja existents: `AppButton`, `AppIcon`, `AppBadge`, `AppAlert`, `AppCard`, `AppSection`, `AppSkeleton`.
-- Els elements natius corresponents estan prohibits fora dels seus wrappers (`vue/no-restricted-html-elements`). Els estructurals (`div`, `section`, `ul`, `li`, `nav`, `header`, `footer`, `figure`, `form`, `time`) continuen sent natius.
-  **Conseqüències.** Cada primitiu té CSS propi (regla 08) i bloc al catàleg amb TOTS els estils aplicables per props (regla 07). Un canvi d'estil global = tocar tokens + CSS dels primitius.
+- `AppText`: every text `p`, `span`, `h1`..`h6`, `small`, `strong`, `em`, `label`. Props: `as`, `variant` (typographic scale), `tone`, `weight`, `align`, `truncate`.
+- `AppInput`: every input. Props: `type` (`text|search|email|number|textarea|select|multiselect|radio|checkbox`), `options`, `label`, `hint`, `tone`, `size`, `icon`; typed `v-model`.
+- `AppLink`: every text `a` and `NuxtLinkLocale`. `AppImage`: every `img`. Already existing: `AppButton`, `AppIcon`, `AppBadge`, `AppAlert`, `AppCard`, `AppSection`, `AppSkeleton`.
+- The corresponding native elements are forbidden outside their wrappers (`vue/no-restricted-html-elements`). Structural elements (`div`, `section`, `ul`, `li`, `nav`, `header`, `footer`, `figure`, `form`, `time`) remain native.
+  **Consequences.** Each primitive has its own CSS (rule 08) and a catalog block with ALL styles applicable via props (rule 07). A global style change = touch tokens + primitives' CSS.
 
-**Nota (2026-09-14).** Amb la decisió 029 la carpeta passa a `app/components/shared/`. Aplicat: `AppText` és l'únic propietari de la tipografia (`app-text.css`); `AppBadge` renderitza `AppText`; `MemeCard` i `ThemeToggle` són `AppButton`; `AppMarquee` s'afegeix als primitius. `figcaption` i `time` (els `li` són estructurals: el text de dins va en `AppText`) també van per `AppText` (`as`).
+**Note (2026-09-14).** With decision 029 the folder moves to `app/components/shared/`. Applied: `AppText` is the sole owner of typography (`app-text.css`); `AppBadge` renders `AppText`; `MemeCard` and `ThemeToggle` are `AppButton`; `AppMarquee` is added to the primitives. `figcaption` and `time` (the `li`s are structural: the text inside goes through `AppText`) also go through `AppText` (`as`).

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Tone } from '~/types/ui'
-
 export type TextTag =
   | 'p'
   | 'span'
@@ -23,7 +21,6 @@ export type TextTone = 'default' | 'muted' | Tone
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold'
 export type TextAlign = 'start' | 'center' | 'end'
 
-// Únic propietari de la tipografia (decisió 026): mides, pesos i colors de text viuen a custom-text.css.
 withDefaults(
   defineProps<{
     as?: TextTag

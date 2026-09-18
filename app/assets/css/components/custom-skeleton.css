@@ -1,4 +1,3 @@
-/* Neumorphism: el placeholder és un buit enfonsat (inset). */
 @layer components {
   .custom-skeleton {
     @apply animate-pulse rounded-lg bg-surface-alt shadow-neu-inset-sm motion-reduce:animate-none;

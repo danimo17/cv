@@ -9,11 +9,9 @@
   body {
     @apply bg-surface font-sans text-text antialiased;
   }
-  /* Anell de focus sempre visible: mai depenem de l'ombra per indicar l'estat */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
   }
-  /* Neumorphism = transicions d'ombra; amb reduced-motion es tallen totes */
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,

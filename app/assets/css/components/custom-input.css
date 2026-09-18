@@ -1,4 +1,3 @@
-/* Neumorphism: tot control és enfonsat (inset); focus = inset + anell primary; danger = anell danger. */
 @layer components {
   .custom-input {
     @apply flex flex-col gap-1.5;
@@ -31,7 +30,6 @@
     @apply ring-1 ring-danger focus:ring-2 focus:ring-danger/40;
   }
 
-  /* textarea i multiselect: alçada lliure */
   .custom-input--textarea .custom-input__control,
   .custom-input--multiselect .custom-input__control {
     @apply h-auto min-h-24 py-2;
@@ -40,7 +38,6 @@
     @apply cursor-pointer appearance-none pr-8;
   }
 
-  /* radio i checkbox: indicador propi enfonsat; marcat = fons primary en relleu + marca en -fg */
   .custom-input__group {
     @apply m-0 min-w-0 border-0 p-0;
   }

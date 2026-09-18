@@ -1,31 +1,31 @@
-# 039 · Convencions de Pull Request
+# 039 · Pull Request conventions
 
-**Context.** Fins ara només hi ha hagut 1 PR (#1, "Feat/bootstrap") amb títol per defecte de GitHub (nom de
-branca capitalitzat) i cos buit — soroll, no una convenció deliberada. L'usuari ha demanat (2026-09-16) una
-estructura fixa per a totes les PRs a partir d'ara, que sigui la IA qui les obri, i que la revisió (checklist +
-`/code-review`) es faci just abans d'obrir-les, no abans del primer commit com deia `workflow.md` fins ara.
-Decidit via `/grill-me`.
+**Context.** So far there's only been 1 PR (#1, "Feat/bootstrap") with GitHub's default title (capitalized
+branch name) and an empty body — noise, not a deliberate convention. The user asked (2026-09-16) for a fixed
+structure for all PRs from now on, for the AI to be the one opening them, and for the review (checklist +
+`/code-review`) to happen right before opening them, not before the first commit as `workflow.md` said until
+now. Decided via `/grill-me`.
 
-**Decisió.**
+**Decision.**
 
-1. **Títol:** resum curt en llenguatge natural, en anglès, sense prefix de tipus ni de slug (el slug ja hi és a
-   la branca `feat/<slug>` i al peu de la PR). Ex: `Add www domain, fix Dependabot, enable Web Analytics`.
-2. **Cos:** seccions fixes, sempre en aquest ordre i en anglès:
-   - `## Summary` — 2-4 bullets de què canvia i per què.
-   - `## Acceptance criteria` — llista dels criteris del contracte (`.claude/tasks/<slug>/contract.md`), amb
+1. **Title:** short natural-language summary, in English, with no type or slug prefix (the slug is already in
+   the `feat/<slug>` branch and in the PR footer). E.g.: `Add www domain, fix Dependabot, enable Web Analytics`.
+2. **Body:** fixed sections, always in this order and in English:
+   - `## Summary` — 2-4 bullets on what changes and why.
+   - `## Acceptance criteria` — list of the contract's criteria (`.claude/tasks/<slug>/contract.md`), with
      ✅/⏳.
-   - `## Review` — què s'ha comprovat (checklist de compliance + `/code-review`) i el resultat.
-   - `## User pendings` — només si en queden (accions manuals fora de l'abast de la IA).
-   - `## Test plan` — sortida real de `pnpm gate:push` (N tests, build, e2e).
-3. **Idioma:** anglès (consistent amb els commits, que ja ho són; el repo és públic). **Superat el mateix dia
-   per la regla 13**: tot el repo (inclosa la resta de `.claude/`) passa a ser en anglès, no només les PRs —
-   vegeu `docs/decisions/040-english-only.md` i el pendent de migració al handoff.
-4. **Qui l'obre:** la IA, amb `gh pr create`, analitzant el diff real (no copiant el handoff tal qual).
-   L'usuari continua sent l'únic que fa merge (decisió 031, sense canvis).
-5. **Quan:** el pas "Review" del workflow (checklist + `/code-review`) es mou a just abans d'obrir la PR (no
-   abans del primer commit); si la revisió troba res, es corregeix i es torna a córrer `pnpm gate:push` abans
-   de push/PR. `workflow.md` actualitzat en el mateix canvi (regla 07).
+   - `## Review` — what was checked (compliance checklist + `/code-review`) and the result.
+   - `## User pendings` — only if any remain (manual actions outside the AI's scope).
+   - `## Test plan` — real output of `pnpm gate:push` (N tests, build, e2e).
+3. **Language:** English (consistent with the commits, which already were; the repo is public). **Superseded
+   the same day by rule 13**: the whole repo (including the rest of `.claude/`) becomes English, not just the
+   PRs — see `docs/decisions/040-english-only.md` and the migration pending in the handoff.
+4. **Who opens it:** the AI, with `gh pr create`, analyzing the real diff (not copying the handoff verbatim).
+   The user remains the only one who merges (decision 031, unchanged).
+5. **When:** the workflow's "Review" step (checklist + `/code-review`) moves to right before opening the PR
+   (not before the first commit); if the review finds anything, it's fixed and `pnpm gate:push` is rerun
+   before push/PR. `workflow.md` updated in the same change (rule 07).
 
-**Conseqüències.** Cap test automàtic ho comprova (és procés de la IA, no codi); es revisa handoff a handoff.
-Si calgués citar exemples, la PR d'aquesta mateixa tasca (`post-launch`) és la primera que segueix aquesta
-convenció.
+**Consequences.** No automated test checks this (it's AI process, not code); it's reviewed handoff to handoff.
+If examples were ever needed, the PR for this very task (`post-launch`) is the first to follow this
+convention.

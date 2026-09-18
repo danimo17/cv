@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { profile } from '~/data/cv'
-
 const COPIES = 4
 
 const { t } = useI18n()
@@ -10,20 +8,19 @@ const { t } = useI18n()
   <div class="source-banner" data-testid="source-banner">
     <CustomMarquee :label="t('banner.label')" speed="normal" tone="primary" size="sm">
       <template #default="{ duplicate }">
-        <CustomText
+        <CustomLink
           v-for="n in COPIES"
           :key="n"
-          as="span"
-          variant="small"
-          weight="medium"
+          :href="profile.repo"
+          variant="inline"
           class="source-banner__item"
+          :tabindex="duplicate ? -1 : undefined"
         >
           <CustomIcon name="code" size="sm" class="source-banner__icon" />
-          {{ t('banner.source') }}
-          <CustomLink :href="profile.repo" variant="inline" :tabindex="duplicate ? -1 : undefined">
-            {{ t('banner.repo') }}
-          </CustomLink>
-        </CustomText>
+          <CustomText as="span" variant="small" weight="medium">
+            {{ t('banner.source') }} {{ t('banner.repo') }}
+          </CustomText>
+        </CustomLink>
       </template>
     </CustomMarquee>
   </div>

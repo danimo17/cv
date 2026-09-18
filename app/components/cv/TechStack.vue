@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { stack } from '~/data/cv'
-import { getSectionConfig } from '~/ui-config/cv/sections'
-
 const config = getSectionConfig('stack')
 const { t } = useI18n()
 </script>

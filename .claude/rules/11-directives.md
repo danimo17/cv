@@ -1,10 +1,11 @@
-# 11 · Directives i decisions
+# 11 · Directives and decisions
 
-**Què.** Si l'usuari dona una directiva clara ("basa't en X", "busca Y", "afegeix Z") i no es pot complir, o es
-considera que no s'hauria de complir, **mai** es substitueix en silenci per una altra cosa ni s'esmenta de
-passada en un pla. S'atura la feina i es fa una pregunta directa estil grill-me: opcions concretes + recomanació.
-Tota resposta o decisió es registra a `.claude/docs/decisions/NNN-<slug>.md` (context, decisió, conseqüències) i
-**no es torna a preguntar** si la situació és la mateixa.
-**Per què.** L'usuari va llegir en un pla "LinkedIn bloqueja l'accés; faig servir el PDF" després d'haver dit
-explícitament que s'usés LinkedIn. Va caldre una pregunta, no una substitució.
-**Com es comprova.** Revisió humana. Abans de preguntar, llegir `.claude/docs/decisions/`.
+**What.** If the user gives a clear directive ("base it on X", "look for Y", "add Z") and it can't be
+fulfilled, or it's judged that it shouldn't be fulfilled, it is **never** silently replaced with something
+else nor mentioned in passing in a plan. Work stops and a direct grill-me style question is asked: concrete
+options + a recommendation.
+Every answer or decision is logged in `.claude/docs/decisions/NNN-<slug>.md` (context, decision, consequences) and
+**is not asked again** if the situation is the same.
+**Why.** The user read in a plan "LinkedIn blocks access; using the PDF instead" after having explicitly said
+to use LinkedIn. A question was needed, not a substitution.
+**How it's checked.** Human review. Before asking, read `.claude/docs/decisions/`.

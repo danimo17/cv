@@ -1,4 +1,3 @@
-/* Neumorphism: en repòs relleu (shadow-neu), hover relleu curt, active/loading enfonsat (inset). */
 @layer components {
   .custom-button {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-surface font-medium whitespace-nowrap shadow-neu transition-shadow select-none hover:shadow-neu-sm active:shadow-neu-inset disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-neu-sm;
@@ -22,7 +21,6 @@
     @apply shrink-0;
   }
 
-  /* solid: fons ple del to + text -fg, mateix relleu */
   .custom-button--solid.custom-button--primary {
     @apply bg-primary text-primary-fg;
   }
@@ -45,7 +43,6 @@
     @apply bg-danger text-danger-fg;
   }
 
-  /* outline: superfície en relleu + text del to + anell fi del to */
   .custom-button--outline {
     @apply bg-surface ring-1;
   }
@@ -71,7 +68,6 @@
     @apply text-danger ring-danger/40;
   }
 
-  /* ghost: pla en repòs, relleu curt a hover, enfonsat a active */
   .custom-button--ghost {
     @apply bg-transparent shadow-neu-none;
   }

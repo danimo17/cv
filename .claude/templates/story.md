@@ -1,13 +1,13 @@
-# Story: <títol>
+# Story: <title>
 
-**Slug:** `<slug>` · **Branca:** `feat/<slug>` · **Estat:** doing
+**Slug:** `<slug>` · **Branch:** `feat/<slug>` · **Status:** doing
 
-Com a <actor> vull <què> per <valor>.
+As a <actor> I want <what> so that <value>.
 
-## Fora d'abast
+## Out of scope
 
 - …
 
-## Dependències externes
+## External dependencies
 
 - …

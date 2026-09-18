@@ -1,7 +1,7 @@
-# 031 · Escriptura al repo: només l'usuari
+# 031 · Write access to the repo: user only
 
-**Context.** El repo és públic (030) però només l'usuari hi pot escriure.
-**Decisió.** Cap col·laborador a GitHub. Només l'usuari fa `push` i `merge`. La IA pot fer commits locals a branques `feat/<slug>` (regla 06) però mai push. Les PRs externes (forks) són possibles però només l'usuari les pot fusionar; els workflows en PRs de forks no reben secrets (GitHub no els exposa), així que preview i deploy no s'executen per a tercers. El ruleset de `main` (024) exigeix PR + checks i bloqueja força-push i esborrat.
-**Conseqüències.** Handoff sempre acaba amb: branca a punt, gate en verd, i és l'usuari qui fa `git push` i obre la PR. Regla 06 actualitzada.
+**Context.** The repo is public (030) but only the user can write to it.
+**Decision.** No collaborators on GitHub. Only the user does `push` and `merge`. The AI can make local commits on `feat/<slug>` branches (rule 06) but never push. External PRs (forks) are possible but only the user can merge them; workflows on PRs from forks don't receive secrets (GitHub doesn't expose them), so preview and deploy don't run for third parties. The `main` ruleset (024) requires PR + checks and blocks force-push and deletion.
+**Consequences.** A handoff always ends with: branch ready, gate green, and it's the user who runs `git push` and opens the PR. Rule 06 updated.
 
-**Excepció (2026-09-14).** L'usuari pot demanar explícitament a la IA que faci `git push` d'una branca `feat/*` (mai de `main`). El merge continua sent només de l'usuari.
+**Exception (2026-09-14).** The user can explicitly ask the AI to `git push` a `feat/*` branch (never `main`). The merge remains the user's alone.

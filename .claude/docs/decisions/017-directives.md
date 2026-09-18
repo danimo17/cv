@@ -1,3 +1,3 @@
-# 017 · Directives → pregunta, mai substitució
+# 017 · Directives → ask, never substitute
 
-**Decisió.** Regla 11. Vegeu `.claude/rules/11-directives.md`.
+**Decision.** Rule 11. See `.claude/rules/11-directives.md`.

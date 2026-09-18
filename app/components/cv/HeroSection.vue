@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import photo from '~/assets/img/daniel.jpg'
-import { profile } from '~/data/cv'
 
 const { t } = useI18n()
 const hero = useHeroStore()

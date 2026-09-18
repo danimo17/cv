@@ -8,7 +8,6 @@ withDefaults(
     status: AsyncDataRequestStatus
     selectedId?: string | null
     skeletons?: number
-    /** Clau i18n del missatge d'error (la produeix `GiphyService.toUserErrorKey`) */
     errorKey?: string
   }>(),
   { selectedId: null, skeletons: 8, errorKey: 'meme.results.error' }

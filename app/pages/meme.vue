@@ -5,13 +5,11 @@ const { t } = useI18n()
 const hero = useHeroStore()
 const giphy = useGiphyStore()
 
-/** Meme en previsualització (encara no aplicat) */
 const candidate = ref<Meme | null>(null)
 const justApplied = ref(false)
 
 const steps = useMessageList('meme.how.steps')
 
-/** Pàgina actual (1-indexada) derivada de l'offset de la store; canviar-la torna a paginar la mateixa cerca. */
 const page = computed({
   get: () => Math.floor(giphy.offset / giphy.limit) + 1,
   set: (value: number) => {

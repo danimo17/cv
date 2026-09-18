@@ -1,18 +1,18 @@
 # Story: Post-launch fixes (DNS, www, Dependabot, backlog)
 
-**Slug:** `post-launch` · **Branca:** `feat/post-launch` (crear-la a partir d'aquesta) · **Estat:** doing
+**Slug:** `post-launch` · **Branch:** `feat/post-launch` (create it from this one) · **Status:** doing
 
-Com a Daniel vull que `danimorales.dev` i `www.danimorales.dev` responguin de veritat, que el pipeline de
-Dependabot no falli, i vull decidir els punts oberts (D1-D5) del bootstrap, per poder dir que el lloc és
-"acabat" i passar a la següent iteració.
+As Daniel I want `danimorales.dev` and `www.danimorales.dev` to actually respond, the Dependabot pipeline to
+stop failing, and to decide the open points (D1-D5) from the bootstrap, so I can say the site is "done" and
+move on to the next iteration.
 
-## Fora d'abast
+## Out of scope
 
-- Secció "Projectes" (descartada, decisió 035).
-- Generar mides reals de la foto (decisió 037: `CustomImage` només queda preparat per a `srcset`/`sizes`).
-- Activar Cloudflare Web Analytics (decisió 036: acció manual de dashboard, no codi).
+- "Projects" section (dropped, decision 035).
+- Generating real photo sizes (decision 037: `CustomImage` is only left ready for `srcset`/`sizes`).
+- Enabling Cloudflare Web Analytics (decision 036: manual dashboard action, not code).
 
-## Dependències externes
+## External dependencies
 
-- Propagació DNS de Cloudflare (fora del nostre control, només esperar/verificar).
-- Accés de l'usuari al dashboard de Cloudflare i a GitHub (regla 06/031: només ell fa push/merge).
+- Cloudflare DNS propagation (outside our control, only wait/verify).
+- User's access to the Cloudflare dashboard and GitHub (rule 06/031: only they push/merge).

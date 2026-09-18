@@ -1,15 +1,15 @@
 # 01 · Secrets
 
-**Què.** Cap clau, token o credencial en cap fitxer versionat, en cap missatge del xat, en cap log ni en cap test.
+**What.** No key, token or credential in any versioned file, in any chat message, in any log or in any test.
 
-- Local: `.env` (ignorat per git). `.env.example` només amb noms i valors buits.
-- Producció: secrets de GitHub (entorn `production`) que el workflow de deploy injecta al Worker. Mai al dashboard a mà si es pot evitar: un sol lloc per rotar.
-- Nuxt mapeja `NUXT_GIPHY_API_KEY` → `runtimeConfig.giphyApiKey` (server-only, mai a `runtimeConfig.public`).
-- El client no coneix la clau: només crida `/api/giphy/*`.
-- La IA no llegeix mai `.env` (el hook global `protect-secrets` de l'usuari ho bloqueja); tampoc cal. La IA no escriu mai valors de claus: l'usuari els posa.
+- Local: `.env` (git-ignored). `.env.example` only with names and empty values.
+- Production: GitHub secrets (`production` environment) that the deploy workflow injects into the Worker. Never set manually in the dashboard if it can be avoided: a single place to rotate.
+- Nuxt maps `NUXT_GIPHY_API_KEY` → `runtimeConfig.giphyApiKey` (server-only, never in `runtimeConfig.public`).
+- The client doesn't know the key: it only calls `/api/giphy/*`.
+- The AI never reads `.env` (the user's global `protect-secrets` hook blocks it); it doesn't need to either. The AI never writes key values: the user puts them in.
 
-**Per què.** Una clau al repo o al xat és pública per sempre (historial, còpies, logs).
+**Why.** A key in the repo or in the chat is public forever (history, copies, logs).
 
-**Si una clau s'exposa.** No s'esborra: es **regenera** al proveïdor i s'actualitza `.env` + el secret de GitHub.
+**If a key gets exposed.** It's not deleted: it's **regenerated** at the provider and `.env` + the GitHub secret are updated.
 
-**Com es comprova.** `tests/arch/secrets.spec.ts` (cap `.env`/`.dev.vars` traçat; cap fitxer amb `NUXT_GIPHY_API_KEY=` seguit d'un valor amb pinta de clau; `api_key` només a `server/`) i gitleaks a la CI.
+**How it's checked.** `tests/arch/secrets.spec.ts` (no `.env`/`.dev.vars` tracked; no file with `NUXT_GIPHY_API_KEY=` followed by a value that looks like a key; `api_key` only in `server/`) and gitleaks in CI.

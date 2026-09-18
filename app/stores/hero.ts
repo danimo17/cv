@@ -2,7 +2,6 @@ import type { Meme } from '#shared/types/giphy'
 
 const HISTORY_SIZE = 5
 
-/** Estat que travessa rutes: el meme que "porta" el hero. Sense persistència a propòsit (decisió 004). */
 export const useHeroStore = defineStore('hero', () => {
   const selected = ref<Meme | null>(null)
   const history = ref<Meme[]>([])

@@ -1,12 +1,10 @@
 // @ts-check
-// Regles d'estil vinculants: .claude/docs/standards/code-style.md explica cadascuna.
 import prettier from 'eslint-config-prettier'
 import withNuxt from './.nuxt/eslint.config.mjs'
 
 const STYLE_UTILITIES =
   '/^(bg|text|p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|rounded|border|shadow|font|w|h|max-w|max-h|size)-/'
 
-// Decisió 026: cada element natiu de text/formulari/enllaç/imatge té un únic primitiu propi.
 const PRIMITIVE_WRAPPERS = [
   'CustomText',
   'CustomInput',
@@ -59,9 +57,7 @@ export default withNuxt(
         { registeredComponentsOnly: false },
       ],
       'vue/require-explicit-emits': 'error',
-      // Regla 05: cap string d'usuari al template, tot passa per i18n.
       'vue/no-bare-strings-in-template': 'error',
-      // Regla 08: cap utilitat de color/espai/tipografia al template; només classes del CSS del component.
       'vue/no-restricted-class': ['error', STYLE_UTILITIES],
       '@typescript-eslint/no-explicit-any': 'error',
       'no-console': 'error',
@@ -80,7 +76,6 @@ export default withNuxt(
     },
   },
   {
-    // Decisió 026: elements natius només dins del seu primitiu.
     files: ['app/**/*.vue'],
     rules: { 'vue/no-restricted-html-elements': ['error', ...RESTRICTED_ELEMENTS] },
   },

@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import type { Tone } from '~/types/ui'
-
 const props = withDefaults(
   defineProps<{
     tone?: Tone
     title?: string
-    /** Sobreescriu la icona per defecte del tone */
     icon?: string
   }>(),
   { tone: 'info', title: '', icon: '' }

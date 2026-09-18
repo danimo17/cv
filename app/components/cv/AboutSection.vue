@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { profile } from '~/data/cv'
-import { getSectionConfig } from '~/ui-config/cv/sections'
-
 const config = getSectionConfig('about')
 const { t } = useI18n()
 </script>

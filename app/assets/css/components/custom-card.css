@@ -1,4 +1,3 @@
-/* Neumorphism: outline = relleu subtil, filled = enfonsada (inset), elevated = relleu gran. */
 @layer components {
   .custom-card {
     @apply rounded-xl transition-shadow;

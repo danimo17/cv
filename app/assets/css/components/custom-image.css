@@ -1,4 +1,3 @@
-/* Neumorphism: `--frame` és un relleu curt (la imatge "surt" del marc que la conté). */
 @layer components {
   .custom-image {
     @apply block max-w-full;

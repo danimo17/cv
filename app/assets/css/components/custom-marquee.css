@@ -1,4 +1,3 @@
-/* Neumorphism: la marquesina és una franja enfonsada (inset) del to. */
 @layer components {
   .custom-marquee {
     @apply relative w-full overflow-hidden whitespace-nowrap shadow-neu-inset-sm;

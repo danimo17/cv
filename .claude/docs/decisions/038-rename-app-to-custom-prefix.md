@@ -1,10 +1,10 @@
-# 038 · Renom del prefix de primitius: App* → Custom*
+# 038 · Primitives prefix rename: App* → Custom*
 
-**Decisió (D5 del handoff post-launch, reobre la 026).** Es renomena tota la família de primitius
-`App{Text,Input,Link,Image,Button,Icon,Badge,Alert,Card,Section,Skeleton,Marquee}` a `Custom*`. Substitueix la
-decisió 026 pel que fa al nom (no pel que fa al concepte: segueixen sent l'única porta d'entrada a elements
-HTML natius de text/form/enllaç/imatge).
-**Conseqüències.** Rename mecànic però ampli: fitxers de component, imports a totes les vistes, ESLint
-(`vue/no-restricted-html-elements`, `no-restricted-class`), tests unitaris i d'arquitectura, catàleg
-(`docs/catalog/components.md`) i qualsevol menció a `docs/standards/`. Es fa en un sol commit per evitar estats
-intermedis inconsistents.
+**Decision (D5 of the post-launch handoff, reopens 026).** The whole primitives family
+`App{Text,Input,Link,Image,Button,Icon,Badge,Alert,Card,Section,Skeleton,Marquee}` is renamed to `Custom*`.
+Supersedes decision 026 on naming (not on the concept: they remain the sole entry point to native
+text/form/link/image HTML elements).
+**Consequences.** A mechanical but wide-reaching rename: component files, imports across all views, ESLint
+(`vue/no-restricted-html-elements`, `no-restricted-class`), unit and architecture tests, catalog
+(`docs/catalog/components.md`), and any mention in `docs/standards/`. Done in a single commit to avoid
+inconsistent intermediate states.

@@ -1,5 +1,3 @@
-import type { TimelineItem } from '~/domain/cv/types'
-
 export const experience: TimelineItem[] = [
   {
     id: 'pdpaola-vue',

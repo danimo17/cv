@@ -1,7 +1,8 @@
 # Backlog
 
-| Slug         | Story                                                                                                       | Estat | Carpeta                                          |
-| ------------ | ----------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------ |
-| bootstrap    | Web CV completa (home + meme) amb governança, estils, gates, entorns i deploy                               | done  | fusionat a `main` (PR #1, `03eedd9`)             |
-| post-launch  | DNS de `www`, fix de Dependabot (pendents manuals); D1-D5 decidits i fets                                   | doing | `.claude/tasks/post-launch/`                     |
-| english-only | Traduir tot el repo a l'anglès (regla 13, decisió 040): docs de `.claude/`, `CLAUDE.md`, comentaris de codi | todo  | inventari a `docs/decisions/040-english-only.md` |
+| Slug                             | Story                                                                                                                                                  | Status | Folder                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------- |
+| bootstrap                        | Full CV website (home + meme) with governance, styles, gates, environments and deploy                                                                  | done   | merged to `main` (PR #1, `03eedd9`)                                        |
+| post-launch                      | `www` DNS, Dependabot fix (manual pendings); D1-D5 decided and done                                                                                    | doing  | `.claude/tasks/post-launch/`                                               |
+| english-only                     | Translate the whole repo to English (rule 13, decision 040): `.claude/` docs, `CLAUDE.md`, code comments                                               | done   | `docs/decisions/040-english-only.md`                                       |
+| arch-no-comments-no-suppressions | Add `tests/arch/no-code-comments.spec.ts` and `tests/arch/no-lint-suppressions.spec.ts` to automate rules 14/15 (decision 041) — manual review for now | todo   | `.claude/docs/decisions/041-code-comments-zero-suppressions-autoimport.md` |

@@ -1,4 +1,3 @@
-// Dades no traduïbles del CV (font: LinkedIn de l'usuari + PDFs, decisió 006). El text va a i18n.
 export const profile = {
   name: 'Daniel Morales',
   email: 'daniel.spr17@gmail.com',

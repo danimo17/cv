@@ -1,6 +1,5 @@
 <script setup lang="ts">
 defineProps<{
-  /** Últims termes cercats, més recent primer (`useGiphyStore.history`), màxim 5. */
   terms: string[]
 }>()
 const emit = defineEmits<{ select: [term: string] }>()

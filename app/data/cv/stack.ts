@@ -1,5 +1,3 @@
-import type { StackGroup } from '~/domain/cv/types'
-
 export const stack: StackGroup[] = [
   {
     id: 'frontend',

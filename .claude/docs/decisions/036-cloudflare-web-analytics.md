@@ -1,11 +1,11 @@
-# 036 · Analítica: Cloudflare Web Analytics, Automatic Setup
+# 036 · Analytics: Cloudflare Web Analytics, Automatic Setup
 
-**Decisió (D3 del handoff post-launch).** S'activa Cloudflare Web Analytics. Compleix decisió 030 (cost zero)
-i no usa cookies. S'usa el mode **Automatic Setup** del dashboard de Cloudflare (Analytics & Logs → Web
-Analytics → afegir zona `danimorales.dev`, sense "Manual Setup"): injecta el beacon a nivell d'edge per a tot
-el trànsit HTML de la zona, sense tocar codi ni afegir cap script al repo.
-**Conseqüències.** Acció manual al dashboard de Cloudflare (fora de l'abast de la IA, com el DNS de `www`).
-Res a `app/` ni a `nuxt.config.ts`.
+**Decision (D3 of the post-launch handoff).** Cloudflare Web Analytics is enabled. It complies with decision
+030 (zero cost) and doesn't use cookies. The Cloudflare dashboard's **Automatic Setup** mode is used
+(Analytics & Logs → Web Analytics → add zone `danimorales.dev`, without "Manual Setup"): it injects the beacon
+at the edge level for all of the zone's HTML traffic, without touching code or adding any script to the repo.
+**Consequences.** Manual action in the Cloudflare dashboard (outside the AI's scope, like `www`'s DNS).
+Nothing in `app/` or `nuxt.config.ts`.
 
-**Fet.** Zona `danimorales.dev` afegida amb Automatic Setup (2026-09-16); dades reals ja arribant (verificat
-captura del dashboard: 14 page views / 5 visits a les últimes 24h).
+**Done.** Zone `danimorales.dev` added with Automatic Setup (2026-09-16); real data already coming in (verified
+via dashboard screenshot: 14 page views / 5 visits in the last 24h).
