@@ -23,6 +23,12 @@ Living documentation (rule 07): every new or changed script, gate, hook or workf
 
 Manual check of the hook (criterion 11 of the `bootstrap` contract): from Claude, with `ACTIVE` empty, `git commit -m x` must fail with "Rule 10: no commit without an active contract"; with a valid contract, `git commit --no-verify -m x` must fail with "Rule 09: --no-verify / -n is not allowed". It only looks at actual git invocations (start of line or after `;`, `&&`, `||`, `|`), not prose inside heredocs. Staging `nuxt.config.ts`/`eslint.config.mjs` alone (no decision file staged) must fail with "Rule 11: this commit changes nuxt.config.ts or eslint.config.mjs...".
 
+**Post-merge deploy verification (decision 042):** CI green on the PR only proves the code is correct — it
+never proves `deploy.yml` actually reached Cloudflare (PR #2, 2026-09-18: CI green, deploy failed on
+Cloudflare error 10215, unnoticed for 2 days because no step checked). Manual, mandatory step between merge
+and closing a task: `gh run list --branch main --limit 1 --workflow deploy.yml` must show `success` for that
+commit before the task is marked done. Tracked per-task in `handoff.md`'s "Post-merge deploy check" section.
+
 ## Environments and deploy
 
 Decisions: 021 (environments), 022 (scans), 024 (GitHub environment, secrets, ruleset).

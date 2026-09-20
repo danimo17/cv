@@ -29,6 +29,11 @@ Not covered: …
 | --- | ---- | ------ | ------- |
 | 1   | …    | …      | pending |
 
+## Post-merge deploy check (decision 042, only after the user merges)
+
+- [ ] `gh run list --branch main --limit 1 --workflow deploy.yml` shows `success` for this merge's commit.
+- If not: this is an open bug on this task, not a footnote — fix before closing.
+
 ## Decisions made in this task
 
 - → `.claude/docs/decisions/NNN-….md`
