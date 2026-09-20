@@ -35,8 +35,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # `secrets:` puja NUXT_GIPHY_API_KEY al Worker (wrangler secret bulk) abans del deploy:
-      # GitHub és l'únic lloc on es rota el secret.
       - name: Deploy to Cloudflare Workers
         id: deploy
         uses: cloudflare/wrangler-action@v4
@@ -45,6 +43,17 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: pnpm
           command: deploy
+
+      # Secrets es pugen després del deploy: Cloudflare rebutja `secret bulk` quan la
+      # darrera versió del Worker encara no està desplegada (API error 10215). GitHub
+      # segueix sent l'únic lloc on es rota el secret.
+      - name: Upload secrets
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          command: secret bulk
           secrets: |
             NUXT_GIPHY_API_KEY
         env:
