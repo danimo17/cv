@@ -44,16 +44,19 @@ jobs:
           packageManager: pnpm
           command: deploy
 
-      # Secrets es pugen després del deploy: Cloudflare rebutja `secret bulk` quan la
-      # darrera versió del Worker encara no està desplegada (API error 10215). GitHub
-      # segueix sent l'únic lloc on es rota el secret.
+      # Secrets are uploaded after the deploy: Cloudflare rejects `secret bulk` when the
+      # Worker's latest version isn't deployed yet (API error 10215). GitHub stays the
+      # only place the secret is rotated. No `command:` here: wrangler-action's `secrets:`
+      # input already runs `wrangler secret bulk` internally before any command does —
+      # setting `command: secret bulk` too would run it a second time with no stdin piped
+      # in, which fails.
       - name: Upload secrets
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: pnpm
-          command: secret bulk
+          command: deployments status
           secrets: |
             NUXT_GIPHY_API_KEY
         env:
