@@ -1,7 +1,7 @@
 # AI work workflow (binding)
 
 ```
-story → contract → build ⟲ iterate → consolidate (gate) → validate → handoff → commit → review → gate:push → PR (AI) → CI+security → merge → deploy
+story → contract → build ⟲ iterate → consolidate (gate) → validate → handoff → commit → review → gate:push → PR (AI) → CI+security → merge → deploy → verify deploy → close
 ```
 
 1. **Story** — `.claude/tasks/<slug>/story.md` (template `templates/story.md`): "As a <actor> I want <what> for
@@ -31,9 +31,14 @@ story → contract → build ⟲ iterate → consolidate (gate) → validate →
     prefix, body with fixed sections Summary/Acceptance criteria/Review/User pendings/Test plan). CI repeats
     the gate, runs build + e2e and the security scans; the PR gets a preview URL.
 11. **Merge / deploy** — the human reviews and merges (rule 06); GitHub only allows it once all checks are
-    green. Merging to `main` deploys to production automatically (`deploy.yml` workflow).
-12. **Close** — promote what is durable (`docs/standards/`, `docs/decisions/`, `docs/catalog/`), delete
-    `.claude/tasks/<slug>/`, clear `ACTIVE`, mark `done` in the backlog.
+    green. Merging to `main` triggers `deploy.yml` (decision 042: this is a trigger, not a guarantee — it can
+    still fail on Cloudflare's side after CI was green).
+12. **Verify deploy** (decision 042) — mandatory, not skippable: `gh run list --branch main --limit 1
+--workflow deploy.yml` (or the equivalent in the GitHub UI) until the run for this merge shows `success`.
+    A failed run is treated as an open bug on the active task, not a footnote — fix it before closing.
+13. **Close** — only after step 12 confirms green: promote what is durable (`docs/standards/`,
+    `docs/decisions/`, `docs/catalog/`), delete `.claude/tasks/<slug>/`, clear `ACTIVE`, mark `done` in the
+    backlog.
 
 ## Gates (what blocks what)
 
@@ -47,5 +52,6 @@ story → contract → build ⟲ iterate → consolidate (gate) → validate →
 | `security.yml`                    | gitleaks, pnpm audit, CodeQL             | the PR merge        |
 | `main` ruleset (GitHub)           | requires the above checks + PR           | the direct merge    |
 | `deploy.yml`                      | only on push to `main` with CI green     | the deploy          |
+| verify deploy (decision 042)      | `gh run list --workflow deploy.yml`      | closing the task    |
 
 Legitimately unblocking = making it pass. Never `--no-verify`, never `skip`, never delete the test.
