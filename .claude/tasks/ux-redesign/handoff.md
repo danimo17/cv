@@ -1,8 +1,17 @@
 # Handoff: ux-redesign
 
-_Updated: 2026-09-18 (session pause, user stepping away right after this task was created). Real state of
-`feat/ux-redesign`: **branch created off `feat/post-launch`@`3fbfbdd`, story + contract written (17
-criteria), ZERO implementation done yet.** Nothing committed on this branch._
+_Updated: 2026-09-20. Real state of `feat/ux-redesign`: **rebased onto `main` (now carries `post-launch` PR
+#2 and `deploy-secrets-order` PR #3), story + contract written (17 criteria), ZERO implementation done yet.**
+Nothing else committed on this branch beyond the rebase._
+
+## Picked up from `deploy-secrets-order` (2026-09-20)
+
+That task fixed a silent production deploy failure (PR #2 merged, CI green, but `deploy.yml` itself failed on
+Cloudflare error 10215 — unnoticed for 2 days) and closed the process gap that let it go unnoticed: **decision
+042** now makes a post-merge deploy check mandatory before any task can be closed. This branch inherits that
+via the rebase; it applies to this task too once its PR eventually merges — see `workflow.md` step 12
+("Verify deploy") and `templates/handoff.md`'s "Post-merge deploy check" section, and remember to fill that
+section in on this task's own handoff once it merges.
 
 ## Status: contract written, nothing built
 
@@ -22,9 +31,9 @@ points were grilled with the user and resolved:
 
 1. Read `CLAUDE.md` → `hard-rules.md` → `workflow.md` → this file → `contract.md` (has all 17 criteria with
    Given/When/Then + what test/review covers each).
-2. Confirm `.claude/tasks/ACTIVE` says `ux-redesign` and you're on branch `feat/ux-redesign` (branched from
-   `feat/post-launch` — if `post-launch`'s PR has merged to `main` by then, consider rebasing this branch
-   onto `main` first so the diff doesn't carry post-launch's changes too).
+2. Confirm `.claude/tasks/ACTIVE` says `ux-redesign` and you're on branch `feat/ux-redesign` — already rebased
+   onto `main` as of 2026-09-20 (post `post-launch` + `deploy-secrets-order`), no further rebase needed unless
+   more work has landed on `main` since.
 3. Work through the 17 criteria. Rule 12 applies: delegate research/implementation to subagents per
    reasonably-scoped chunk (e.g. one agent for the header/nav restyle, one for the new dropdown component,
    one for the Timeline component, one for CV content/data fixes, one for the meme page rework, one for the
@@ -83,7 +92,7 @@ just "danimo17/cv"). That was small enough to fix inline immediately — it's al
 - `.claude/docs/decisions/025-neumorphism.md`, `026-custom-primitives.md`, `003-meme-picker.md`,
   `004-meme-state-memory-only.md`, `010-home-sections.md`, `011-visual-style.md`
 
-## Pendents de l'usuari
+## Pending on the user
 
 None yet blocking — the two branch/scope questions were already resolved this session (see "Status" above).
 The next real decision points are the three "Open questions" listed in `contract.md` (exact copy wording,
