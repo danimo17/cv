@@ -23,7 +23,7 @@ const note = computed(() => (te(`${key.value}.note`) ? t(`${key.value}.note`) : 
       <CustomText as="time" variant="small" :datetime="item.start">{{ period }}</CustomText>
     </CustomText>
     <div class="experience-item__body">
-      <CustomText as="h3" variant="body" weight="semibold" class="experience-item__title">
+      <CustomText as="h3" variant="h4" class="experience-item__title">
         {{ t(`${key}.title`) }}
       </CustomText>
       <CustomText as="p" variant="body" tone="muted" class="experience-item__org">
