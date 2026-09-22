@@ -5,4 +5,7 @@
   .meme-search__input {
     @apply flex-1;
   }
+  .meme-search__status {
+    @apply animate-pulse sm:pb-3;
+  }
 }

@@ -53,6 +53,9 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
           {{ step }}
         </CustomText>
       </ol>
+      <CustomButton size="sm" variant="outline" icon="arrow-left" to="/" class="meme-page__how-cta">
+        {{ t('meme.goHome') }}
+      </CustomButton>
     </CustomCard>
 
     <CustomAlert
