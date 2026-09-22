@@ -77,7 +77,7 @@ test('theme toggle persists', async ({ page }) => {
 
 test('locale switch', async ({ page }) => {
   await visit(page, '/')
-  await page.getByTestId('locale-ca').click()
+  await page.locator('[data-testid="locale-switcher"] select').selectOption('ca')
   await expect(page).toHaveURL(/\/ca\/?$/)
   await expect(page.getByRole('heading', { level: 2, name: ca.about.title })).toBeVisible()
 })
