@@ -644,8 +644,11 @@ reduce` there is no animation and only the first copy is visible. `div` containe
 - **Path**: `app/components/cv/ExperienceItem.vue`
 - **Purpose**: timeline entry (job, education, or certification). Text via i18n at `<section>.items.<id>`
   (`title`, `bullets[]` via `useMessageList`, `note`); period via `formatPeriod` (`~/domain/cv/period`) and the
-  active locale. Typography: period `CustomText small muted` (+ `time`), title `h3 body semibold`, org `body muted`
+  active locale. Typography: period `CustomText small muted` (+ `time`), title `h3 h4`, org `body muted`
   (`CustomLink inline` if it has a URL), location `span small muted`, bullets `li small muted`, note `small muted`.
+  `--detailed`'s connecting line (`border-l-2`, on `.experience-item`) runs continuous through the item's own
+  `pb-8` (in place of the list's `gap-8`, removed) instead of breaking between items; trimmed to `pb-0` on the
+  list's last item.
 - **Props**:
 
 | Prop      | Type                      | Default      | Allowed values → class                                                   |

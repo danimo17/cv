@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Daniel Morales · Desenvolupador Frontend",
-    "description": "Desenvolupador frontend (Vue, Nuxt, Shopify) a Girona. CV, stack, experiència i un mode meme impulsat per Giphy.",
+    "description": "Desenvolupador frontend (Vue, Nuxt i tots els frameworks de frontend) a Girona. CV, stack, experiència i un mode meme impulsat per Giphy.",
     "memeTitle": "Mode meme",
     "memeDescription": "Canvia el meu retrat per un meme de Giphy. Una petita demo de useFetch, Pinia i estat de client a Nuxt."
   },
@@ -21,8 +21,11 @@
   "hero": {
     "greeting": "Hola, sóc",
     "headline": "Desenvolupador Frontend",
-    "tagline": "Vue, Nuxt i Shopify de dia. Readaptant-me ràpid amb la IA: pipelines agèntics, desenvolupament guiat per especificacions i quality gates.",
-    "location": "Banyoles, Girona · híbrid o remot",
+    "tagline": "Vue, Nuxt i tots els frameworks de frontend de dia. Readaptant-me ràpid amb la IA: pipelines agèntics, desenvolupament guiat per especificacions i quality gates.",
+    "location": {
+      "hybrid": "Banyoles, Girona (híbrid, presencial per la zona de Girona) o remot",
+      "remote": "Remot, arreu del món"
+    },
     "openToWork": "Obert a ofertes",
     "cta": { "contact": "Contacta amb mi" },
     "photoAlt": "Retrat de Daniel Morales",
@@ -50,7 +53,7 @@
       "motion": "Animació amb JS i CSS",
       "uiux": "UI/UX",
       "ai": "IA",
-      "ml": "Machine learning"
+      "pastisseria": "Pastisseria"
     }
   },
   "experience": {
@@ -136,12 +139,9 @@
   },
   "certifications": {
     "items": {
-      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
-      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
-      "amaltea": {
-        "title": "Introducció a la igualtat d'oportunitats a l'entorn laboral",
-        "note": "Amaltea Consultoría."
-      }
+      "cambridge": { "title": "C1 Advanced English" },
+      "esplai-cert": { "title": "PHP Junior Developer" },
+      "amaltea": { "title": "Introducció a la igualtat d'oportunitats a l'entorn laboral" }
     }
   },
   "contact": {

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Daniel Morales · Frontend Developer",
-    "description": "Frontend developer (Vue, Nuxt, Shopify) based in Girona. CV, stack, experience and a meme mode powered by Giphy.",
+    "description": "Frontend developer (Vue, Nuxt and all the frontend frameworks) based in Girona. CV, stack, experience and a meme mode powered by Giphy.",
     "memeTitle": "Meme mode",
     "memeDescription": "Swap my portrait for a Giphy meme. A small demo of useFetch, Pinia and client state in Nuxt."
   },
@@ -21,8 +21,11 @@
   "hero": {
     "greeting": "Hi, I'm",
     "headline": "Frontend Developer",
-    "tagline": "Vue, Nuxt and Shopify by day. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
-    "location": "Banyoles, Girona · hybrid or remote",
+    "tagline": "Vue, Nuxt and all the frontend frameworks by day. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
+    "location": {
+      "hybrid": "Banyoles, Girona (hybrid, on-site by the Girona area) or remote",
+      "remote": "Remote, worldwide"
+    },
     "openToWork": "Open to work",
     "cta": { "contact": "Get in touch" },
     "photoAlt": "Portrait of Daniel Morales",
@@ -50,7 +53,7 @@
       "motion": "JS & CSS animation",
       "uiux": "UI/UX",
       "ai": "AI",
-      "ml": "Machine learning"
+      "pastisseria": "Baking"
     }
   },
   "experience": {
@@ -136,12 +139,9 @@
   },
   "certifications": {
     "items": {
-      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
-      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
-      "amaltea": {
-        "title": "Introduction to equal opportunities in the workplace",
-        "note": "Amaltea Consultoría."
-      }
+      "cambridge": { "title": "C1 Advanced English" },
+      "esplai-cert": { "title": "PHP Junior Developer" },
+      "amaltea": { "title": "Introduction to equal opportunities in the workplace" }
     }
   },
   "contact": {

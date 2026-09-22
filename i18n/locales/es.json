@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Daniel Morales · Desarrollador Frontend",
-    "description": "Desarrollador frontend (Vue, Nuxt, Shopify) en Girona. CV, stack, experiencia y un modo meme impulsado por Giphy.",
+    "description": "Desarrollador frontend (Vue, Nuxt y todos los frameworks de frontend) en Girona. CV, stack, experiencia y un modo meme impulsado por Giphy.",
     "memeTitle": "Modo meme",
     "memeDescription": "Cambia mi retrato por un meme de Giphy. Una pequeña demo de useFetch, Pinia y estado de cliente en Nuxt."
   },
@@ -21,8 +21,11 @@
   "hero": {
     "greeting": "Hola, soy",
     "headline": "Desarrollador Frontend",
-    "tagline": "Vue, Nuxt y Shopify de día. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
-    "location": "Banyoles, Girona · híbrido o remoto",
+    "tagline": "Vue, Nuxt y todos los frameworks de frontend de día. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
+    "location": {
+      "hybrid": "Banyoles, Girona (híbrido, presencial por la zona de Girona) o remoto",
+      "remote": "Remoto, en cualquier parte del mundo"
+    },
     "openToWork": "Abierto a ofertas",
     "cta": { "contact": "Contacta conmigo" },
     "photoAlt": "Retrato de Daniel Morales",
@@ -50,7 +53,7 @@
       "motion": "Animación con JS y CSS",
       "uiux": "UI/UX",
       "ai": "IA",
-      "ml": "Machine learning"
+      "pastisseria": "Repostería"
     }
   },
   "experience": {
@@ -136,12 +139,9 @@
   },
   "certifications": {
     "items": {
-      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
-      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
-      "amaltea": {
-        "title": "Introducción a la igualdad de oportunidades en el entorno laboral",
-        "note": "Amaltea Consultoría."
-      }
+      "cambridge": { "title": "C1 Advanced English" },
+      "esplai-cert": { "title": "PHP Junior Developer" },
+      "amaltea": { "title": "Introducción a la igualdad de oportunidades en el entorno laboral" }
     }
   },
   "contact": {
