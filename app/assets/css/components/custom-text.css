@@ -15,6 +15,15 @@
   .custom-text--h3 {
     @apply text-xl font-semibold sm:text-2xl;
   }
+  .custom-text--h4 {
+    @apply text-lg font-semibold sm:text-xl;
+  }
+  .custom-text--h5 {
+    @apply text-base font-medium sm:text-lg;
+  }
+  .custom-text--h6 {
+    @apply text-sm font-medium sm:text-base;
+  }
   .custom-text--lead {
     @apply text-lg;
   }
