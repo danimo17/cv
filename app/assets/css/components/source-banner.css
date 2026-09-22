@@ -3,7 +3,7 @@
     @apply relative z-30;
   }
   .source-banner__item {
-    @apply inline-flex items-center gap-2 px-6;
+    @apply inline-flex items-center gap-sm px-6;
   }
   .source-banner__icon {
     @apply opacity-60;

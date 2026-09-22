@@ -1,8 +1,8 @@
 @layer components {
   .meme-recent-searches {
-    @apply flex flex-col gap-3;
+    @apply flex flex-col gap-sm;
   }
   .meme-recent-searches__list {
-    @apply flex flex-wrap gap-2;
+    @apply flex flex-wrap gap-sm;
   }
 }

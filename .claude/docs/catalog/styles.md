@@ -14,6 +14,7 @@ shadows, a light one top-left (`neu-light`) and a dark one bottom-right (`neu-da
 | `--font-sans` / `--font-mono` | `font-sans` (body), `font-mono`                                               | system-ui… / ui-monospace… | =                     |
 | `--radius-sm/md/lg/xl`        | `rounded-sm/md/lg/xl`                                                         | 0.5 / 0.75 / 1 / 1.5 rem   | =                     |
 | `--radius-2xl/3xl`            | `rounded-2xl/3xl` (large frames: hero figure, "how it works" card)            | 2 / 2.5 rem                | =                     |
+| `--spacing-sm/lg`             | `gap/gap-x/gap-y/p/px/py/m/mx/my/mt/mb/space-y/space-x-sm/lg` (decision 050)  | 0.5 / 1.5 rem              | =                     |
 | `--color-surface`             | page background and base surface for all relief (cards, buttons, frames)      | `oklch(94% .008 250)`      | `oklch(23% .015 250)` |
 | `--color-surface-alt`         | background of recessed areas (inputs, filled cards, tracks, skeleton, footer) | `oklch(91.5% .01 250)`     | `oklch(20% .015 250)` |
 | `--color-border`              | residual lines (timeline)                                                     | `oklch(86% .012 250)`      | `oklch(32% .015 250)` |
@@ -47,6 +48,24 @@ two colors** and every shadow is recalculated automatically at runtime.
 | `--shadow-neu-inset`    | `shadow-neu-inset`    | `inset 4px 4px 8px neu-dark, inset -4px -4px 8px neu-light` | recessed (inputs, pressed)     |
 | `--shadow-neu-inset-sm` | `shadow-neu-inset-sm` | `inset 2px 2px 4px neu-dark, inset -2px -2px 4px neu-light` | light recess (tracks, stripes) |
 | `--shadow-neu-none`     | `shadow-neu-none`     | `0 0 #0000`                                                 | flat (ghost, links)            |
+
+### Spacing tokens (`--spacing-*` → `gap/p/m/space-*-sm/lg`, decision 050)
+
+Scope: **spacing between sibling elements only** — `gap-*` in flex/grid containers, `mb-*`/`mt-*`/`space-y-*`/
+`space-x-*` margins that separate stacked elements within one component. `sm` (0.5rem) for tight/inline
+groupings (icon + text, tag lists); `lg` (1.5rem) for looser separation (list items, stacked field groups).
+
+Three categories are deliberately **not** migrated to these tokens (different concern, not an oversight):
+
+- Page/section-level vertical rhythm: `pages.css`, and section-wrapper padding inside component CSS
+  (`custom-section.css`/`hero-section.css`'s `py-12/16/24`).
+- Control-internal padding governed by the `Size` scale: `custom-button.css`, `custom-input.css` (untouched).
+- Values that don't cleanly land in either bucket (0.25–0.75rem vs 1–1.5rem) are left as raw Tailwind
+  utilities rather than forced: `about-section.css`/`experience-section.css`'s `gap-8` (2rem),
+  `hero-section.css`'s `gap-10` grid gap and one `mt-8` (2rem), `custom-section.css__header`'s `mb-8` (2rem),
+  `education-section.css__subtitle`'s `mt-12` (3rem), `app-footer.css`'s page-to-footer `mt-8`, and
+  `custom-alert.css__icon`'s `mt-0.5` (icon-alignment nudge, not inter-element spacing). Revisit only if a
+  third tier is added later (YAGNI for now).
 
 ### State recipes (which relief goes with each state)
 

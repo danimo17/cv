@@ -1,6 +1,6 @@
 @layer components {
   .custom-badge {
-    @apply inline-flex items-center gap-1 rounded-full whitespace-nowrap shadow-neu-sm;
+    @apply inline-flex items-center gap-sm rounded-full whitespace-nowrap shadow-neu-sm;
   }
   .custom-badge--sm {
     @apply px-2 py-0.5;
