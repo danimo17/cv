@@ -1,5 +1,7 @@
 export type Section = 'experience' | 'education' | 'certifications'
 
+export type WorkMode = 'hybrid' | 'remote'
+
 export interface TimelineItem {
   id: string
   section: Section
