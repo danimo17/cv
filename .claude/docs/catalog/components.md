@@ -48,14 +48,14 @@ Block template:
   All attributes (`id`, `datetime`, `for`, `aria-*`, `data-testid`, `class`) fall through to the element.
 - **Props**:
 
-| Prop       | Type                                                                                                     | Default     | Allowed values → class                                                                                         |
-| ---------- | -------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| `as`       | `'p' \| 'span' \| 'h1'…'h6' \| 'small' \| 'strong' \| 'em' \| 'label' \| 'figcaption' \| 'time' \| 'li'` | `'p'`       | rendered HTML tag (does not affect the style)                                                                  |
-| `variant`  | `'display' \| 'h1' \| 'h2' \| 'h3' \| 'lead' \| 'body' \| 'small' \| 'caption' \| 'eyebrow'`             | `'body'`    | `.custom-text--<variant>` (default size + weight, see `styles.md`)                                             |
-| `tone`     | `'default' \| 'muted' \| Tone`                                                                           | `'default'` | `.custom-text--tone-<tone>` (`default` inherits the color, `muted` = `text-text-muted`, tones = `text-<tone>`) |
-| `weight`   | `'normal' \| 'medium' \| 'semibold' \| 'bold'`                                                           | —           | `.custom-text--<weight>` (overrides the variant's weight)                                                      |
-| `align`    | `'start' \| 'center' \| 'end'`                                                                           | —           | `.custom-text--align-<align>`                                                                                  |
-| `truncate` | `boolean`                                                                                                | `false`     | `.custom-text--truncate` (single line with ellipsis)                                                           |
+| Prop       | Type                                                                                                                 | Default     | Allowed values → class                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `as`       | `'p' \| 'span' \| 'h1'…'h6' \| 'small' \| 'strong' \| 'em' \| 'label' \| 'figcaption' \| 'time' \| 'li'`             | `'p'`       | rendered HTML tag (does not affect the style)                                                                  |
+| `variant`  | `'display' \| 'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'lead' \| 'body' \| 'small' \| 'caption' \| 'eyebrow'` | `'body'`    | `.custom-text--<variant>` (default size + weight, see `styles.md`)                                             |
+| `tone`     | `'default' \| 'muted' \| Tone`                                                                                       | `'default'` | `.custom-text--tone-<tone>` (`default` inherits the color, `muted` = `text-text-muted`, tones = `text-<tone>`) |
+| `weight`   | `'normal' \| 'medium' \| 'semibold' \| 'bold'`                                                                       | —           | `.custom-text--<weight>` (overrides the variant's weight)                                                      |
+| `align`    | `'start' \| 'center' \| 'end'`                                                                                       | —           | `.custom-text--align-<align>`                                                                                  |
+| `truncate` | `boolean`                                                                                                            | `false`     | `.custom-text--truncate` (single line with ellipsis)                                                           |
 
 - **Variants/classes**: `.custom-text` + the above. Size/weight/color are never added from any other CSS.
 - **Slots**: `default`.
@@ -189,7 +189,8 @@ Block template:
   `value` of the option; `multiselect` an array; `checkbox` a `boolean`; `radio` the `value` of the chosen option.
 - **Variants/classes**: `.custom-input`, `--<type>`, `--sm/--md/--lg`, `--neutral/--danger`, `--with-icon`,
   `--disabled`; elements `__label`, `__field`, `__icon`, `__control` (input/select/textarea), `__group`
-  (fieldset), `__options`, `__option`, `__radio`, `__checkbox`, `__hint`.
+  (fieldset), `__options`, `__option`, `__radio`, `__checkbox`, `__hint`. `--select` adds a CSS-only chevron on
+  `__field::after` (same border-trick as the checkbox tick, no icon/dependency).
 - **Slots**: none.
 - **Events**: `update:modelValue`.
 - **Example**:
@@ -494,10 +495,11 @@ reduce` there is no animation and only the first copy is visible. `div` containe
 ### AppHeader
 
 - **Path**: `app/components/layout/AppHeader.vue`
-- **Purpose**: fixed header with brand (`CustomLink subtle neutral`), navigation (`/`, `/meme`) via `CustomLink nav`
-  (active state `.custom-link--active`), and tools (language, theme).
+- **Purpose**: fixed header with navigation (`/`, `/meme`) via `CustomLink nav` (active state, `.app-header__link--active`,
+  a raised chip — deliberate deviation from `CustomLink`'s default sunken `--active`, via the `activeClass` prop; see
+  decision 044), and tools (language, theme). No brand text (removed, criterion 1).
 - **Props**: none.
-- **Variants/classes**: `.app-header`; elements `__inner`, `__brand` (`font-bold`), `__nav`, `__link`, `__tools`.
+- **Variants/classes**: `.app-header`; elements `__inner`, `__nav`, `__link`, `__link--active`, `__tools`.
 - **Slots**: none.
 - **Events**: none.
 - **Example**:
@@ -530,7 +532,8 @@ reduce` there is no animation and only the first copy is visible. `div` containe
 ### AppFooter
 
 - **Path**: `app/components/layout/AppFooter.vue`
-- **Purpose**: footer with credit (`CustomText small muted`), source link (`CustomLink inline`), and contact icons
+- **Purpose**: footer with copyright (`CustomText small muted`, `footer.copyright` with `{ name, year }`, `year` from
+  `computed(() => new Date().getFullYear())`), source link (`CustomLink inline`), and contact icons
   (`CustomLink icon`: GitHub, LinkedIn, email) from `data/cv`.
 - **Props**: none.
 - **Variants/classes**: `.app-footer`; elements `__inner`, `__source`, `__links`, `__link`.
@@ -564,11 +567,11 @@ reduce` there is no animation and only the first copy is visible. `div` containe
 ### LocaleSwitcher
 
 - **Path**: `app/components/layout/LocaleSwitcher.vue`
-- **Purpose**: `en / ca / es` links (`CustomLink subtle` with `localize=false` over `useSwitchLocalePath()`);
-  `aria-current` on the active one; `data-testid="locale-<code>"`.
+- **Purpose**: `CustomInput type="select"` bound to `useI18n().locale`; on change, navigates via
+  `useSwitchLocalePath()` + `navigateTo()` (not plain `v-model`). Options are `locales[].name` from
+  `nuxt.config.ts`. `data-testid="locale-switcher"` on the outer root. See decision 043.
 - **Props**: none.
-- **Variants/classes**: `.locale-switcher`; elements `__item` (`text-xs uppercase` pill, belongs to the link),
-  `__item--active`.
+- **Variants/classes**: `.locale-switcher` (`w-32`, layout width only — look is `CustomInput`'s, per decision 026).
 - **Slots**: none.
 - **Events**: none.
 - **Example**:

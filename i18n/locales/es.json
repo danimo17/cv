@@ -8,8 +8,8 @@
   "nav": {
     "brand": "Daniel Morales",
     "main": "Navegación principal",
-    "home": "Inicio",
-    "meme": "Modo meme",
+    "home": "Home",
+    "meme": "Meme",
     "skipToContent": "Saltar al contenido"
   },
   "theme": {
@@ -155,22 +155,22 @@
   "cv": { "download": "Descargar CV (PDF)" },
   "meme": {
     "kicker": "Modo meme",
-    "title": "Cambia mi cara por un meme",
+    "title": "Cambia tu cara",
     "intro": "Busca en Giphy, elige un GIF y póntelo en la página de inicio. Es una pequeña demo de cómo este sitio gestiona datos y estado.",
     "how": {
       "title": "Cómo funciona",
       "steps": [
-        "Tu búsqueda llega a una ruta de servidor de Nuxt (/api/giphy/search) que habla con Giphy con una clave privada. El navegador nunca ve la clave.",
-        "Un servicio define la petición useFetch y un store de Pinia guarda su estado: pending, error y resultados son reactivos.",
-        "Tu elección vive en un store de Pinia, así que sobrevive a la navegación hacia la página de inicio.",
-        "Recarga la página y vuelve mi cara real: el store está en memoria a propósito. Estado, no persistencia."
+        "Busca un meme con la palabra que quieras: gato, lunes, lo que sea.",
+        "Elige tu favorito entre los resultados.",
+        "Tu foto en la página de inicio se convierte en ese meme.",
+        "Recarga la página cuando quieras recuperar tu foto real."
       ]
     },
     "currently": "Ahora mismo llevas: {title}",
     "search": {
       "label": "Buscar GIFs",
       "placeholder": "gato, developer, lunes…",
-      "button": "Buscar"
+      "searching": "Buscando…"
     },
     "results": {
       "errorTitle": "Giphy no ha respondido",
@@ -200,7 +200,7 @@
     "page": "Página {page} de {total}"
   },
   "footer": {
-    "built": "Hecho con Nuxt 4, Tailwind, Pinia y un poco de IA.",
+    "copyright": "© {name} {year}",
     "source": "Código fuente"
   },
   "banner": {

@@ -33,8 +33,24 @@ toggle, only resized).
 
 ## Subagent assignments (rule 12)
 
-To be filled in as work is scoped and delegated — see `handoff.md` for the live log (rule 11: documented as
-decisions/problems come up, not batched at the end).
+Grounded by main-thread research (file paths, existing patterns) before dispatch — see `handoff.md` for the
+live log. Two phases to avoid concurrent edits to shared files (i18n locales, catalog/standards docs, which
+the main thread owns and consolidates from each agent's report):
+
+| Phase | Subagent            | Criteria                    | Scope                                                                              |
+| ----- | ------------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| 1     | header-nav          | 1, 2                        | `AppHeader.vue` + css                                                              |
+| 1     | controls-dropdown   | 3, 4, 5                     | `LocaleSwitcher.vue` → `CustomInput type="select"`, `ThemeToggle.vue` height audit |
+| 1     | elevation-cards     | 8, 15                       | `CustomCard.vue`, `MemeCard.vue`, `MemeGrid.vue` + css                             |
+| 1     | footer              | 14                          | `AppFooter.vue` + css                                                              |
+| 1     | meme-search-copy    | 16, 17                      | `MemeSearch.vue`, `meme.vue` + css                                                 |
+| 1     | customtext-headings | 13 (primitive)              | `CustomText.vue` + css: add missing h4-h6 variants                                 |
+| 2     | timeline-experience | 10, 13 (apply)              | `ExperienceItem.vue`, `ExperienceSection.vue` + css                                |
+| 2     | cv-content-fixes    | 6, 7, 9, 11, 12, 13 (apply) | `profile.ts`, `education.ts`, `HeroSection.vue`, `EducationSection.vue` + css      |
+
+i18n locale values and `docs/catalog/{components,styles,i18n}.md` / `docs/standards/components.md` edits are
+NOT made by subagents — each reports the exact key/value or doc block it needs, main thread applies them
+once per phase (avoids concurrent writes to the same shared files) and runs `pnpm gate` before committing.
 
 ## Standards to consult
 

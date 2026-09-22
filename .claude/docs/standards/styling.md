@@ -17,7 +17,7 @@ Deliberately short: it describes the rules in force (decisions 015, 025, 026). V
 - **Typography only via `CustomText`.** `custom-text.css` is the only file with sizes (`text-xs … text-6xl`), weights and
   text colors for content. Section and layout CSS only carry layout, spacing, background and relief. Documented
   exceptions in `catalog/styles.md`: controls' own text (`CustomButton`, `CustomInput__control`, `CustomIcon`,
-  `CustomAlert`'s base, `LocaleSwitcher__item`, `AppHeader__brand`).
+  `CustomAlert`'s base).
 - **Primitives** (decision 026). The look of links, images, inputs, buttons, badges, alerts, cards and marquees
   is changed in the primitive's CSS, never the consumer's. A consumer only adds layout (`aspect-square`,
   `w-full`, margins) to its own class passed via `class`.
@@ -29,10 +29,13 @@ Deliberately short: it describes the rules in force (decisions 015, 025, 026). V
   are reserved for residual lines (the timeline), not for outlining boxes.
 - **What is raised.** Everything actionable or "object"-like: buttons (`shadow-neu`), outline cards
   (`neu-sm`) and elevated cards (`neu-lg`), header, the hero figure's frame, preview image, badges, alerts,
-  timeline dots, theme toggle, the active locale-switcher item, meme cards.
+  timeline dots, theme toggle, meme cards (presses in on hover, per criterion 8/15). The header's active nav
+  link is also raised (`.app-header__link--active`, decision 044) — a documented, `activeClass`-based
+  exception to `CustomLink`'s own default below.
 - **What is inset.** Everything that is a "container" or is written into: `CustomInput` controls
-  (`shadow-neu-inset`), unchecked radio/checkbox, filled cards, skeletons, tracks (locale switcher, marquee, banner), active
-  nav, footer. Background `bg-surface-alt` so the recess reads even without the shadow.
+  (`shadow-neu-inset`, including the locale switcher, now a `CustomInput type="select"` — decision 043),
+  unchecked radio/checkbox, filled cards, skeletons, tracks (marquee, banner), `CustomLink`'s default active
+  state, footer. Background `bg-surface-alt` so the recess reads even without the shadow.
 - **What is flat.** Ghost buttons at rest, inline/subtle links, sections and pages: the relief comes from the
   primitives they contain, not from the container.
 - **Hover/active.** Hover = shorter relief (`shadow-neu-sm`); active, `--loading` and `--selected` = inset

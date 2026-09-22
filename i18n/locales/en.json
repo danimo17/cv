@@ -9,7 +9,7 @@
     "brand": "Daniel Morales",
     "main": "Main navigation",
     "home": "Home",
-    "meme": "Meme mode",
+    "meme": "Meme",
     "skipToContent": "Skip to content"
   },
   "theme": {
@@ -155,22 +155,22 @@
   "cv": { "download": "Download CV (PDF)" },
   "meme": {
     "kicker": "Meme mode",
-    "title": "Swap my face for a meme",
+    "title": "Swap your face",
     "intro": "Search Giphy, pick a GIF and wear it on the home page. It's a tiny demo of how this site handles data and state.",
     "how": {
       "title": "How it works",
       "steps": [
-        "Your search hits a Nuxt server route (/api/giphy/search) that talks to Giphy with a private key. The browser never sees the key.",
-        "A service defines the useFetch request and a Pinia store owns its state: pending, error and results are reactive.",
-        "Your pick lives in a Pinia store, so it survives navigating to the home page.",
-        "Reload the page and my real face is back: the store is in memory on purpose. State, not persistence."
+        "Search for a meme using any word — cat, monday, whatever you like.",
+        "Pick your favorite from the results.",
+        "Your photo on the home page turns into that meme.",
+        "Reload the page whenever you want your real photo back."
       ]
     },
     "currently": "You're currently wearing: {title}",
     "search": {
       "label": "Search GIFs",
       "placeholder": "cat, developer, monday…",
-      "button": "Search"
+      "searching": "Searching…"
     },
     "results": {
       "errorTitle": "Giphy didn't answer",
@@ -200,7 +200,7 @@
     "page": "Page {page} of {total}"
   },
   "footer": {
-    "built": "Built with Nuxt 4, Tailwind, Pinia and a bit of AI.",
+    "copyright": "© {name} {year}",
     "source": "Source code"
   },
   "banner": {

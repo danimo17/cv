@@ -8,8 +8,8 @@
   "nav": {
     "brand": "Daniel Morales",
     "main": "Navegació principal",
-    "home": "Inici",
-    "meme": "Mode meme",
+    "home": "Home",
+    "meme": "Meme",
     "skipToContent": "Salta al contingut"
   },
   "theme": {
@@ -155,22 +155,22 @@
   "cv": { "download": "Descarrega el CV (PDF)" },
   "meme": {
     "kicker": "Mode meme",
-    "title": "Canvia la meva cara per un meme",
+    "title": "Canvia la teva cara",
     "intro": "Cerca a Giphy, tria un GIF i posa-me'l a la pàgina d'inici. És una petita demo de com aquest lloc gestiona dades i estat.",
     "how": {
       "title": "Com funciona",
       "steps": [
-        "La teva cerca arriba a una ruta de servidor de Nuxt (/api/giphy/search) que parla amb Giphy amb una clau privada. El navegador mai veu la clau.",
-        "Un servei defineix la petició useFetch i un store de Pinia en guarda l'estat: pending, error i resultats són reactius.",
-        "La teva tria viu en un store de Pinia, així que sobreviu a la navegació cap a la pàgina d'inici.",
-        "Recarrega la pàgina i torna la meva cara real: el store és en memòria a propòsit. Estat, no persistència."
+        "Cerca un meme amb la paraula que vulguis: gat, dilluns, el que sigui.",
+        "Tria el teu preferit entre els resultats.",
+        "La teva foto a la pàgina d'inici es converteix en aquest meme.",
+        "Recarrega la pàgina quan vulguis recuperar la teva foto real."
       ]
     },
     "currently": "Ara mateix portes: {title}",
     "search": {
       "label": "Cerca GIFs",
       "placeholder": "gat, developer, dilluns…",
-      "button": "Cerca"
+      "searching": "Cercant…"
     },
     "results": {
       "errorTitle": "Giphy no ha respost",
@@ -199,7 +199,7 @@
     "next": "Pàgina següent",
     "page": "Pàgina {page} de {total}"
   },
-  "footer": { "built": "Fet amb Nuxt 4, Tailwind, Pinia i una mica d'IA.", "source": "Codi font" },
+  "footer": { "copyright": "© {name} {year}", "source": "Codi font" },
   "banner": {
     "source": "Aquesta web és de codi obert — llegeix el codi a GitHub",
     "repo": "danimo17/cv",
