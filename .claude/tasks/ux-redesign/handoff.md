@@ -1,11 +1,46 @@
 # Handoff: ux-redesign
 
-_Updated: 2026-09-20 (session pause, user stepping away). Real state of `feat/ux-redesign`: **rebased onto
-`main`; ALL 6 Phase-1 agents finished and reported back; their changes are sitting in the working tree,
-UNCOMMITTED and UNVERIFIED (pnpm gate not run).** Nothing has been committed on this branch since the rebase
-commit (`3629b06`). Next session's very first job is the consolidation + gate + commit described below — no
-agent is still running, it's safe to start straight in on that (just re-read this whole file first, it's long
-because everything is captured here rather than lost).
+_Updated: 2026-09-22. **Phase 1 is DONE and committed** (7 commits, `f04244e`..`ceaeff6`): the 6 feature
+commits plus one consolidation commit for i18n/catalog/standards + decision 044 (header-nav's flagged
+sunken-vs-raised active-nav conflict, resolved, not left open). `pnpm gate` green after every commit. The
+`e2e/meme-flow.spec.ts:80` locale-testid breakage is fixed. One correction to the agents' reports: `nav.brand`
+was NOT removed from the locales — `app/app.vue:7`'s `titleTemplate` still reads it, contrary to `header-nav`'s
+"unused" claim; verified via grep before deleting anything.
+
+Phase 2 dispatched now (`timeline-experience`, `cv-content-fixes`, both backgrounded, running in parallel) —
+see "Phase 2 dispatch log" below. Once they report back: same consolidation pattern (apply their i18n/catalog
+notes, `pnpm gate`, commit), then the full review pass before PR.
+
+Also noted, out of scope for this task: the repo currently has 5 open PRs, all Dependabot dependency bumps
+(#4-8) — 4 of them are major-version bumps (vitest 4→5, eslint 9→10, vue-router 4→5, typescript 5.9→6.0.3).
+Not leftover work from any task, but risky to merge blindly; flagged to the user, no action taken here.
+
+## Phase 2 dispatch log (2026-09-22)
+
+Dispatched after Phase 1 landed and gate was green, per `contract.md`'s assignment table:
+
+- **`timeline-experience`** (criteria 10, apply 13): make the experience timeline's connecting line continuous
+  across the whole list instead of breaking at each item's `gap-8`, and apply the new `h4`-`h6` `CustomText`
+  variants to `ExperienceItem.vue`'s title (currently `variant="body"` despite being an `<h3>` — the actual bug
+  behind both the timeline items and certifications looking flat, since certifications render through the same
+  component). Scope: `ExperienceItem.vue`, `ExperienceSection.vue` + their CSS. Reserve decision number 047 if a
+  real decision is needed (heading-level mapping is expected to be uncontroversial, per contract.md's "Open
+  questions").
+- **`cv-content-fixes`** (criteria 6, 7, 9, 11, 12, apply 13 elsewhere): drop "Shopify" from descriptive
+  copy (job-history tags like "Shopify Plus" stay) in favour of a frontend-framework mention, in all 3 locales;
+  add a typed `workMode: 'hybrid' | 'remote'` field to `profile.ts` (+ type) shown on the hero, replacing the
+  bare `hero.location` string; swap `'ml'` for `'pastisseria'` in interests; Santander entry org line →
+  "Santander" only, location → "Remote"; certifications (cambridge, esplai-cert, amaltea) → delete the
+  redundant `note` field (identical to `org`) so they render 2 lines not 3; apply the remaining heading-scale
+  variant wherever criterion 13 still needs it outside `ExperienceItem` (hero name, section titles, org line).
+  Scope: `profile.ts`, `education.ts`, `HeroSection.vue`, `EducationSection.vue` + CSS. Reserve decision 048 if
+  needed.
+
+Both told explicitly, per the Phase 1 pattern: do NOT touch `i18n/locales/*.json` or
+`.claude/docs/catalog/*.md`/`.claude/docs/standards/*.md` — report the exact key/value or doc block instead,
+main thread consolidates once both are back.
+
+## Phase 1 log (superseded by the above — kept for background only)
 
 ## ⚠️ Read this first (next session)
 
