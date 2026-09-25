@@ -155,8 +155,8 @@
   "cv": { "download": "Download CV (PDF)" },
   "meme": {
     "kicker": "Meme mode",
-    "title": "Swap your face",
-    "intro": "Search Giphy, pick a GIF and wear it on the home page. It's a tiny demo of how this site handles data and state.",
+    "title": "Swap my face",
+    "intro": "Search Giphy, pick a GIF and wear it on the home page.",
     "how": {
       "title": "How it works",
       "steps": [

@@ -155,8 +155,8 @@
   "cv": { "download": "Descarrega el CV (PDF)" },
   "meme": {
     "kicker": "Mode meme",
-    "title": "Canvia la teva cara",
-    "intro": "Cerca a Giphy, tria un GIF i posa-me'l a la pàgina d'inici. És una petita demo de com aquest lloc gestiona dades i estat.",
+    "title": "Canvia la meva cara",
+    "intro": "Cerca a Giphy, tria un GIF i posa-me'l a la pàgina d'inici.",
     "how": {
       "title": "Com funciona",
       "steps": [

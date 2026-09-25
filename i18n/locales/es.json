@@ -155,8 +155,8 @@
   "cv": { "download": "Descargar CV (PDF)" },
   "meme": {
     "kicker": "Modo meme",
-    "title": "Cambia tu cara",
-    "intro": "Busca en Giphy, elige un GIF y póntelo en la página de inicio. Es una pequeña demo de cómo este sitio gestiona datos y estado.",
+    "title": "Cambia mi cara",
+    "intro": "Busca en Giphy, elige un GIF y póntelo en la página de inicio.",
     "how": {
       "title": "Cómo funciona",
       "steps": [
