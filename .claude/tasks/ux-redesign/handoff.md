@@ -1,5 +1,33 @@
 # Handoff: ux-redesign
 
+## Update 2026-09-25 — branch was orphaned, now closed out, ready for PR
+
+This branch had **13 commits done since 2026-09-22 (both phases) but was never pushed or opened as a PR** —
+a later session branched `feat/spacing-tokens` straight from `main`, silently skipping this branch entirely.
+Found only because the user asked where the button/timeline work had gone. See
+`.claude/tasks/workflow-integrity-hardening/story.md` for the process fix queued to stop this happening again.
+
+Since then, closed real gaps found while reviewing before push:
+
+- `e2e/meme-flow.spec.ts` still clicked the submit button `meme-search-copy` (Phase 2) removed — fixed to wait
+  on the debounced auto-search result instead (`c660521`).
+- Criterion 10's continuous-timeline-line fix only reached `ExperienceItem`'s `--detailed` variant;
+  `EducationSection` reuses the same component `--compact` (twice) and still had the old per-item gap —
+  applied the same fix there (`bd2c321`).
+- The timeline dot was bleeding past the page's horizontal padding (`-left-[9px]` wasn't centered on the
+  border and the item had no inset of its own) — fixed (`bd2c321`, same commit).
+- "Certificacions" subtitle had a one-off icon with no precedent anywhere else in the project (rule 16, new
+  this session: UI pattern consistency) — removed per the user's call (`997695e`).
+- New rule 16 written directly into the project; two follow-up tasks queued
+  (`.claude/tasks/workflow-integrity-hardening/`, `.claude/tasks/css-tailwind-first/`) — not part of this
+  branch's scope, don't pull their work in here.
+
+`pnpm gate:push` confirmed green (real exit code, re-verified — an earlier run this session reported exit 0
+via a wrapper bug while the actual `pnpm` command had failed; don't trust that notification path blindly,
+check the log tail). All 17 contract criteria now genuinely done. Ready to push and open the PR.
+
+---
+
 _Updated: 2026-09-22. **Phase 1 is DONE and committed** (7 commits, `f04244e`..`ceaeff6`): the 6 feature
 commits plus one consolidation commit for i18n/catalog/standards + decision 044 (header-nav's flagged
 sunken-vs-raised active-nav conflict, resolved, not left open). `pnpm gate` green after every commit. The
