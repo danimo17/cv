@@ -199,7 +199,7 @@
     "next": "Pàgina següent",
     "page": "Pàgina {page} de {total}"
   },
-  "footer": { "copyright": "© {name} {year}", "source": "Codi font" },
+  "footer": { "copyright": "© {name} {year}", "source": "- Github" },
   "banner": {
     "source": "Aquesta web és de codi obert — llegeix el codi a GitHub",
     "repo": "danimo17/cv",

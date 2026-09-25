@@ -201,7 +201,7 @@
   },
   "footer": {
     "copyright": "© {name} {year}",
-    "source": "Source code"
+    "source": "- Github"
   },
   "banner": {
     "source": "This site is open source — read the code on GitHub",
