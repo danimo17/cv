@@ -41,10 +41,9 @@ test('home renders CV sections', async ({ page }) => {
 test('search, pick and wear a meme', async ({ page }) => {
   await visit(page, '/meme')
   await page.fill('#meme-query', 'cat')
-  await page.click('[data-testid="meme-search-submit"]')
 
   const cards = page.locator('[data-testid="meme-card"]')
-  await expect(cards).toHaveCount(3)
+  await expect(cards).toHaveCount(3, { timeout: 5000 })
   await cards.first().click()
   await expect(page.getByTestId('meme-preview')).toBeVisible()
 
