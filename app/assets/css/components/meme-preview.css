@@ -1,6 +1,6 @@
 @layer components {
   .meme-preview {
-    @apply grid gap-lg md:grid-cols-[1fr_1.2fr];
+    @apply grid gap-custom-lg md:grid-cols-[1fr_1.2fr];
   }
   .meme-preview__image {
     @apply aspect-square w-full shadow-neu;
@@ -9,9 +9,9 @@
     @apply flex flex-col justify-center;
   }
   .meme-preview__meta {
-    @apply mt-sm;
+    @apply mt-custom-sm;
   }
   .meme-preview__actions {
-    @apply mt-lg flex flex-wrap gap-sm;
+    @apply mt-custom-lg flex flex-wrap gap-custom-sm;
   }
 }

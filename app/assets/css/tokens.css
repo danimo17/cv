@@ -3,8 +3,8 @@
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --font-mono: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
 
-  --spacing-sm: 0.5rem;
-  --spacing-lg: 1.5rem;
+  --spacing-custom-sm: 0.5rem;
+  --spacing-custom-lg: 1.5rem;
 
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;

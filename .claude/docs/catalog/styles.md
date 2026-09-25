@@ -9,22 +9,22 @@ The only file with raw colors. Dark mode: same names, new values under `.dark` (
 The idea behind the neumorphism: everything is the **same color as the background** (`surface`) and volume comes from two
 shadows, a light one top-left (`neu-light`) and a dark one bottom-right (`neu-dark`).
 
-| Token                         | Use                                                                           | Light                      | Dark                  |
-| ----------------------------- | ----------------------------------------------------------------------------- | -------------------------- | --------------------- |
-| `--font-sans` / `--font-mono` | `font-sans` (body), `font-mono`                                               | system-ui… / ui-monospace… | =                     |
-| `--radius-sm/md/lg/xl`        | `rounded-sm/md/lg/xl`                                                         | 0.5 / 0.75 / 1 / 1.5 rem   | =                     |
-| `--radius-2xl/3xl`            | `rounded-2xl/3xl` (large frames: hero figure, "how it works" card)            | 2 / 2.5 rem                | =                     |
-| `--spacing-sm/lg`             | `gap/gap-x/gap-y/p/px/py/m/mx/my/mt/mb/space-y/space-x-sm/lg` (decision 050)  | 0.5 / 1.5 rem              | =                     |
-| `--color-surface`             | page background and base surface for all relief (cards, buttons, frames)      | `oklch(94% .008 250)`      | `oklch(23% .015 250)` |
-| `--color-surface-alt`         | background of recessed areas (inputs, filled cards, tracks, skeleton, footer) | `oklch(91.5% .01 250)`     | `oklch(20% .015 250)` |
-| `--color-border`              | residual lines (timeline)                                                     | `oklch(86% .012 250)`      | `oklch(32% .015 250)` |
-| `--color-text`                | main text                                                                     | `oklch(24% .02 250)`       | `oklch(94% .005 250)` |
-| `--color-text-muted`          | secondary text                                                                | `oklch(46% .02 250)`       | `oklch(72% .015 250)` |
-| `--color-neu-light`           | light shadow (top-left) of the relief                                         | `oklch(100% 0 0)`          | `oklch(29% .018 250)` |
-| `--color-neu-dark`            | dark shadow (bottom-right) of the relief                                      | `oklch(82% .02 250)`       | `oklch(15% .015 250)` |
-| `--color-<tone>`              | tone color (`primary, secondary, neutral, success, info, warning, danger`)    | see file                   | see file              |
-| `--color-<tone>-fg`           | text over the tone's solid background                                         |                            |                       |
-| `--color-<tone>-soft`         | tone's soft background (soft badges, alerts, marquee)                         |                            |                       |
+| Token                         | Use                                                                                       | Light                      | Dark                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------- | -------------------------- | --------------------- |
+| `--font-sans` / `--font-mono` | `font-sans` (body), `font-mono`                                                           | system-ui… / ui-monospace… | =                     |
+| `--radius-sm/md/lg/xl`        | `rounded-sm/md/lg/xl`                                                                     | 0.5 / 0.75 / 1 / 1.5 rem   | =                     |
+| `--radius-2xl/3xl`            | `rounded-2xl/3xl` (large frames: hero figure, "how it works" card)                        | 2 / 2.5 rem                | =                     |
+| `--spacing-custom-sm/lg`      | `gap/gap-x/gap-y/p/px/py/m/mx/my/mt/mb/space-y/space-x-custom-sm/lg` (decisions 050, 053) | 0.5 / 1.5 rem              | =                     |
+| `--color-surface`             | page background and base surface for all relief (cards, buttons, frames)                  | `oklch(94% .008 250)`      | `oklch(23% .015 250)` |
+| `--color-surface-alt`         | background of recessed areas (inputs, filled cards, tracks, skeleton, footer)             | `oklch(91.5% .01 250)`     | `oklch(20% .015 250)` |
+| `--color-border`              | residual lines (timeline)                                                                 | `oklch(86% .012 250)`      | `oklch(32% .015 250)` |
+| `--color-text`                | main text                                                                                 | `oklch(24% .02 250)`       | `oklch(94% .005 250)` |
+| `--color-text-muted`          | secondary text                                                                            | `oklch(46% .02 250)`       | `oklch(72% .015 250)` |
+| `--color-neu-light`           | light shadow (top-left) of the relief                                                     | `oklch(100% 0 0)`          | `oklch(29% .018 250)` |
+| `--color-neu-dark`            | dark shadow (bottom-right) of the relief                                                  | `oklch(82% .02 250)`       | `oklch(15% .015 250)` |
+| `--color-<tone>`              | tone color (`primary, secondary, neutral, success, info, warning, danger`)                | see file                   | see file              |
+| `--color-<tone>-fg`           | text over the tone's solid background                                                     |                            |                       |
+| `--color-<tone>-soft`         | tone's soft background (soft badges, alerts, marquee)                                     |                            |                       |
 
 Tones (light → dark, L/C/h in oklch): `primary` (mustard) 50%/.14/88 → 78%/.13/88 · `secondary` (neutral dark gray)
 30%/.006/90 → 82%/.006/90 ·
@@ -49,11 +49,19 @@ two colors** and every shadow is recalculated automatically at runtime.
 | `--shadow-neu-inset-sm` | `shadow-neu-inset-sm` | `inset 2px 2px 4px neu-dark, inset -2px -2px 4px neu-light` | light recess (tracks, stripes) |
 | `--shadow-neu-none`     | `shadow-neu-none`     | `0 0 #0000`                                                 | flat (ghost, links)            |
 
-### Spacing tokens (`--spacing-*` → `gap/p/m/space-*-sm/lg`, decision 050)
+### Spacing tokens (`--spacing-custom-*` → `gap/p/m/space-*-custom-sm/lg`, decisions 050, 053)
 
 Scope: **spacing between sibling elements only** — `gap-*` in flex/grid containers, `mb-*`/`mt-*`/`space-y-*`/
-`space-x-*` margins that separate stacked elements within one component. `sm` (0.5rem) for tight/inline
-groupings (icon + text, tag lists); `lg` (1.5rem) for looser separation (list items, stacked field groups).
+`space-x-*` margins that separate stacked elements within one component. `custom-sm` (0.5rem) for tight/inline
+groupings (icon + text, tag lists); `custom-lg` (1.5rem) for looser separation (list items, stacked field
+groups).
+
+Token/class names are `custom-sm`/`custom-lg`, not the plain `sm`/`lg` originally chosen in decision 050:
+Tailwind v4 generates a utility for every `--spacing-*` key across every family that reads the shared spacing
+scale (`gap-*`/`p-*`/`m-*` but also `w-*`, `max-w-*`, `h-*`, `inset-*`, …), and `sm`/`lg` are also Tailwind's
+own default named keys for those other families — defining `--spacing-sm`/`--spacing-lg` silently overrode
+what `max-w-sm`, `h-lg`, etc. resolved to elsewhere in the app. See decision 053 for the concrete regression
+this caused and why the key was renamed instead of narrowing scope another way.
 
 Three categories are deliberately **not** migrated to these tokens (different concern, not an oversight):
 

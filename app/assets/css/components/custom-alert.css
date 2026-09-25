@@ -1,18 +1,18 @@
 @layer components {
   .custom-alert {
-    @apply flex gap-sm rounded-xl p-4 text-sm shadow-neu;
+    @apply flex gap-custom-sm rounded-xl p-4 text-sm shadow-neu;
   }
   .custom-alert__icon {
     @apply mt-0.5 shrink-0;
   }
   .custom-alert__body {
-    @apply flex flex-1 flex-col gap-sm;
+    @apply flex flex-1 flex-col gap-custom-sm;
   }
   .custom-alert__title {
     @apply block;
   }
   .custom-alert__content {
-    @apply flex flex-wrap items-center gap-sm;
+    @apply flex flex-wrap items-center gap-custom-sm;
   }
 
   .custom-alert--primary {

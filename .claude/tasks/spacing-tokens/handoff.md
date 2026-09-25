@@ -1,17 +1,21 @@
 # Handoff: spacing-tokens
 
 **Branch:** `feat/spacing-tokens` · **Base:** merged with `main` at `3c52325` on 2026-09-25 (was `e96aa05`) ·
-**Status:** merge commit in, unit gate + build green, `pnpm gate:push` currently RED on a pre-existing `main`
-e2e defect unrelated to this branch's own changes (see below) — not ready to push until that's resolved or
-explicitly accepted.
+**Status:** root cause of the e2e failure found and fixed (2026-09-25, see below) — `--spacing-sm`/`--spacing-lg`
+collided with Tailwind v4's own default `sm`/`lg` scale keys shared across all spacing-scale utility families.
+Tokens and every generated utility renamed to `custom-sm`/`custom-lg`. `pnpm gate:push` green, 5/5 e2e passing.
+Ready to push once the user gives explicit go-ahead (rule 06).
 
 ## Real state
 
-| Commit    | What                                                                    |
-| --------- | ----------------------------------------------------------------------- |
-| `b4c4fac` | `--spacing-sm: 0.5rem` / `--spacing-lg: 1.5rem` in `@theme`             |
-| `c18d3ba` | inter-element gaps/margins migrated to `*-sm` / `*-lg`                  |
-| `3c741d5` | merge `main` (36 commits ahead, incl. UX-redesign + 5 Dependabot bumps) |
+| Commit    | What                                                                                 |
+| --------- | ------------------------------------------------------------------------------------ |
+| `b4c4fac` | `--spacing-sm: 0.5rem` / `--spacing-lg: 1.5rem` in `@theme`                          |
+| `c18d3ba` | inter-element gaps/margins migrated to `*-sm` / `*-lg`                               |
+| `3c741d5` | merge `main` (36 commits ahead, incl. UX-redesign + 5 Dependabot bumps)              |
+| `4afc7d1` | handoff note (later corrected below) mis-attributing the e2e failure to `main` alone |
+| _(this)_  | root-cause fix: rename `--spacing-sm/lg` → `--spacing-custom-sm/lg` and every        |
+|           | generated utility (decision 053); catalog/standards updated; `pnpm gate:push` green  |
 
 Working tree clean except one untracked scratch file (see pendings).
 
@@ -43,36 +47,57 @@ resolution (token substitution kept, both sides' doc additions present). `pnpm-l
 - `nuxt build`: green.
 - `pnpm test:e2e` (Playwright, 5 tests): **2 failing** — `home renders CV sections` and `search, pick and wear
 a meme`, both on `expect(getByTestId('hero-image')).toBeVisible()` timing out with "Received: hidden".
-  Root cause traced (not fixed): with a cold `.nuxt`/Vite cache, `nuxt dev`'s Tailwind v4 JIT compiles
-  `.hero-section__figure`'s `max-w-sm` utility against `var(--spacing-sm)` (0.5rem = 8px) instead of the
-  expected `var(--container-sm)` (24rem), collapsing the figure to a padding-only 32px box and the image
-  inside it to 0×0. **Reproduced identically on plain `main` alone** (fresh `git worktree add` of `main`,
-  `pnpm install --frozen-lockfile`, cold cache, 3/3 runs failing) — this is a pre-existing `main` defect, not
-  something introduced by this branch's spacing tokens or by this merge. Survives a page reload (not a
-  warm-up race). Not investigated further: fixing a `main`-side Tailwind theme/dev-JIT bug is out of scope for
-  a merge-conflict-reconciliation task and needs its own story/contract.
+
+### Root cause — corrected (2026-09-25)
+
+The previous version of this handoff (commit `4afc7d1`) called this a pre-existing `main`-only Tailwind v4
+dev-JIT defect and left it unfixed as out of scope. **That was wrong** and was re-verified before writing this
+correction, not taken on faith:
+
+- `pnpm gate:push` on plain `main` (no spacing-token changes at all): **5/5 e2e green**.
+- `pnpm gate:push` on `main` merged with this branch's spacing-token changes: **2/5 e2e failing**, same
+  `hero-image` hidden failure.
+
+The regression is caused by this branch, not `main`. Tailwind v4 generates a utility for every key under
+`--spacing-*` across **every** utility family that draws from the shared spacing scale — not just
+`gap-*`/`p-*`/`m-*`, but also `w-*`, `max-w-*`, `min-w-*`, `h-*`, `inset-*`, etc. `sm`/`lg` are also
+Tailwind's own default named scale keys for those other families, so decision 050's `--spacing-sm: 0.5rem` /
+`--spacing-lg: 1.5rem` silently redefined what `max-w-sm` (and friends) resolve to everywhere, including
+`hero-section.css`'s pre-existing, unrelated `.hero-section__figure { max-w-sm }` (the hero photo frame's
+width) — collapsing it to 0.5rem instead of Tailwind's built-in container-scale value, which is why the
+`hero-image` test-id resolved as hidden.
+
+**Fix:** renamed the tokens and every generated utility this branch introduced from `sm`/`lg` to
+`custom-sm`/`custom-lg` (`--spacing-custom-sm`/`--spacing-custom-lg` in `tokens.css`; `gap-custom-sm`,
+`mb-custom-lg`, etc. across the same ~20 component CSS files) — full reasoning in
+`.claude/docs/decisions/053-spacing-tokens-avoid-tailwind-scale-collision.md`. This is an amendment to decision
+050's naming choice only; the two-tier concept, values and scope are unchanged. After the rename,
+`pnpm gate:push` is green end to end, `getByTestId('hero-image')` included — see the log snippet the AI
+reported alongside this commit.
 
 ## Contract criteria
 
-| #   | State   | Evidence                                                                                       |
-| --- | ------- | ---------------------------------------------------------------------------------------------- |
-| 1   | done    | `tokens.css` defines both tokens next to `--radius-*`                                          |
-| 2   | done    | ~20 component CSS files use `gap-sm`/`gap-lg`/`mb-sm`/`mb-lg`/`mt-lg`; exceptions kept         |
-| 3   | blocked | `pnpm gate:push` red on the pre-existing `main` e2e defect above (unit gate + build are green) |
-| 4   | done    | `docs/catalog/styles.md` row for `--spacing-sm/lg` + decision 050                              |
-| 5   | done    | `docs/standards/styling.md` covers sibling-element spacing                                     |
+| #   | State | Evidence                                                                                           |
+| --- | ----- | -------------------------------------------------------------------------------------------------- |
+| 1   | done  | `tokens.css` defines both tokens next to `--radius-*` (now `--spacing-custom-sm/lg`, decision 053) |
+| 2   | done  | ~20 component CSS files use `gap-custom-sm`/`gap-custom-lg`/`mb-custom-sm`/`mb-custom-lg`/etc.     |
+| 3   | done  | `pnpm gate:push` green — 5/5 e2e passing, `getByTestId('hero-image')` included                     |
+| 4   | done  | `docs/catalog/styles.md` row for `--spacing-custom-sm/lg` + decisions 050, 053                     |
+| 5   | done  | `docs/standards/styling.md` covers sibling-element spacing with the `custom-sm`/`custom-lg` names  |
 
 ## Decisions taken here
 
 - `--spacing-tight` / `--spacing-loose` rename was started in the working tree and **reverted** (2026-09-25,
   user's call): `sm`/`lg` already matches `--radius-sm/md/lg` and `--shadow-neu-sm/lg` in the same file and is
   what decision 050 records. Not revisited.
+- `--spacing-sm`/`--spacing-lg` → `--spacing-custom-sm`/`--spacing-custom-lg`, and every generated utility
+  renamed to match (decision 053, 2026-09-25): the plain `sm`/`lg` keys collided with Tailwind v4's own default
+  spacing-scale keys shared across `w-*`/`max-w-*`/`h-*`/etc., which is what broke `hero-section.css`'s
+  unrelated `max-w-sm`. This amends decision 050's naming only, not its scope or values.
 
 ## User pendings
 
-- Decide how to handle the pre-existing `main` e2e defect (hero image collapses under `nuxt dev`'s Tailwind
-  JIT on a cold cache) before this branch can go green end to end — separate story, or accept/skip for now.
 - Delete the leftover debug spec `e2e/_debug-tmp.spec.ts` (untracked; the `delete-test` hook blocks the AI
   from removing test files).
 - Push `feat/spacing-tokens` and open the PR (rule 06: push needs explicit permission, merge is user-only) —
-  hold until the e2e defect above is resolved or explicitly accepted.
+  the branch is green end to end now, holding only on the user's explicit go-ahead to push.

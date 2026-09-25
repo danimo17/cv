@@ -1,8 +1,8 @@
 @layer components {
   .contact-section__intro {
-    @apply mb-lg max-w-xl;
+    @apply mb-custom-lg max-w-xl;
   }
   .contact-section__actions {
-    @apply flex flex-wrap gap-sm;
+    @apply flex flex-wrap gap-custom-sm;
   }
 }

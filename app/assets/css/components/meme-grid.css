@@ -1,10 +1,10 @@
 @layer components {
   .meme-grid {
-    @apply flex flex-col gap-lg;
+    @apply flex flex-col gap-custom-lg;
   }
   .meme-grid__skeletons,
   .meme-grid__list {
-    @apply grid grid-cols-2 gap-sm sm:grid-cols-3 md:grid-cols-4;
+    @apply grid grid-cols-2 gap-custom-sm sm:grid-cols-3 md:grid-cols-4;
   }
   .meme-grid__state {
     @apply w-full;

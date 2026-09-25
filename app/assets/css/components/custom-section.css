@@ -6,12 +6,12 @@
     @apply mb-8;
   }
   .custom-section__eyebrow {
-    @apply mb-sm flex items-center gap-sm;
+    @apply mb-custom-sm flex items-center gap-custom-sm;
   }
   .custom-section__title {
     @apply block;
   }
   .custom-section__subtitle {
-    @apply mt-sm max-w-2xl;
+    @apply mt-custom-sm max-w-2xl;
   }
 }
