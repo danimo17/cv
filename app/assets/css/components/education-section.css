@@ -1,6 +1,9 @@
 @layer components {
   .education-section__list {
-    @apply flex flex-col gap-6;
+    @apply flex flex-col;
+  }
+  .education-section__list li:last-child .experience-item--compact {
+    @apply pb-0;
   }
   .education-section__subtitle {
     @apply mt-12 mb-6 flex items-center gap-2;

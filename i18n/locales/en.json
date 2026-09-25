@@ -21,7 +21,7 @@
   "hero": {
     "greeting": "Hi, I'm",
     "headline": "Frontend Developer",
-    "tagline": "Vue, Nuxt and all the frontend frameworks by day. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
+    "tagline": "Vue, Nuxt and all the frontend frameworks. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
     "location": {
       "hybrid": "Banyoles, Girona (hybrid, on-site by the Girona area) or remote",
       "remote": "Remote, worldwide"

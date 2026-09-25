@@ -21,7 +21,7 @@
   "hero": {
     "greeting": "Hola, soy",
     "headline": "Desarrollador Frontend",
-    "tagline": "Vue, Nuxt y todos los frameworks de frontend de día. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
+    "tagline": "Vue, Nuxt y todos los frameworks de frontend. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
     "location": {
       "hybrid": "Banyoles, Girona (híbrido, presencial por la zona de Girona) o remoto",
       "remote": "Remoto, en cualquier parte del mundo"
