@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Daniel Morales · Frontend Developer",
-    "description": "Frontend developer (Vue, Nuxt, Shopify) based in Girona. CV, stack, experience and a meme mode powered by Giphy.",
+    "description": "Frontend developer (Vue, Nuxt and all the frontend frameworks) based in Girona. CV, stack, experience and a meme mode powered by Giphy.",
     "memeTitle": "Meme mode",
     "memeDescription": "Swap my portrait for a Giphy meme. A small demo of useFetch, Pinia and client state in Nuxt."
   },
@@ -9,7 +9,7 @@
     "brand": "Daniel Morales",
     "main": "Main navigation",
     "home": "Home",
-    "meme": "Meme mode",
+    "meme": "Meme",
     "skipToContent": "Skip to content"
   },
   "theme": {
@@ -21,8 +21,11 @@
   "hero": {
     "greeting": "Hi, I'm",
     "headline": "Frontend Developer",
-    "tagline": "Vue, Nuxt and Shopify by day. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
-    "location": "Banyoles, Girona · hybrid or remote",
+    "tagline": "Vue, Nuxt and all the frontend frameworks. Readapting fast with AI: agentic pipelines, spec-driven development and quality gates.",
+    "location": {
+      "hybrid": "Banyoles, Girona (hybrid, on-site by the Girona area) or remote",
+      "remote": "Remote, worldwide"
+    },
     "openToWork": "Open to work",
     "cta": { "contact": "Get in touch" },
     "photoAlt": "Portrait of Daniel Morales",
@@ -50,7 +53,7 @@
       "motion": "JS & CSS animation",
       "uiux": "UI/UX",
       "ai": "AI",
-      "ml": "Machine learning"
+      "pastisseria": "Baking"
     }
   },
   "experience": {
@@ -136,12 +139,9 @@
   },
   "certifications": {
     "items": {
-      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
-      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
-      "amaltea": {
-        "title": "Introduction to equal opportunities in the workplace",
-        "note": "Amaltea Consultoría."
-      }
+      "cambridge": { "title": "C1 Advanced English" },
+      "esplai-cert": { "title": "PHP Junior Developer" },
+      "amaltea": { "title": "Introduction to equal opportunities in the workplace" }
     }
   },
   "contact": {
@@ -155,22 +155,22 @@
   "cv": { "download": "Download CV (PDF)" },
   "meme": {
     "kicker": "Meme mode",
-    "title": "Swap my face for a meme",
-    "intro": "Search Giphy, pick a GIF and wear it on the home page. It's a tiny demo of how this site handles data and state.",
+    "title": "Swap my face",
+    "intro": "Search Giphy, pick a GIF and wear it on the home page.",
     "how": {
       "title": "How it works",
       "steps": [
-        "Your search hits a Nuxt server route (/api/giphy/search) that talks to Giphy with a private key. The browser never sees the key.",
-        "A service defines the useFetch request and a Pinia store owns its state: pending, error and results are reactive.",
-        "Your pick lives in a Pinia store, so it survives navigating to the home page.",
-        "Reload the page and my real face is back: the store is in memory on purpose. State, not persistence."
+        "Search for a meme using any word — cat, monday, whatever you like.",
+        "Pick your favorite from the results.",
+        "Your photo on the home page turns into that meme.",
+        "Reload the page whenever you want your real photo back."
       ]
     },
     "currently": "You're currently wearing: {title}",
     "search": {
       "label": "Search GIFs",
       "placeholder": "cat, developer, monday…",
-      "button": "Search"
+      "searching": "Searching…"
     },
     "results": {
       "errorTitle": "Giphy didn't answer",
@@ -200,8 +200,8 @@
     "page": "Page {page} of {total}"
   },
   "footer": {
-    "built": "Built with Nuxt 4, Tailwind, Pinia and a bit of AI.",
-    "source": "Source code"
+    "copyright": "© {name} {year}",
+    "source": "- Github"
   },
   "banner": {
     "source": "This site is open source — read the code on GitHub",

@@ -1,23 +1,28 @@
 <script setup lang="ts">
 const { locale, locales, t } = useI18n()
 const switchLocalePath = useSwitchLocalePath()
+
+const options = computed(() =>
+  locales.value.map((item) => ({ value: item.code, label: item.name ?? item.code }))
+)
+
+function onLocaleChange(value: 'en' | 'ca' | 'es' | undefined) {
+  if (!value) return
+  const path = switchLocalePath(value)
+  if (path) navigateTo(path)
+}
 </script>
 
 <template>
-  <nav class="locale-switcher" :aria-label="t('locale.switch')">
-    <CustomLink
-      v-for="item in locales"
-      :key="item.code"
-      :to="switchLocalePath(item.code)"
-      :localize="false"
-      variant="subtle"
-      :class="['locale-switcher__item', { 'locale-switcher__item--active': item.code === locale }]"
-      :aria-current="item.code === locale ? 'true' : undefined"
-      :lang="item.code"
-      :title="item.name"
-      :data-testid="`locale-${item.code}`"
-    >
-      {{ item.code }}
-    </CustomLink>
-  </nav>
+  <CustomInput
+    id="locale-switcher"
+    class="locale-switcher"
+    type="select"
+    :label="t('locale.switch')"
+    hide-label
+    :options="options"
+    :model-value="locale"
+    data-testid="locale-switcher"
+    @update:model-value="onLocaleChange"
+  />
 </template>

@@ -11,7 +11,8 @@ export const education: TimelineItem[] = [
   {
     id: 'santander',
     section: 'education',
-    org: 'Santander X Explorer',
+    org: 'Santander',
+    location: 'Remote',
     start: '2021-03',
     end: '2021-05',
     tags: [],

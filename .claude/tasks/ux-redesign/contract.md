@@ -1,0 +1,71 @@
+# Contract: UX/content redesign pass
+
+**Story:** `story.md` · **Declared data sources (rule 02):** none (only the user's own CV facts, no company
+resources).
+
+Grounded in `Explore` research this session (header/nav, locale switcher, theme toggle, `CustomInput` select,
+meme feature/hero swap, timeline, certifications data, experience data, interests, footer, card elevation) —
+see the session transcript / `.claude/tasks/ux-redesign/handoff.md` once written. Grilled with the user:
+branch strategy (own branch, resolved) and whether the theme toggle also becomes a dropdown (no — stays a
+toggle, only resized).
+
+## Acceptance criteria
+
+| #   | Given / When / Then                                                                                                                                                                                                                                                                                                                               | Test that covers it                                                                                                              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Given the header, When rendered, Then the "Daniel Morales" brand text is gone, the nav links sit on the left, and the active-link style is visually distinct from today's pressed-button look while staying within the existing neumorphic language (a header-appropriate treatment, not the sunken-pill nav-link style reused elsewhere)         | manual review (`pnpm dev`) + screenshot                                                                                          |
+| 2   | Given `nav.home`/`nav.meme` i18n keys, When read in any of the 3 locales, Then they render the literal English words "Home" and "Meme" (not translated)                                                                                                                                                                                           | `tests/unit/i18n-parity.spec.ts` (keys still present in all 3 locales) + manual check of literal value                           |
+| 3   | Given every interactive control in the app (buttons, inputs, the locale switcher, the theme toggle), When compared, Then they all share one height token (the existing `md` control height, `h-10`)                                                                                                                                               | manual review (computed height via `javascript_tool` in the Browser pane)                                                        |
+| 4   | Given the locale switcher, When rendered, Then it is a custom (non-native) dropdown matching the app's visual style, exposed as a new `CustomInput` type (not a bespoke one-off component)                                                                                                                                                        | `tests/unit/components/CustomInput.spec.ts` (new type case) + manual                                                             |
+| 5   | Given the new dropdown type, When documented, Then `.claude/docs/standards/components.md` and `.claude/docs/catalog/components.md` describe it like every other `CustomInput` type (rule 07)                                                                                                                                                      | human review of the same commit's diff                                                                                           |
+| 6   | Given the profile/experience description text, When read, Then "Shopify" does not appear in descriptive/summary copy (job-history tags like "Shopify Plus" stay — they're factual skill tags, not descriptive prose) and a frontend-framework mention (Vue, Nuxt, "and all the frontend frameworks") appears instead, translated in all 3 locales | `tests/unit/i18n-parity.spec.ts` + manual read of the 3 locale files                                                             |
+| 7   | Given the profile data, When a structured work-mode field is added (on-site/hybrid limited to the Girona area, remote worldwide), Then it's a real typed field (not free text baked into `hero.location`) shown on the hero/profile section, in all 3 locales                                                                                     | `tests/unit/domain/period.spec.ts`-style unit test for the new field if logic is added; otherwise manual + i18n-parity           |
+| 8   | Given the neumorphic elevation system, When a card is NOT nested inside another card, Then it's raised by default; When it IS nested inside another (already-raised) card, Then it reads as sunken; When hovering the meme "swap" action, Then it visually presses in                                                                             | manual review (light + dark mode screenshots)                                                                                    |
+| 9   | Given `profile.ts` interests, When read, Then `'ml'` (machine learning) is removed and a `'pastisseria'` (baking) entry exists, with an i18n label in all 3 locales                                                                                                                                                                               | `tests/unit/i18n-parity.spec.ts`                                                                                                 |
+| 10  | Given a generic Timeline component (new, or `ExperienceItem` refactored into one), When multiple items render in a list, Then the connecting line is continuous between items (no visible gap in the `gap-8` list spacing)                                                                                                                        | manual review + existing `tests/unit/components/*` pattern for a new component if one is created                                 |
+| 11  | Given the Santander education entry, When rendered, Then the org line reads just "Santander" (title keeps the full "Santander X Explorer" programme name) and the location reads "Remote"                                                                                                                                                         | `tests/unit` fixture/spec covering `education.ts` data shape if one exists, else manual                                          |
+| 12  | Given the `certifications` entries (cambridge, esplai-cert, amaltea), When rendered, Then each shows exactly 2 lines (title + org), not 3 (today's duplicated org/note)                                                                                                                                                                           | manual review; `docs-sync` unaffected                                                                                            |
+| 13  | Given a new `h1`-`h6` heading scale added to `CustomText`, When applied across the home page's structural data levels (hero name, section titles, timeline item titles, org/company line), Then certifications' heading is visually coherent with the rest (fixes the reported inconsistency)                                                     | `tests/unit/components/CustomText.spec.ts` (new heading levels) + manual                                                         |
+| 14  | Given the footer, When rendered, Then it shows copyright + year (new) and no longer shows the "Built with Nuxt 4, Tailwind, Pinia and a bit of AI" line; the source/social links stay                                                                                                                                                             | `tests/unit/components/AppFooter.spec.ts` if one exists, else manual                                                             |
+| 15  | Given meme-mode cards (`MemeCard`/`MemeGrid`), When rendered, Then they use the same raised-by-default elevation system as the rest of the app (criterion 8), replacing their bespoke CSS                                                                                                                                                         | manual review                                                                                                                    |
+| 16  | Given the meme page's "How it works" card, When read, Then it contains no technical/implementation detail (code is in the repo already), explains the game and its effect in plain language, and includes a button linking to `/` to see the changed hero image                                                                                   | `tests/unit/components/MemeSearch.spec.ts`-adjacent or new `meme.vue` test if one exists, else manual + i18n-parity for new copy |
+| 17  | Given the meme search, When the user stops typing for 1.5s, Then it searches automatically and the explicit submit button is gone; When the meme page is read, Then its `<h1>` no longer says "Meme mode" (something like "Swap face") while the nav link still says "Meme" (criterion 2)                                                         | `tests/unit/components/MemeSearch.spec.ts` (debounce behavior, fake timers)                                                      |
+
+## Subagent assignments (rule 12)
+
+Grounded by main-thread research (file paths, existing patterns) before dispatch — see `handoff.md` for the
+live log. Two phases to avoid concurrent edits to shared files (i18n locales, catalog/standards docs, which
+the main thread owns and consolidates from each agent's report):
+
+| Phase | Subagent            | Criteria                    | Scope                                                                              |
+| ----- | ------------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| 1     | header-nav          | 1, 2                        | `AppHeader.vue` + css                                                              |
+| 1     | controls-dropdown   | 3, 4, 5                     | `LocaleSwitcher.vue` → `CustomInput type="select"`, `ThemeToggle.vue` height audit |
+| 1     | elevation-cards     | 8, 15                       | `CustomCard.vue`, `MemeCard.vue`, `MemeGrid.vue` + css                             |
+| 1     | footer              | 14                          | `AppFooter.vue` + css                                                              |
+| 1     | meme-search-copy    | 16, 17                      | `MemeSearch.vue`, `meme.vue` + css                                                 |
+| 1     | customtext-headings | 13 (primitive)              | `CustomText.vue` + css: add missing h4-h6 variants                                 |
+| 2     | timeline-experience | 10, 13 (apply)              | `ExperienceItem.vue`, `ExperienceSection.vue` + css                                |
+| 2     | cv-content-fixes    | 6, 7, 9, 11, 12, 13 (apply) | `profile.ts`, `education.ts`, `HeroSection.vue`, `EducationSection.vue` + css      |
+
+i18n locale values and `docs/catalog/{components,styles,i18n}.md` / `docs/standards/components.md` edits are
+NOT made by subagents — each reports the exact key/value or doc block it needs, main thread applies them
+once per phase (avoids concurrent writes to the same shared files) and runs `pnpm gate` before committing.
+
+## Standards to consult
+
+- `.claude/docs/standards/{components,styling,state,i18n,testing}.md`
+- `.claude/docs/catalog/{components,styles,i18n}.md`
+- `.claude/docs/decisions/025-neumorphism.md`, `026-custom-primitives.md`, `003-meme-picker.md`,
+  `004-meme-state-memory-only.md`, `010-home-sections.md`, `011-visual-style.md`
+
+## Open questions (each with a destination)
+
+- Exact wording for "Vue, Nuxt and all the frontend frameworks" in ca/es/en (criterion 6) → decided while
+  implementing, logged as a decision once the copy is final, not asked up front (low-stakes content wording).
+- Exact heading-level mapping for criterion 13 (which data level = h1 vs h2 vs h3 vs h4) → proposed by the
+  main thread while implementing, logged as a decision; only escalated to the user if it conflicts with an
+  existing decision (e.g. 011-visual-style.md).
+- New dropdown component's exact interaction pattern (native `<select>` visually restyled vs. a fully custom
+  `<details>`/ARIA listbox) → engineering call made while implementing (least code that keeps native
+  accessibility semantics — rung 3 of the ladder), logged as a decision, not asked up front.

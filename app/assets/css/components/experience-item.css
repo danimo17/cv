@@ -1,10 +1,16 @@
 @layer components {
   .experience-item {
-    @apply relative grid gap-1 border-l-2 border-border pl-6 sm:grid-cols-[9rem_1fr] sm:gap-6;
+    @apply relative ml-2 grid gap-1 border-l-2 border-border pl-6 sm:grid-cols-[9rem_1fr] sm:gap-6;
+  }
+  .experience-item--detailed {
+    @apply pb-8;
+  }
+  .experience-item--compact {
+    @apply pb-8;
   }
   .experience-item::before {
     content: '';
-    @apply absolute top-1 -left-[9px] size-4 rounded-full bg-primary shadow-neu-sm;
+    @apply absolute top-1 -left-[7px] size-4 rounded-full bg-primary shadow-neu-sm;
   }
   .experience-item--compact::before {
     @apply bg-neutral;

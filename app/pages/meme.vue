@@ -53,6 +53,9 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
           {{ step }}
         </CustomText>
       </ol>
+      <CustomButton size="sm" variant="outline" icon="arrow-left" to="/" class="meme-page__how-cta">
+        {{ t('meme.goHome') }}
+      </CustomButton>
     </CustomCard>
 
     <CustomAlert
@@ -76,6 +79,8 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
 
     <MemeSearch :loading="giphy.status === 'pending'" :initial="giphy.query" @search="onSearch" />
 
+    <MemeRecentSearches :terms="giphy.history" @select="onSearch" />
+
     <MemePreview v-if="candidate" :meme="candidate" @use="wear" @cancel="candidate = null" />
 
     <MemeGrid
@@ -87,8 +92,6 @@ useSeoMeta({ title: t('meta.memeTitle'), description: t('meta.memeDescription') 
     />
 
     <CustomPagination v-model:page="page" :total="giphy.total" :per-page="giphy.limit" />
-
-    <MemeRecentSearches :terms="giphy.history" @select="onSearch" />
 
     <CustomText as="p" variant="caption" tone="muted" class="meme-page__credit">
       {{ t('meme.poweredBy') }}

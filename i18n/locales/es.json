@@ -1,15 +1,15 @@
 {
   "meta": {
     "title": "Daniel Morales · Desarrollador Frontend",
-    "description": "Desarrollador frontend (Vue, Nuxt, Shopify) en Girona. CV, stack, experiencia y un modo meme impulsado por Giphy.",
+    "description": "Desarrollador frontend (Vue, Nuxt y todos los frameworks de frontend) en Girona. CV, stack, experiencia y un modo meme impulsado por Giphy.",
     "memeTitle": "Modo meme",
     "memeDescription": "Cambia mi retrato por un meme de Giphy. Una pequeña demo de useFetch, Pinia y estado de cliente en Nuxt."
   },
   "nav": {
     "brand": "Daniel Morales",
     "main": "Navegación principal",
-    "home": "Inicio",
-    "meme": "Modo meme",
+    "home": "Home",
+    "meme": "Meme",
     "skipToContent": "Saltar al contenido"
   },
   "theme": {
@@ -21,8 +21,11 @@
   "hero": {
     "greeting": "Hola, soy",
     "headline": "Desarrollador Frontend",
-    "tagline": "Vue, Nuxt y Shopify de día. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
-    "location": "Banyoles, Girona · híbrido o remoto",
+    "tagline": "Vue, Nuxt y todos los frameworks de frontend. Readaptándome rápido con la IA: pipelines agénticos, desarrollo guiado por especificaciones y quality gates.",
+    "location": {
+      "hybrid": "Banyoles, Girona (híbrido, presencial por la zona de Girona) o remoto",
+      "remote": "Remoto, en cualquier parte del mundo"
+    },
     "openToWork": "Abierto a ofertas",
     "cta": { "contact": "Contacta conmigo" },
     "photoAlt": "Retrato de Daniel Morales",
@@ -50,7 +53,7 @@
       "motion": "Animación con JS y CSS",
       "uiux": "UI/UX",
       "ai": "IA",
-      "ml": "Machine learning"
+      "pastisseria": "Repostería"
     }
   },
   "experience": {
@@ -136,12 +139,9 @@
   },
   "certifications": {
     "items": {
-      "cambridge": { "title": "C1 Advanced English", "note": "University of Cambridge." },
-      "esplai-cert": { "title": "PHP Junior Developer", "note": "Fundación Esplai." },
-      "amaltea": {
-        "title": "Introducción a la igualdad de oportunidades en el entorno laboral",
-        "note": "Amaltea Consultoría."
-      }
+      "cambridge": { "title": "C1 Advanced English" },
+      "esplai-cert": { "title": "PHP Junior Developer" },
+      "amaltea": { "title": "Introducción a la igualdad de oportunidades en el entorno laboral" }
     }
   },
   "contact": {
@@ -155,22 +155,22 @@
   "cv": { "download": "Descargar CV (PDF)" },
   "meme": {
     "kicker": "Modo meme",
-    "title": "Cambia mi cara por un meme",
-    "intro": "Busca en Giphy, elige un GIF y póntelo en la página de inicio. Es una pequeña demo de cómo este sitio gestiona datos y estado.",
+    "title": "Cambia mi cara",
+    "intro": "Busca en Giphy, elige un GIF y póntelo en la página de inicio.",
     "how": {
       "title": "Cómo funciona",
       "steps": [
-        "Tu búsqueda llega a una ruta de servidor de Nuxt (/api/giphy/search) que habla con Giphy con una clave privada. El navegador nunca ve la clave.",
-        "Un servicio define la petición useFetch y un store de Pinia guarda su estado: pending, error y resultados son reactivos.",
-        "Tu elección vive en un store de Pinia, así que sobrevive a la navegación hacia la página de inicio.",
-        "Recarga la página y vuelve mi cara real: el store está en memoria a propósito. Estado, no persistencia."
+        "Busca un meme con la palabra que quieras: gato, lunes, lo que sea.",
+        "Elige tu favorito entre los resultados.",
+        "Tu foto en la página de inicio se convierte en ese meme.",
+        "Recarga la página cuando quieras recuperar tu foto real."
       ]
     },
     "currently": "Ahora mismo llevas: {title}",
     "search": {
       "label": "Buscar GIFs",
       "placeholder": "gato, developer, lunes…",
-      "button": "Buscar"
+      "searching": "Buscando…"
     },
     "results": {
       "errorTitle": "Giphy no ha respondido",
@@ -200,8 +200,8 @@
     "page": "Página {page} de {total}"
   },
   "footer": {
-    "built": "Hecho con Nuxt 4, Tailwind, Pinia y un poco de IA.",
-    "source": "Código fuente"
+    "copyright": "© {name} {year}",
+    "source": "- Github"
   },
   "banner": {
     "source": "Esta web es de código abierto — lee el código en GitHub",

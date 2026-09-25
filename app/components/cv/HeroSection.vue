@@ -28,7 +28,7 @@ const alt = computed(() =>
       <div class="hero-section__meta">
         <CustomText as="span" variant="small" tone="muted" class="hero-section__meta-item">
           <CustomIcon name="location-dot" size="sm" />
-          {{ t('hero.location') }}
+          {{ t(`hero.location.${profile.workMode}`) }}
         </CustomText>
         <CustomBadge tone="success" icon="circle-check">{{ t('hero.openToWork') }}</CustomBadge>
       </div>
