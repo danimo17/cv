@@ -17,7 +17,6 @@ const { t } = useI18n()
       </li>
     </ol>
     <CustomText as="h3" variant="h3" weight="semibold" class="education-section__subtitle">
-      <CustomIcon name="certificate" size="sm" />
       {{ t('education.certifications') }}
     </CustomText>
     <ol class="education-section__list">

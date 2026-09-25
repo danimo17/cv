@@ -686,8 +686,8 @@ reduce` there is no animation and only the first copy is visible. `div` containe
 ### EducationSection
 
 - **Path**: `app/components/cv/EducationSection.vue`
-- **Purpose**: `#education` section: education and, under a subtitle (`CustomText h3 lead semibold` + `certificate`
-  icon), certifications; all via `ExperienceItem` `compact`.
+- **Purpose**: `#education` section: education and, under a subtitle (`CustomText h3 semibold`, no icon — rule
+  16, no other in-section subtitle in the project has one), certifications; all via `ExperienceItem` `compact`.
 - **Props**: none.
 - **Variants/classes**: `.education-section` (root), `__list`, `__subtitle`.
 - **Slots**: none.
