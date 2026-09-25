@@ -1,12 +1,13 @@
 <script setup lang="ts">
 const { t } = useI18n()
+const year = computed(() => new Date().getFullYear())
 </script>
 
 <template>
   <footer class="app-footer">
     <div class="app-footer__inner">
       <CustomText as="p" variant="small" tone="muted">
-        {{ t('footer.built') }}
+        {{ t('footer.copyright', { name: profile.name, year }) }}
         <CustomLink :href="profile.repo" variant="inline" class="app-footer__source">
           {{ t('footer.source') }}
         </CustomLink>

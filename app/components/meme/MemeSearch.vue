@@ -7,6 +7,7 @@ const emit = defineEmits<{ search: [query: string] }>()
 
 const { t } = useI18n()
 const query = ref(props.initial)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(
   () => props.initial,
@@ -15,14 +16,22 @@ watch(
   }
 )
 
-function submit() {
-  const q = query.value.trim()
-  if (q) emit('search', q)
-}
+watch(query, (value) => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  const trimmed = value.trim()
+  if (!trimmed) return
+  debounceTimer = setTimeout(() => {
+    emit('search', trimmed)
+  }, 1500)
+})
+
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+})
 </script>
 
 <template>
-  <form class="meme-search" role="search" @submit.prevent="submit">
+  <form class="meme-search" role="search" @submit.prevent>
     <CustomInput
       id="meme-query"
       v-model="query"
@@ -33,14 +42,15 @@ function submit() {
       type="search"
       hide-label
     />
-    <CustomButton
-      type="submit"
-      icon="magnifying-glass"
-      :loading="loading"
-      :disabled="!query.trim()"
-      data-testid="meme-search-submit"
+    <CustomText
+      v-if="loading"
+      as="span"
+      variant="caption"
+      tone="muted"
+      class="meme-search__status"
+      data-testid="meme-search-loading"
     >
-      {{ t('meme.search.button') }}
-    </CustomButton>
+      {{ t('meme.search.searching') }}
+    </CustomText>
   </form>
 </template>

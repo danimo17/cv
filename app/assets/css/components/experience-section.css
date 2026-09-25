@@ -1,5 +1,8 @@
 @layer components {
   .experience-section__list {
-    @apply flex flex-col gap-8;
+    @apply flex flex-col;
+  }
+  .experience-section__list li:last-child .experience-item--detailed {
+    @apply pb-0;
   }
 }

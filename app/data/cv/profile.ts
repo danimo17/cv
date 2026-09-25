@@ -5,5 +5,6 @@ export const profile = {
   linkedin: 'https://www.linkedin.com/in/uptivya',
   repo: 'https://github.com/danimo17/cv',
   languages: ['ca', 'es', 'en', 'ja'],
-  interests: ['frontend', 'threejs', 'motion', 'uiux', 'ai', 'ml'],
+  interests: ['frontend', 'threejs', 'motion', 'uiux', 'ai', 'pastisseria'],
+  workMode: 'hybrid' as WorkMode,
 } as const

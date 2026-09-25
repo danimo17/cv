@@ -1,6 +1,6 @@
 @layer components {
   .custom-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-surface font-medium whitespace-nowrap shadow-neu transition-shadow select-none hover:shadow-neu-sm active:shadow-neu-inset disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-neu-sm;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-surface font-medium whitespace-nowrap shadow-neu transition-shadow select-none hover:shadow-neu-sm active:shadow-neu-inset disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-neu-sm;
   }
   .custom-button--block {
     @apply flex w-full;

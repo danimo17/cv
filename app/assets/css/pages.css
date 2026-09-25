@@ -27,4 +27,7 @@
   .meme-page__steps {
     @apply list-decimal space-y-2 pl-5;
   }
+  .meme-page__how-cta {
+    @apply mt-4;
+  }
 }

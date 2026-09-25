@@ -16,8 +16,7 @@ const { t } = useI18n()
         <ExperienceItem :item="item" variant="compact" />
       </li>
     </ol>
-    <CustomText as="h3" variant="lead" weight="semibold" class="education-section__subtitle">
-      <CustomIcon name="certificate" size="sm" />
+    <CustomText as="h3" variant="h3" weight="semibold" class="education-section__subtitle">
       {{ t('education.certifications') }}
     </CustomText>
     <ol class="education-section__list">

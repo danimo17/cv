@@ -15,3 +15,4 @@
 - [ ] **Living docs (027):** the catalog was consulted before creating anything; every new prop/value is documented with its class.
 - [ ] **Subagents (12):** the handoff states who did what.
 - [ ] **Accessibility:** visible focus, `aria-*` on icon buttons, token contrast in dark mode.
+- [ ] **UI pattern consistency (16):** every other place playing the same role (section titles, timeline items, cards, controls) was checked and matches, or the difference is a logged decision.

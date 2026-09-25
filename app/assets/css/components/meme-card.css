@@ -1,6 +1,6 @@
 @layer components {
   .meme-card {
-    @apply relative aspect-square h-auto w-full overflow-hidden rounded-xl bg-surface p-0 shadow-neu transition-shadow hover:shadow-neu-lg active:shadow-neu-inset;
+    @apply relative aspect-square h-auto w-full overflow-hidden rounded-xl bg-surface p-0 shadow-neu transition-shadow hover:shadow-neu-inset active:shadow-neu-inset;
   }
   .meme-card--selected,
   .meme-card--selected:hover {

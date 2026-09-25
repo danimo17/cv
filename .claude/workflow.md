@@ -36,9 +36,15 @@ story → contract → build ⟲ iterate → consolidate (gate) → validate →
 12. **Verify deploy** (decision 042) — mandatory, not skippable: `gh run list --branch main --limit 1
 --workflow deploy.yml` (or the equivalent in the GitHub UI) until the run for this merge shows `success`.
     A failed run is treated as an open bug on the active task, not a footnote — fix it before closing.
-13. **Close** — only after step 12 confirms green: promote what is durable (`docs/standards/`,
-    `docs/decisions/`, `docs/catalog/`), delete `.claude/tasks/<slug>/`, clear `ACTIVE`, mark `done` in the
-    backlog.
+13. **Close** — only after step 12 confirms green: fill `.claude/templates/close-checklist.md`'s copy at
+    `.claude/tasks/<slug>/close-checklist.md` (every box, verified, not assumed — contract criteria, real
+    `gate:push` output, PR merge link+SHA, deploy run, decisions/catalog/standards promoted, no open rule-11
+    conflict, backlog row). Then, in one commit: stage the fully-checked checklist as
+    `.claude/tasks/closed/<slug>.md` (new file, never deleted — the permanent record), delete
+    `.claude/tasks/<slug>/`, clear `ACTIVE` (empty is a valid state — no need to immediately open the next
+    task), mark `done` in the backlog. `require-contract.py` (task-close-gate, decision 051) blocks this
+    commit if the archive is missing or has any unchecked box — "I promoted everything" is enforced, not
+    trusted.
 
 ## Gates (what blocks what)
 
