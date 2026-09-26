@@ -75,6 +75,27 @@ width) — collapsing it to 0.5rem instead of Tailwind's built-in container-scal
 `pnpm gate:push` is green end to end, `getByTestId('hero-image')` included — see the log snippet the AI
 reported alongside this commit.
 
+## Subagents (rule 12)
+
+| Subagent              | What it did                                                                                                                                                    | Result                                                                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| spacing-migration     | Grepped every component CSS file for in-scope `gap-`/`mb-`/`mt-`/`space-y-`/`space-x-` values, replaced with `-sm`/`-lg` (original naming, pre-rename)         | Done, `c18d3ba`                                                                                                                                |
+| spacing-tokens-merge  | Merged `main` (36 commits ahead) into this branch, resolved 4 real conflicts by reapplying the token substitution to main's current content                    | Done, `3c741d5`; wrongly attributed the resulting e2e failure to `main` alone in its own handoff note (corrected by the main thread afterward) |
+| spacing-tokens-rename | Renamed `--spacing-sm/lg` → `--spacing-custom-sm/lg` and every generated utility across ~20 files, updated docs, wrote decision 053, verified `pnpm gate:push` | Done, `1d63df4`; verified independently by the main thread (not taken on faith) before being accepted                                          |
+
+## Review (workflow step 8, rule 09)
+
+Review checklist (`.claude/templates/review-checklist.md`) run 2026-09-26 over the full `main...HEAD` diff:
+secrets/company/giphy/PII/i18n — n/a (pure CSS token + docs change); branch correct; catalog/decisions updated
+(confirmed, one stale cross-reference found and fixed — see below); gates green; contract criteria each have
+named evidence above; primitives/accessibility — n/a (no template or color changes); UI pattern consistency
+(16) — the whole point of this task is one consistent convention applied everywhere.
+
+`/code-review` (medium effort) result: 1 finding — `.claude/docs/catalog/styles.md`'s spacing-token exceptions
+list still cited `experience-section.css`'s `gap-8`, which no longer exists there (removed by the unrelated
+`ux-redesign` timeline fix after decision 050 was written, cross-reference never updated). Fixed in this same
+commit.
+
 ## Contract criteria
 
 | #   | State | Evidence                                                                                           |

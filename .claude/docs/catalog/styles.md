@@ -69,7 +69,7 @@ Three categories are deliberately **not** migrated to these tokens (different co
   (`custom-section.css`/`hero-section.css`'s `py-12/16/24`).
 - Control-internal padding governed by the `Size` scale: `custom-button.css`, `custom-input.css` (untouched).
 - Values that don't cleanly land in either bucket (0.25–0.75rem vs 1–1.5rem) are left as raw Tailwind
-  utilities rather than forced: `about-section.css`/`experience-section.css`'s `gap-8` (2rem),
+  utilities rather than forced: `about-section.css`'s `gap-8` (2rem),
   `hero-section.css`'s `gap-10` grid gap and one `mt-8` (2rem), `custom-section.css__header`'s `mb-8` (2rem),
   `education-section.css__subtitle`'s `mt-12` (3rem), `app-footer.css`'s page-to-footer `mt-8`, and
   `custom-alert.css__icon`'s `mt-0.5` (icon-alignment nudge, not inter-element spacing). Revisit only if a
