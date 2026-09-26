@@ -28,3 +28,34 @@ commit-time check:
 section before it can be pushed at all. `.claude/hard-rules.md` rule 09, `.claude/rules/09-gates.md`, and
 `workflow.md` steps 8-9 updated to describe the real mechanism instead of prose-only "review right before the
 PR."
+
+**Fixed during `/code-review` (high effort), same session, before this shipped:**
+
+- The check originally read `handoff.md` off the working tree (`open(...)`), which meant a push could be
+  satisfied by an uncommitted edit — the pushed history would never contain the review evidence the gate
+  exists to require. Changed to `git show HEAD:<path>`, so it inspects what was actually committed.
+- The branch-name resolution (`git rev-parse --abbrev-ref HEAD`) and its subprocess call had no error
+  handling, unlike every other subprocess/file call in this script; both now guard against `OSError` and
+  decode failures (`errors="replace"`), matching the file's existing convention.
+
+**Known, accepted limitations (not fixed — documented honestly per rule 19, not silently left as a gap):**
+
+- The "code-review ran" check is a bare case-insensitive substring match on "code-review" — it has no way to
+  tell a genuine run from prose that merely mentions the word, including a sentence describing that review was
+  _skipped_. Making this airtight would mean parsing intent from free text, which isn't realistic for a regex-
+  based hook; the story already scopes "is the content genuinely true" as human judgment, and this is the same
+  limit applied to the "did it run at all" claim, not a new one.
+- The gate is keyed on `branch.startswith("feat/")` using the checked-out ref, not the actual push target — a
+  detached-HEAD push with an explicit refspec (`git push origin feat/x:feat/y`) bypasses it, as does any
+  `chore/close-<slug>` push made before the closing commit clears `ACTIVE`. Both require a deliberately unusual
+  git incantation in a solo-maintainer project; narrowing this further is deferred rather than adding
+  speculative complexity for an attack a human would have to construct on purpose against their own repo.
+- The unchecked-box regex (`-\s\[\s\]`, shared with `task-close-gate`) expects exactly one whitespace character
+  inside the brackets and the top-level `GIT` regex expects `commit`/`push` immediately after `git` — both
+  pre-existing limitations this task inherited rather than introduced, left as-is rather than hardened
+  speculatively.
+- **Retroactive effect on already-existing branches**: any branch with `ACTIVE` set and no `## Review` section
+  in its `handoff.md` (e.g. `feat/composable-store-regions`, written before this gate existed) will be blocked
+  on its very next push, with no exemption for having started before the rule did. This is the same trade-off
+  `task-close-gate` made — the alternative (versioning which branches are grandfathered) is more complexity
+  than a solo-maintainer project's occasional stale branch warrants.

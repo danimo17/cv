@@ -132,9 +132,13 @@ if any(sub == "push" for sub, _ in hits):
         slug = ""
 
     if slug:
-        branch = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True, text=True,
-        ).stdout.strip()
+        try:
+            branch = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                cwd=root, capture_output=True, text=True, errors="replace",
+            ).stdout.strip()
+        except OSError:
+            branch = ""
 
         if branch.startswith("feat/"):
 
@@ -146,12 +150,18 @@ if any(sub == "push" for sub, _ in hits):
                 )
                 sys.exit(2)
 
-            handoff = os.path.join(root, ".claude", "tasks", slug, "handoff.md")
-            if not os.path.isfile(handoff):
-                block(f".claude/tasks/{slug}/handoff.md doesn't exist — the ## Review section is missing")
+            handoff_path = f".claude/tasks/{slug}/handoff.md"
+            try:
+                show = subprocess.run(
+                    ["git", "show", f"HEAD:{handoff_path}"],
+                    cwd=root, capture_output=True, text=True, errors="replace",
+                )
+            except OSError:
+                show = None
+            if show is None or show.returncode != 0:
+                block(f"{handoff_path} doesn't exist in the last commit — the ## Review section is missing")
 
-            with open(handoff, encoding="utf-8") as f:
-                content = f.read()
+            content = show.stdout
 
             section_lines = []
             in_section = False

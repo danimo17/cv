@@ -1,6 +1,6 @@
 # 19 · "Ensure" means a technical check, not a promise
 
-**What.** When the user says "make sure", "assegura't", "ensure", or gives an equivalent instruction that
+**What.** When the user says "make sure", "ensure", or gives an equivalent instruction (in any language) that
 something always happens a certain way, the answer is never "I'll remember to" or "I'll try to." It's a
 concrete, technically verifiable mechanism — a hook, a gate, a test, a file the next step is forced to read —
 that holds regardless of whether the AI remembers, is paying attention, or is even the one carrying out the

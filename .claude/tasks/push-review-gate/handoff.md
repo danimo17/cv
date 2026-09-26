@@ -47,19 +47,35 @@ Review checklist (`.claude/templates/review-checklist.md`) run over the full bra
 - [x] Subagents (12) — table above
 - [x] UI pattern consistency (16) — n/a, no UI
 
-`/code-review`: main thread read the subagent's full diff directly rather than a formal multi-angle pass
-(small, mechanical, single-file logic change) and found one real issue: the subagent implemented the push
-branch as `elif any(sub == "push"...)`, sibling to the commit `if` — meaning a combined
-`git commit -m x && git push` command would have the commit branch's match suppress the push check entirely
-(both "commit" and "push" appear as regex hits; `elif` only evaluates when the `if` was false). Fixed by
-changing to a second independent `if`, verified via `python3 -c "import ast; ast.parse(...)"` for syntax and a
-live invocation against this session's real hook config (which correctly blocked the test push, confirming
-the check fires).
+`/code-review` (high effort, full 8-angle run via 5 parallel subagents, verified by the main thread) over the
+full `main...HEAD` diff. 10 findings survived verification, ranked by severity in `ReportFindings`:
+
+- **Fixed**: push-gate read `handoff.md` off the working tree, so an uncommitted edit could satisfy it while
+  the pushed history stayed empty — changed to `git show HEAD:<path>` (reads what was actually committed).
+- **Fixed**: `git rev-parse`/`git show` subprocess calls and the handoff read had no error handling, unlike
+  the rest of the file — both now guard `OSError` and decode failures.
+- **Fixed**: rule 19 itself used the Catalan word "assegura't", violating rule 13 (English-only) — removed.
+- **Documented as an accepted limitation, not fixed** (decision 054): the "code-review ran" check is a bare
+  substring match with no polarity check — this task's own first handoff wording happened to satisfy it while
+  describing a lighter manual pass, not a real `/code-review` run (ironic, self-caught); the branch-prefix gate
+  keys off checked-out HEAD not the actual push target (detached-HEAD/explicit-refspec bypass, and a
+  `chore/close-*` window before `ACTIVE` clears); two pre-existing regex limitations (whitespace-sensitive
+  unchecked-box pattern, `git <flags> push` not matching the top-level command regex) that this task inherited
+  rather than introduced. All four are deliberate, honestly-stated trade-offs for a solo-maintainer project,
+  not gaps found later.
+- **Flagged, not this task's to fix**: `feat/composable-store-regions` (a live branch from earlier this
+  session) has `ACTIVE` set and no `handoff.md` at all — its next push will be blocked by this new gate. Noted
+  under Pending below rather than fixed here (cross-branch, rule 18 — asking before touching another branch's
+  files mid-task).
+- 6 lower-severity code-quality findings (duplicated section-extraction/unchecked-box logic between the
+  commit-side and push-side checks, a few redundant syscalls) were reported but not fixed — real, but cosmetic;
+  tracked as a `require-contract.py` refactor opportunity, not blocking.
 
 ## Pending on the user
 
-None blocking. `.claude/docs/catalog/ai-workflow.md`'s hook table was updated for this task's new check before
-this handoff was finalized (rule 07) — no longer pending.
+| #   | What                                                                                                                                                                 | Blocks              | Status  |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------- |
+| 1   | `feat/composable-store-regions` needs a `handoff.md` with a filled `## Review` section before it can be pushed under this new gate — separate branch, not fixed here | pushing that branch | pending |
 
 ## Post-merge deploy check (decision 042, only after the user merges)
 
