@@ -122,4 +122,68 @@ if any(sub == "commit" for sub, _ in hits):
         )
         sys.exit(2)
 
+if any(sub == "push" for sub, _ in hits):
+    root = os.environ.get("CLAUDE_PROJECT_DIR", ".")
+
+    try:
+        with open(os.path.join(root, ".claude", "tasks", "ACTIVE"), encoding="utf-8") as f:
+            slug = f.read().strip()
+    except OSError:
+        slug = ""
+
+    if slug:
+        branch = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True, text=True,
+        ).stdout.strip()
+
+        if branch.startswith("feat/"):
+
+            def block(reason):
+                print(
+                    f"Rule 09 (push-review-gate): {reason}. Fill .claude/tasks/{slug}/handoff.md's "
+                    "## Review section per .claude/templates/handoff.md before pushing — workflow step 8.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+
+            handoff = os.path.join(root, ".claude", "tasks", slug, "handoff.md")
+            if not os.path.isfile(handoff):
+                block(f".claude/tasks/{slug}/handoff.md doesn't exist — the ## Review section is missing")
+
+            with open(handoff, encoding="utf-8") as f:
+                content = f.read()
+
+            section_lines = []
+            in_section = False
+            for line in content.splitlines():
+                if re.match(r"^## Review\b", line):
+                    in_section = True
+                    continue
+                if in_section:
+                    if re.match(r"^## ", line):
+                        break
+                    section_lines.append(line)
+
+            if not in_section:
+                block(f".claude/tasks/{slug}/handoff.md has no ## Review section")
+
+            unchecked = [
+                (i, line.strip())
+                for i, line in enumerate(section_lines, start=1)
+                if re.search(r"-\s\[\s\]", line)
+            ]
+            if unchecked:
+                items = "; ".join(f"line {i}: {text}" for i, text in unchecked)
+                block(
+                    f".claude/tasks/{slug}/handoff.md's ## Review section has {len(unchecked)} "
+                    f"unchecked item(s): {items}"
+                )
+
+            section_text = "\n".join(section_lines)
+            if not re.search(r"code-review", section_text, re.IGNORECASE):
+                block(
+                    f".claude/tasks/{slug}/handoff.md's ## Review section never mentions code-review "
+                    "having run"
+                )
+
 sys.exit(0)
