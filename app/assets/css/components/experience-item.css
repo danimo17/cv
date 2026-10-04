@@ -1,6 +1,6 @@
 @layer components {
   .experience-item {
-    @apply relative ml-2 grid gap-custom-sm border-l-2 border-border pl-6 sm:grid-cols-[9rem_1fr] sm:gap-custom-lg;
+    @apply relative ml-2 grid gap-1 border-l-2 border-border pl-6 sm:grid-cols-[9rem_1fr] sm:gap-custom-lg;
   }
   .experience-item--detailed {
     @apply pb-8;
@@ -16,15 +16,15 @@
     @apply bg-neutral;
   }
   .experience-item__body {
-    @apply flex flex-col gap-custom-sm;
+    @apply flex flex-col gap-1;
   }
   .experience-item__org {
     @apply flex flex-wrap items-center gap-x-custom-sm;
   }
   .experience-item__bullets {
-    @apply mt-custom-sm list-disc space-y-custom-sm pl-5;
+    @apply mt-custom-sm list-disc space-y-1 pl-5;
   }
   .experience-item__tags {
-    @apply mt-custom-sm flex flex-wrap gap-custom-sm;
+    @apply mt-custom-sm flex flex-wrap gap-1.5;
   }
 }

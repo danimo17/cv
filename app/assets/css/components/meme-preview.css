@@ -9,7 +9,7 @@
     @apply flex flex-col justify-center;
   }
   .meme-preview__meta {
-    @apply mt-custom-sm;
+    @apply mt-1;
   }
   .meme-preview__actions {
     @apply mt-custom-lg flex flex-wrap gap-custom-sm;

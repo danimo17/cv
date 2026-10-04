@@ -15,7 +15,7 @@
     @apply mt-custom-lg flex flex-wrap items-center gap-custom-sm;
   }
   .hero-section__meta-item {
-    @apply inline-flex items-center gap-custom-sm;
+    @apply inline-flex items-center gap-1.5;
   }
   .hero-section__actions {
     @apply mt-8 flex flex-wrap gap-custom-sm;

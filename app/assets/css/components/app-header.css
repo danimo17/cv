@@ -6,7 +6,7 @@
     @apply mx-auto flex h-16 max-w-5xl items-center justify-between gap-custom-lg px-4 sm:px-6;
   }
   .app-header__nav {
-    @apply flex items-center gap-custom-sm;
+    @apply flex items-center gap-1;
   }
   .app-header__link.app-header__link--active {
     @apply bg-surface text-primary shadow-neu-sm hover:text-primary;

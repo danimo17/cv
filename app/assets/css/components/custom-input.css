@@ -46,10 +46,10 @@
     @apply m-0 min-w-0 border-0 p-0;
   }
   .custom-input__options {
-    @apply mt-1.5 flex flex-wrap gap-x-4 gap-y-2;
+    @apply mt-1.5 flex flex-wrap gap-x-custom-lg gap-y-custom-sm;
   }
   .custom-input__option {
-    @apply inline-flex items-center gap-2;
+    @apply inline-flex items-center gap-custom-sm;
   }
   .custom-input__radio,
   .custom-input__checkbox {

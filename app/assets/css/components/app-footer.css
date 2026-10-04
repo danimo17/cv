@@ -6,6 +6,6 @@
     @apply mx-auto flex max-w-5xl flex-col items-center justify-between gap-custom-lg px-4 sm:flex-row sm:px-6;
   }
   .app-footer__links {
-    @apply flex items-center gap-custom-sm;
+    @apply flex items-center gap-1;
   }
 }
