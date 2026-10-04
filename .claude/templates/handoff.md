@@ -23,6 +23,17 @@ pnpm gate → …
 
 Not covered: …
 
+## Review (workflow step 8, rule 09)
+
+Review checklist (`.claude/templates/review-checklist.md`) run over the full branch diff:
+
+- [ ] Secrets/company/giphy/PII/i18n/branch/catalog/CSS/gates/contract/decisions/primitives/living-docs/
+      subagents/accessibility/UI-consistency — go through every line of the template, mark n/a where a
+      category doesn't apply to this diff, otherwise checked
+
+`/code-review` result: <effort level>, <N findings, outcome of each — fixed / no_change_needed / left as
+backlog with a reason>.
+
 ## Pending on the user
 
 | #   | What | Blocks | Status  |

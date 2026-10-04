@@ -2,19 +2,24 @@ export const DEFAULT_GIPHY_LIMIT = 12
 const HISTORY_SIZE = 5
 
 export const useGiphyStore = defineStore('giphy', () => {
+  // #region State
   const query = ref('')
   const limit = ref(DEFAULT_GIPHY_LIMIT)
   const offset = ref(0)
   const history = ref<string[]>([])
 
   const { data, status, error, execute } = giphyService.createSearch(query, limit, offset)
+  // #endregion
 
+  // #region Getters
   const items = computed(() => data.value?.items ?? [])
   const total = computed(() => data.value?.total ?? 0)
   const errorKey = computed(() =>
     status.value === 'error' ? giphyService.toUserErrorKey(error.value) : ''
   )
+  // #endregion
 
+  // #region Methods
   async function search(q: string) {
     query.value = q.trim()
     if (!query.value) return
@@ -31,6 +36,7 @@ export const useGiphyStore = defineStore('giphy', () => {
     await execute()
     if (status.value === 'error') offset.value = previous
   }
+  // #endregion
 
   return {
     query,

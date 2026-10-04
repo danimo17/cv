@@ -10,8 +10,9 @@ built, decided, or left mid-flight is ever silently lost or left inconsistent ag
 
 Rule 16 (UI/UX pattern consistency, `.claude/rules/16-ui-pattern-consistency.md`) was already written directly
 into the project on 2026-09-25 — not queued here, it's live. Same for rule 17 (verify via gates, not manual
-browsing) — also live, `.claude/rules/17-verify-via-gates-not-manual-browsing.md`. Rule numbers below start
-at 18.
+browsing, `.claude/rules/17-verify-via-gates-not-manual-browsing.md`) and rule 18 (ask before switching
+branch/story mid-task, `.claude/rules/18-ask-before-switching-branch.md`) — both also live. Rule numbers below
+start at 19.
 
 ## Origin (2026-09-25 session, branch `feat/spacing-tokens`/`feat/ux-redesign`)
 
@@ -42,13 +43,13 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    a direct question: resume it, merge it first, or explicitly proceed anyway. An explicit "proceed anyway"
    needs a documented escape hatch (e.g. an env var the AI sets only after the user's explicit go-ahead in
    chat, mirroring how `--no-verify` is a hard no but this is a softer, overridable rule) — never a silent
-   bypass. New rule 18.
+   bypass. New rule 19.
 
 2. **Synchronized change — no orphaned references.** When an artifact's public surface changes (removed/
    renamed prop, class, `data-testid`, i18n key, store action, API route), the same change updates every place
    that references it — not just the catalog (rule 07 already covers that), but existing tests too (unit
    **and** e2e). Concretely:
-   - New rule 19 (or fold into 07 — decide when writing the contract) stating this explicitly.
+   - New rule 20 (or fold into 07 — decide when writing the contract) stating this explicitly.
    - `.claude/rules/12-orchestration.md`'s subagent-brief guidance gets a mandatory line: every build
      assignment that removes or renames something must include "grep the whole repo (`app/`, `tests/`,
      `e2e/`, `.claude/docs/`) for every reference to what you're changing, and update them in this same

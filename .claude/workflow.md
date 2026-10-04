@@ -24,8 +24,12 @@ story → contract → build ⟲ iterate → consolidate (gate) → validate →
 7. **Commit** — commits on `feat/<slug>` (pre-commit = gate).
 8. **Review** (decision 039) — right before opening the PR, not before the first commit: `templates/review-checklist.md`
    (compliance) + `/code-review` (bugs/quality) over the whole branch diff. A finding is a claim: the file is
-   opened and confirmed before acting. If there are corrections, they are committed again.
-9. **`gate:push`** — full build + e2e green before push (rule 09).
+   opened and confirmed before acting. If there are corrections, they are committed again. The result is
+   written into the handoff's `## Review` section (checklist fully checked, `/code-review` outcome noted) —
+   step 9 mechanically requires this, so it can't be silently skipped under time pressure.
+9. **`gate:push`** — full build + e2e green before push (rule 09). Pushing a `feat/*` branch with an active
+   task also requires the handoff's `## Review` section to exist, be fully checked, and mention `code-review`
+   (push-review-gate, decision 054) — hard block, no escape hatch.
 10. **Push / PR (AI)** — with the user's explicit permission for that specific push (decision 031), the AI runs
     `git push` on the `feat/*` branch and opens the PR with `gh pr create` (decision 039: title in English with no
     prefix, body with fixed sections Summary/Acceptance criteria/Review/User pendings/Test plan). CI repeats

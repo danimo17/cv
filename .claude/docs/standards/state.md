@@ -37,3 +37,26 @@ calls a service or `/api/*` directly; no service knows about a store; no store k
   page stays interactive. Errors are shown with the key the store provides (`errorKey`).
 - **Catalog.** Every store/service/composable/domain function/ui-config export → `.claude/docs/catalog/state.md`
   (`### name` block, `tests/arch/docs-sync.spec.ts`).
+
+## Internal structure (regions, decision 052)
+
+Every composable and Pinia store is TypeScript, organized into fixed, ordered `// #region <Name>` /
+`// #endregion` blocks (VSCode/JetBrains fold these natively) — the one exception rule 14 grants to comments
+outside `.claude/`, and only for these exact markers, never a free-form comment riding along. Omit a region
+entirely when it would be empty; never write `// #region X` around nothing.
+
+**Composables**, in this order:
+
+1. `// #region Static variables` — module-level constants (outside the composable function).
+2. `// #region Reactive variables` — `ref`/`computed`/`reactive` declared inside the function.
+3. `// #region Methods` — functions defined inside the function.
+4. `// #region Component data` — data coming from a `ui-config` entry or the composable's own arguments.
+5. `// #region Lifecycle` — `watch`, `onMounted`, `onUnmounted`, etc.
+
+**Stores**, in this order:
+
+1. `// #region State` — the `ref`s that hold raw state.
+2. `// #region Getters` — `computed`s derived from state.
+3. `// #region Methods` — actions (functions), sync or async.
+
+Worked examples: `app/composables/useMessageList.ts`, `app/stores/giphy.ts`, `app/stores/hero.ts`.
