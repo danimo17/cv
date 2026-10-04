@@ -1,6 +1,6 @@
 # Handoff: spacing-tokens
 
-**Branch:** `feat/spacing-tokens` · **Base:** merged with `main` at `3c52325` on 2026-09-25 (was `e96aa05`) ·
+**Branch:** `feat/spacing-tokens` · **Base:** merged with `main` at `3e9d66d` on 2026-10-04 (previously `3c52325` on 2026-09-25) ·
 **Status:** root cause of the e2e failure found and fixed (2026-09-25, see below) — `--spacing-sm`/`--spacing-lg`
 collided with Tailwind v4's own default `sm`/`lg` scale keys shared across all spacing-scale utility families.
 Tokens and every generated utility renamed to `custom-sm`/`custom-lg`. `pnpm gate:push` green, 5/5 e2e passing.
@@ -14,10 +14,23 @@ Ready to push once the user gives explicit go-ahead (rule 06).
 | `c18d3ba` | inter-element gaps/margins migrated to `*-sm` / `*-lg`                               |
 | `3c741d5` | merge `main` (36 commits ahead, incl. UX-redesign + 5 Dependabot bumps)              |
 | `4afc7d1` | handoff note (later corrected below) mis-attributing the e2e failure to `main` alone |
-| _(this)_  | root-cause fix: rename `--spacing-sm/lg` → `--spacing-custom-sm/lg` and every        |
+| `1d63df4` | root-cause fix: rename `--spacing-sm/lg` → `--spacing-custom-sm/lg` and every        |
 |           | generated utility (decision 053); catalog/standards updated; `pnpm gate:push` green  |
+| `0b09ba0` | review pass (workflow step 8), one stale catalog cross-reference fixed               |
+| `85ec463` | merge `main` at `3e9d66d` (2026-10-04), no conflicts                                 |
 
-Working tree clean except one untracked scratch file (see pendings).
+Working tree clean. The debug spec `e2e/_debug-tmp.spec.ts` was deleted by the user.
+
+## Merge with main (2026-10-04)
+
+`git merge origin/main` (PRs #13 and #14: composable-store-regions, push-review-gate, task closes, rules 18/19)
+completed with **no conflicts**. Main's diff since the last merge touched only `.claude/` docs/tasks/rules and the
+`// #region` markers in `app/stores/giphy.ts` and `app/stores/hero.ts`; no CSS, token, `tests/arch` or lockfile
+changes. Grep of `app/assets/css` found no new in-scope raw `gap-`/`mb-`/`mt-`/`space-` values introduced by main
+(the remaining raw values are the documented exceptions from decision 050). `.claude/tasks/ACTIVE` still
+`spacing-tokens`. Reviewed diff (`main...HEAD`) is materially unchanged, so `## Review` below stays valid.
+`pnpm gate:push`: format/lint/typecheck green (1 pre-existing `CustomInput.vue` warning), 21 test files / 289
+unit+arch tests passed, build green, 5/5 e2e passed.
 
 ## Merge with main (2026-09-25)
 
@@ -118,7 +131,5 @@ commit.
 
 ## User pendings
 
-- Delete the leftover debug spec `e2e/_debug-tmp.spec.ts` (untracked; the `delete-test` hook blocks the AI
-  from removing test files).
 - Push `feat/spacing-tokens` and open the PR (rule 06: push needs explicit permission, merge is user-only) —
   the branch is green end to end now, holding only on the user's explicit go-ahead to push.
