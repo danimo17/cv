@@ -79,8 +79,30 @@ the first push happens while `ACTIVE` still names the task and `handoff.md` stil
 happens under an already-empty `ACTIVE`, which is correctly exempt (nothing new to review, just closing
 paperwork). Any implementation of this story must preserve that ordering deliberately, not by accident.
 
+## Problem 3 — the handoff has no workflow progress bar, and no step can be proven (user directive, 2026-10-04)
+
+The user's requirement: everything in the workflow must be covered by a gate, so the AI can **assert** it
+followed every step because a check proves it, not because it remembers. Every handoff must also carry a
+checklist/status bar showing which workflow step the branch is at.
+
+Since this story already rewrites the step order in `workflow.md` (close-out folds into the push/PR step), it
+owns the handoff-side half of that requirement:
+
+- `.claude/templates/handoff.md` gets a `## Workflow progress` block at the **top**: one checkbox per
+  `workflow.md` step in its new order (story → contract → build → gate → review → push → close-out → PR),
+  each with an evidence field (commit SHA, gate output line, review block date) — the status bar is the first
+  thing read when resuming a branch.
+- `require-contract.py` verifies it mechanically: a commit may not tick a step whose evidence field is empty,
+  and `git push` of a `feat/*` branch requires every step before "push" ticked with evidence (extends
+  `push-review-gate`, same ordering caveat as above — the check reads `HEAD`, not the working tree).
+- The step list is defined once (in `workflow.md`) and the template + hook read the same list, so a step added
+  later cannot exist without a checkbox and a gate row (see `workflow-integrity-hardening` item 7 for the
+  broader step-to-gate audit).
+
 ## Scope
 
+- `.claude/templates/handoff.md` + `.claude/hooks/require-contract.py`: the `## Workflow progress` block and its
+  commit/push verification (Problem 3).
 - `.claude/templates/close-checklist.md`: remove "PR merged"/"deploy verified" as pre-close blocking items;
   add whatever pre-merge-provable items replace them.
 - `.claude/hooks/require-contract.py`: fix problem 2 (read `ACTIVE`'s pre-commit/HEAD state for the

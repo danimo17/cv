@@ -99,6 +99,27 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    real hook or arch test. Update each rule's `.claude/rules/NN-*.md` "How it's checked" line to match once
    built — don't leave stale rows claiming "human review" once a test exists.
 
+6. **Review-freshness gate and a mandatory code-review prompt** (found 2026-10-04, `feat/spacing-tokens`
+   PR #16). `push-review-gate` (decision 054) only substring-matches "code-review" in `handoff.md`'s `## Review`,
+   so it accepted a medium-effort review dated before a merge with `main`, and nothing made the AI tell the user
+   a fresh `/code-review` was due before opening the PR (the user had to ask for it). Fix mechanically:
+   - the `## Review` block records a fingerprint of the reviewed diff (e.g. sha256 of
+     `git diff main...HEAD -- . ':!.claude'`) and the effort level; the push gate recomputes the fingerprint and
+     blocks when it differs (review is stale: code changed after it) or when the effort is below the required
+     minimum (user's call, default `high`);
+   - the gate's block message names the exact command to run (`/code-review high`), so the AI surfaces it to
+     the user instead of working around it; a PR cannot be opened by the AI without a fresh matching block.
+
+7. **Every `workflow.md` step has a gate; the AI can prove it followed all of them** (user directive,
+   2026-10-04: "everything in the workflow must be tested by gates, you must be able to assure me you followed
+   every step"). Build a step-to-gate map (a table in `.claude/docs/catalog/ai-workflow.md`: workflow step →
+   the hook/test/CI check that fails if it is skipped → what it reads) and a `tests/arch/workflow-gates.spec.ts`
+   that fails when a step in `workflow.md` has no row, or a row names a hook/test file that does not exist.
+   Steps found with no mechanical check get one built here or are listed honestly as human-only (like rules
+   02 and 16). The per-branch `## Workflow progress` status bar in the handoff is owned by
+   `close-workflow-redesign` (Problem 3) — this item makes sure the step list it mirrors is itself complete and
+   enforced.
+
 ## Out of scope
 
 - Actually building the CSS architecture change (`css-tailwind-first`, separate story/task).
