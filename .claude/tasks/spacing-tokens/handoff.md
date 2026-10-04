@@ -18,6 +18,9 @@ Ready to push once the user gives explicit go-ahead (rule 06).
 |           | generated utility (decision 053); catalog/standards updated; `pnpm gate:push` green  |
 | `0b09ba0` | review pass (workflow step 8), one stale catalog cross-reference fixed               |
 | `85ec463` | merge `main` at `3e9d66d` (2026-10-04), no conflicts                                 |
+| `cc99091` | handoff note for the 2026-10-04 merge                                                |
+| `13626c2` | review fixes 1-3: decision 055 mapping, micro gaps reverted, `pages.css` migrated    |
+| this      | handoff update for the 2026-10-04 high-effort review                                 |
 
 Working tree clean. The debug spec `e2e/_debug-tmp.spec.ts` was deleted by the user.
 
@@ -109,6 +112,28 @@ list still cited `experience-section.css`'s `gap-8`, which no longer exists ther
 `ux-redesign` timeline fix after decision 050 was written, cross-reference never updated). Fixed in this same
 commit.
 
+2026-10-04, `/code-review` (high effort) re-run over the whole `main...HEAD` diff after the merge with `main`
+at `3e9d66d` (this block supersedes the 2026-09-26 one as the fresh review). 5 findings:
+
+- Finding 1, `pages.css` meme-page sibling spacing not migrated: fixed (`.meme-page__kicker`/`__intro`/
+  `__how-title`/`__steps`/`__how-cta` now use `custom-sm`/`custom-lg`; `gap-8`, `py-*`, `.home-page` `pb-16`
+  stay raw as page rhythm). Docs no longer exclude `pages.css` wholesale.
+- Finding 2, two-tier rounding doubled the tightest gaps: fixed by decision 055. Micro gaps below 0.5rem stay
+  raw again: `custom-badge` `gap-1`, `app-header__nav` `gap-1`, `app-footer__links` `gap-1`, `experience-item`
+  base `gap-1` / `__body` `gap-1` / `__bullets` `space-y-1` / `__tags` `gap-1.5`, `hero-section__meta-item`
+  `gap-1.5`, `meme-preview__meta` `mt-1`. In-range shifts (step 3 to 0.5rem, step 4 to 1.5rem) are now stated.
+- Finding 3, ambiguous bucket rule in the catalog: fixed (decision 055 plus an unambiguous step-to-token table
+  in `catalog/styles.md`, exceptions list re-verified against the CSS, `standards/styling.md` aligned).
+- Finding 4, `ACTIVE` left set on `main` forces a second close PR: not fixed here, deferred to the queued story
+  `close-workflow-redesign` (backlog row exists).
+- Finding 5, push gate accepted the stale pre-merge review: not fixed here, deferred to the story
+  `workflow-integrity-hardening` (review-freshness gate; this block is itself the fresh review).
+
+Review checklist items for this re-run: secrets/company/giphy/PII/i18n n/a (CSS and docs only); branch correct;
+catalog, standards, decision 055 and contract updated in the same change (rule 07); UI consistency (16) is the
+purpose of decision 055, every migrated and reverted utility derived mechanically from a diff against
+`origin/main`; `pnpm gate:push` green after the fixes.
+
 ## Contract criteria
 
 | #   | State | Evidence                                                                                           |
@@ -128,6 +153,11 @@ commit.
   renamed to match (decision 053, 2026-09-25): the plain `sm`/`lg` keys collided with Tailwind v4's own default
   spacing-scale keys shared across `w-*`/`max-w-*`/`h-*`/etc., which is what broke `hero-section.css`'s
   unrelated `max-w-sm`. This amends decision 050's naming only, not its scope or values.
+
+- Explicit step-to-token mapping (decision 055, 2026-10-04): raw steps 2-3 to `custom-sm`, 4-6 to `custom-lg`;
+  micro gaps (0.5-1.5) and gaps from step 8 up stay raw; padding is never migrated. Amends decision 050's scope
+  text only. Also migrated the in-range `gap` utilities in `custom-button.css`/`custom-input.css` that the old
+  "control padding" exception had over-covered.
 
 ## User pendings
 
