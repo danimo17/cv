@@ -57,6 +57,9 @@ in chat and, if it fails, in a new task. Unticked `push-pr` in the archive's pro
 unchecked line (the hook must exempt it). `gate:push` is run before the close commit and re-run by
 `.githooks/pre-push`; the close commit only touches `.claude/`, so the earlier run stays valid.
 
-**Known limits (stated, rule 19).** Progress evidence is checked for presence, not truth; `story`, `validate`
-and `deploy-check` are `human` in `workflow-steps.json`. The branch-name slug assumes the `feat/<slug>`
+**Known limits (stated, rule 19).** Progress evidence is checked for presence, not truth; `validate` and
+`deploy-check` are `human` in `workflow-steps.json` (`story` is `require-contract`: an active task without
+`story.md` blocks commits, but the story's content is not judged). The hook reads the index and `HEAD`, so it
+cannot see a commit made outside Claude's Bash tool or a push whose refspec differs from the checked-out
+branch. The branch-name slug assumes the `feat/<slug>`
 convention (rule 06). Review freshness remains in `workflow-integrity-hardening`.

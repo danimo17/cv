@@ -26,5 +26,5 @@ which forced a second close-only PR per task.
 **How it's checked.** `.githooks/pre-commit`, `.githooks/pre-push` (enabled by `pnpm install` → `prepare`
 script), workflows in `.github/workflows/`, `main` ruleset with required checks, and the Claude hook
 `.claude/hooks/require-contract.sh` that blocks `--no-verify`, a commit that ticks a progress step without
-evidence, and (on push) a missing review or an incomplete progress block. `tests/arch/workflow-steps.spec.ts`
-keeps `workflow.md`, the handoff template and the Gates table in sync with `workflow-steps.json`.
+evidence, and (on push) a missing review or an incomplete progress block. `tests/arch/require-contract-hook.spec.ts`
+runs the real hook against throwaway git repos; `tests/arch/workflow-steps.spec.ts` keeps `workflow.md`, the handoff template and the Gates table in sync with `workflow-steps.json`.

@@ -25,6 +25,6 @@ was before rule 09 existed — same fix, same reasoning. Requiring merge/deploy 
 second close-only PR per task, and keying detection on `ACTIVE` meant the check could skip itself
 (decision 057).
 
-**How it's checked.** `.claude/hooks/require-contract.sh` blocks commits if there's no contract with criteria,
+**How it's checked.** `.claude/hooks/require-contract.sh` blocks commits if there's no story or contract with criteria,
 if an empty-`ACTIVE` commit touches code outside `.claude/`, or if a commit deleting any task folder lacks a
 fully-checked archive.

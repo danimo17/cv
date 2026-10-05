@@ -75,7 +75,7 @@ same id order and title as that file, the handoff's `## Workflow progress` block
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | `pre-commit` (git hook)           | `pnpm gate`                                                                                                     | the commit                                  |
 | `pre-push` (git hook)             | `pnpm gate:push`                                                                                                | the push                                    |
-| `require-contract` (Claude hook)  | active contract, `--no-verify`, progress ticks need evidence                                                    | commits from the AI                         |
+| `require-contract` (Claude hook)  | active story + contract, `--no-verify`, progress ticks need evidence                                            | commits from the AI                         |
 | `task-close-gate` (Claude hook)   | commit that deletes any `.claude/tasks/<slug>/` folder must stage a fully-checked `closed/<slug>.md`            | the closing commit                          |
 | `push-review-gate` (Claude hook)  | `feat/<slug>` push: review evidence + every pre-push progress step ticked (handoff, or closed archive if empty) | the push from the AI                        |
 | `git-safety` (global Claude hook) | commit/push to `main`                                                                                           | the command                                 |
@@ -84,8 +84,9 @@ same id order and title as that file, the handoff's `## Workflow progress` block
 | `main` ruleset (GitHub)           | requires the above checks + PR                                                                                  | the direct merge                            |
 | `deploy.yml`                      | only on push to `main` with CI green                                                                            | the deploy (not the task: deploy-check, 13) |
 
-Steps whose `gate` is `human` in `workflow-steps.json` (`story`, `validate`, `deploy-check`) have no mechanical
-check today: a progress tick with non-empty evidence is the only trace for the first two, and the deploy check is
-reported in chat. That is stated, not hidden (rule 19).
+Steps whose `gate` is `human` in `workflow-steps.json` (`validate`, `deploy-check`) have no mechanical
+check today: a progress tick with non-empty evidence is the only trace for `validate`, and the deploy check is
+reported in chat. That is stated, not hidden (rule 19). (`story` is gated by `require-contract`: an active task
+without `story.md` blocks commits.)
 
 Legitimately unblocking = making it pass. Never `--no-verify`, never `skip`, never delete the test.

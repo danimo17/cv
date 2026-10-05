@@ -1,5 +1,5 @@
 [
-  { "id": "story", "phase": "pre-push", "title": "Story", "gate": "human" },
+  { "id": "story", "phase": "pre-push", "title": "Story", "gate": "require-contract" },
   { "id": "contract", "phase": "pre-push", "title": "Contract", "gate": "require-contract" },
   { "id": "build", "phase": "pre-push", "title": "Build / iterate", "gate": "pre-commit" },
   { "id": "consolidate", "phase": "pre-push", "title": "Consolidate", "gate": "pre-commit" },
