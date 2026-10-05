@@ -12,7 +12,9 @@ same id order and title as that file, the handoff's `## Workflow progress` block
 
 1. **Story** — `.claude/tasks/<slug>/story.md` (template `templates/story.md`): "As a <actor> I want <what> for
    <value>", out of scope, external dependencies. Added to `.claude/backlog.md` with status `doing` and
-   `.claude/tasks/ACTIVE` is set to contain the slug. Branch `feat/<slug>`.
+   Branch `feat/<slug>`: the slug is the branch name, so `.claude/tasks/ACTIVE` is neither required nor updated on
+   feat branches (decision 057 amendment: several `feat/*` branches can run in parallel without sharing a
+   file; the hooks ignore `ACTIVE` there).
 2. **Contract** — `contract.md` (template `templates/contract.md`): Given/When/Then criteria, each with the
    test that will cover it (file + name), declared data sources (rule 02), standards to consult, open
    questions with a destination (`decided:` / `owner:` / `docs/decisions/NNN`). The `require-contract` hook blocks
@@ -43,10 +45,9 @@ same id order and title as that file, the handoff's `## Workflow progress` block
    `gate:push` log tail, `/code-review` evidence, decisions/catalog/standards promoted, no open rule-11
    conflict, backlog row). Paste the handoff's `## Review` and `## Workflow progress` blocks into it. Then, in
    one commit: stage it as `.claude/tasks/closed/<slug>.md` (new file, never deleted — the permanent
-   record), delete `.claude/tasks/<slug>/`, clear `ACTIVE` (empty is a valid state), mark `done` in the
-   backlog. `require-contract.py` (`task-close-gate`) detects the close from the commit's own staged
-   deletions of any task folder (not from `ACTIVE`, which is already empty by then) and blocks it if the
-   archive is missing or has an unchecked box. PR merge and deploy are not archived: they cannot exist yet
+   record), delete `.claude/tasks/<slug>/`, mark `done` in the backlog. `require-contract.py`
+   (`task-close-gate`) detects the close from the commit's own staged deletions of any task folder (never
+   from `ACTIVE`) and blocks it if the archive is missing or has an unchecked box. PR merge and deploy are not archived: they cannot exist yet
    and are covered by steps 12-13.
 10. **Gate push** — full `pnpm gate:push` (gate + build + e2e) green before push (rule 09). Its real log tail
     is the evidence for this step and for the close checklist; because close-out only touches `.claude/`, that
@@ -55,10 +56,13 @@ same id order and title as that file, the handoff's `## Workflow progress` block
     `git push` on the `feat/*` branch **once** and opens the PR with `gh pr create` (decision 039: title in
     English with no prefix, body with fixed sections Summary/Acceptance criteria/Review/User pendings/Test
     plan). `push-review-gate` (decision 054, extended by 057) blocks the push unless the review evidence is in
-    the committed tree and every `pre-push` step before this one is ticked with evidence: it reads the
-    handoff when `ACTIVE` is set, and `.claude/tasks/closed/<slug>.md` (slug taken from the `feat/<slug>`
-    branch name) when `ACTIVE` is empty. `push-pr` is ticked last, after the push and the PR exist. CI repeats the
-    gate, runs build + e2e and the security scans; the PR gets a preview URL.
+    the committed tree and every `pre-push` step before this one is ticked with valid evidence (a real commit
+    sha for `commit`, `review` and `close-out`). The slug is the destination `feat/<slug>` branch name (never
+    `ACTIVE`); the gate reads `.claude/tasks/<slug>/handoff.md` from the tip commit of the pushed ref, else
+    `.claude/tasks/closed/<slug>.md`, and follows the refspec, not the checked-out branch. The same script
+    runs from `.githooks/pre-push` (any git client) and from the `workflow-gate` job of CI on every `feat/*`
+    pull request. `push-pr` is ticked last, after the push and the PR exist. CI also repeats the gate, runs
+    build + e2e and the security scans; the PR gets a preview URL.
 12. **Merge** — the human reviews and merges once (rule 06); GitHub only allows it once all checks are
     green. Merging to `main` triggers `deploy.yml` (decision 042: this is a trigger, not a guarantee — it can
     still fail on Cloudflare's side after CI was green). Post-merge steps are not listed in the handoff's
@@ -71,18 +75,18 @@ same id order and title as that file, the handoff's `## Workflow progress` block
 
 ## Gates (what blocks what)
 
-| Gate                              | Runs                                                                                                            | Blocks                                      |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `pre-commit` (git hook)           | `pnpm gate`                                                                                                     | the commit                                  |
-| `pre-push` (git hook)             | `pnpm gate:push`                                                                                                | the push                                    |
-| `require-contract` (Claude hook)  | active story + contract, `--no-verify`, progress ticks need evidence                                            | commits from the AI                         |
-| `task-close-gate` (Claude hook)   | commit that deletes any `.claude/tasks/<slug>/` folder must stage a fully-checked `closed/<slug>.md`            | the closing commit                          |
-| `push-review-gate` (Claude hook)  | `feat/<slug>` push: review evidence + every pre-push progress step ticked (handoff, or closed archive if empty) | the push from the AI                        |
-| `git-safety` (global Claude hook) | commit/push to `main`                                                                                           | the command                                 |
-| `ci` (CI `ci.yml`)                | gate + build + e2e                                                                                              | the PR merge                                |
-| `security.yml`                    | gitleaks, pnpm audit, CodeQL                                                                                    | the PR merge                                |
-| `main` ruleset (GitHub)           | requires the above checks + PR                                                                                  | the direct merge                            |
-| `deploy.yml`                      | only on push to `main` with CI green                                                                            | the deploy (not the task: deploy-check, 13) |
+| Gate                              | Runs                                                                                                                                                                         | Blocks                                      |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `pre-commit` (git hook)           | `require-contract.py --commit`, then `pnpm gate`                                                                                                                             | the commit (any client)                     |
+| `pre-push` (git hook)             | `require-contract.py --pre-push` (gates the pushed SHA), then `pnpm gate:push`                                                                                               | the push (any client)                       |
+| `require-contract` (Claude hook)  | active story + contract, `--no-verify`, progress ticks need evidence                                                                                                         | commits from the AI                         |
+| `task-close-gate` (Claude hook)   | commit that deletes any `.claude/tasks/<slug>/` folder must stage a fully-checked `closed/<slug>.md`                                                                         | the closing commit                          |
+| `push-review-gate` (Claude hook)  | push to `feat/<slug>`: review evidence + every pre-push progress step ticked with valid evidence (handoff, else closed archive; slug from the branch, tip of the pushed ref) | the push from the AI (also git hook and CI) |
+| `git-safety` (global Claude hook) | commit/push to `main`                                                                                                                                                        | the command                                 |
+| `ci` (CI `ci.yml`)                | gate + build + e2e; job `workflow-gate`: `require-contract.py --ci` on `feat/*` PRs                                                                                          | the PR merge                                |
+| `security.yml`                    | gitleaks, pnpm audit, CodeQL                                                                                                                                                 | the PR merge                                |
+| `main` ruleset (GitHub)           | requires the above checks + PR                                                                                                                                               | the direct merge                            |
+| `deploy.yml`                      | only on push to `main` with CI green                                                                                                                                         | the deploy (not the task: deploy-check, 13) |
 
 Steps whose `gate` is `human` in `workflow-steps.json` (`validate`, `deploy-check`) have no mechanical
 check today: a progress tick with non-empty evidence is the only trace for `validate`, and the deploy check is

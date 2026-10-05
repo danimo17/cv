@@ -6,7 +6,8 @@ _Updated: YYYY-MM-DD HH:MM. REAL state of the `feat/<slug>` branch._
 
 One line per `pre-push` step of `.claude/workflow-steps.json`, in order. Tick a step only when it is really
 done: `- [x] <id> — evidence: <commit sha / gate output line / date>`. Evidence is mandatory once ticked
-(blocked at commit time otherwise). `push-pr` is ticked last, after the push and the PR exist; the post-merge
+(blocked at commit time otherwise), and for `commit`, `review` and `close-out` it must contain a real commit
+sha (7-40 hex characters that exist in the repository). `push-pr` is ticked last, after the push and the PR exist; the post-merge
 steps (`merge`, `deploy-check`) are not listed here.
 
 - [ ] story — evidence:

@@ -63,3 +63,43 @@ unchecked line (the hook must exempt it). `gate:push` is run before the close co
 cannot see a commit made outside Claude's Bash tool or a push whose refspec differs from the checked-out
 branch. The branch-name slug assumes the `feat/<slug>`
 convention (rule 06). Review freshness remains in `workflow-integrity-hardening`.
+
+## Amendment 2026-10-05 — branch-keyed slug, one script for every client, verified evidence
+
+Prompted by a high-effort `/code-review` of `feat/close-workflow-redesign` and by the user's two requirements:
+every workflow step must be mechanically gated no matter who or what runs git, and many `feat/*` branches must
+be able to run in parallel. The decision above stays as written; this section changes the following parts.
+
+1. **The slug comes from the branch, `ACTIVE` is ignored on `feat/*` (supersedes decision point 3 and the
+   "ACTIVE set vs empty" split).** On a `feat/<slug>` branch the hook uses `<slug>` for the commit checks
+   (`.claude/tasks/<slug>/{story,contract}.md`) and for the push gate, which reads
+   `.claude/tasks/<slug>/handoff.md` from the pushed commit's tree if it exists there, else
+   `.claude/tasks/closed/<slug>.md`; neither present blocks. A feat branch whose folder is gone and whose archive
+   is staged/committed counts as closed (docs-only commits). On other branches `ACTIVE` keeps today's meaning for
+   commit checks. `ACTIVE` and its other consumers are not deleted; it is just no longer required or updated on
+   feat branches, so parallel branches never fight over one file nor get gated against another task's handoff.
+2. **One script, three callers (supersedes the "Known limits" sentence that the hook only sees Claude's Bash
+   tool).** `.claude/hooks/require-contract.py` keeps its stdin-JSON Claude mode and gains `--commit`
+   (`.githooks/pre-commit`, before `pnpm gate`), `--pre-push` (`.githooks/pre-push`, before `pnpm gate:push`;
+   gates the LOCAL SHA of every pushed `refs/heads/feat/<slug>` from git's stdin lines) and `--ci <branch> <sha>`
+   (job `workflow-gate` of `ci.yml`, on `pull_request` events whose head branch starts with `feat/`). Same checks,
+   exit codes and messages. `--no-verify` can still skip the git hooks; CI is the backstop (a required check
+   closes it; the job could not be run locally, its first real run is the next feat PR).
+3. **The Claude push gate follows the refspec.** `git push [flags] [remote] [refspec...]` is parsed; every
+   destination starting with `feat/` is gated on the tip of its source ref. No refspec = current branch;
+   detached HEAD with no refspec blocks. `--delete`, `:dst` and non-feat destinations are not gated; `--all`,
+   `--mirror` and wildcard refspecs gate every local `feat/*` branch. This replaces "reads the checked-out
+   branch" from the known limits.
+4. **Evidence is validated, not just present.** For `commit`, `review` and `close-out` the evidence must contain a
+   7-40 character hex token that resolves with `git cat-file -e <tok>^{commit}` in the repository being checked
+   (commit time and push time); other steps stay free text but non-empty. `[X]` counts as ticked like `[x]`
+   everywhere. The check proves the sha exists, not that it is the right commit.
+5. **No test-only hook override.** `HOOK_UNDER_TEST` is removed from `tests/arch/require-contract-hook.spec.ts`
+   and `tests/arch/workflow-steps.spec.ts` fails if any arch spec brings one back. The proof that the earlier
+   spec failed on the pre-rewrite hook (`git show 73871d8:.claude/hooks/require-contract.py`) is recorded once in
+   the task handoff.
+
+**Consequences.** Branch slug = task slug becomes load-bearing (rule 06 convention); a branch named differently
+from its task folder is blocked by the hook until it is renamed. Closing a task no longer clears `ACTIVE` on feat
+branches. The `commit` / `close-out` evidence of a commit can only cite an earlier commit (a commit cannot name
+its own sha), which is the intended reading: the evidence points at the work that was gated.
