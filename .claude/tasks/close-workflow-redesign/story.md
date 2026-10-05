@@ -1,6 +1,6 @@
 # Story: close-workflow-redesign
 
-**Status: queued, NOT started.** Written per the user's explicit request (2026-09-26) right after living
+**Status: doing** (started 2026-10-05, branch `feat/close-workflow-redesign`). Written per the user's explicit request (2026-09-26) right after living
 through the exact problem it fixes — do not start without re-reading this in full, it captures a real design
 flaw plus a self-audit finding about the current mechanism's actual (non-)enforcement.
 
