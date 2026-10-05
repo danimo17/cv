@@ -13,21 +13,21 @@
     @apply max-w-2xl;
   }
   .meme-page__kicker {
-    @apply mb-2;
+    @apply mb-custom-sm;
   }
   .meme-page__intro {
-    @apply mt-4;
+    @apply mt-custom-lg;
   }
   .meme-page__how {
     @apply rounded-2xl;
   }
   .meme-page__how-title {
-    @apply mb-3;
+    @apply mb-custom-sm;
   }
   .meme-page__steps {
-    @apply list-decimal space-y-2 pl-5;
+    @apply list-decimal space-y-custom-sm pl-5;
   }
   .meme-page__how-cta {
-    @apply mt-4;
+    @apply mt-custom-lg;
   }
 }

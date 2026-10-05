@@ -1,11 +1,11 @@
 @layer components {
   .tech-stack__groups {
-    @apply grid gap-6 sm:grid-cols-2;
+    @apply grid gap-custom-lg sm:grid-cols-2;
   }
   .tech-stack__group-title {
-    @apply mb-3 flex items-center gap-2;
+    @apply mb-custom-sm flex items-center gap-custom-sm;
   }
   .tech-stack__list {
-    @apply flex flex-wrap gap-2;
+    @apply flex flex-wrap gap-custom-sm;
   }
 }

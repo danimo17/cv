@@ -1,6 +1,6 @@
 @layer components {
   .meme-search {
-    @apply flex flex-col gap-3 sm:flex-row sm:items-end;
+    @apply flex flex-col gap-custom-sm sm:flex-row sm:items-end;
   }
   .meme-search__input {
     @apply flex-1;

@@ -21,9 +21,9 @@
     @apply p-8;
   }
   .custom-card__header {
-    @apply mb-3;
+    @apply mb-custom-sm;
   }
   .custom-card__footer {
-    @apply mt-4;
+    @apply mt-custom-lg;
   }
 }

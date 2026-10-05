@@ -6,7 +6,13 @@ Deliberately short: it describes the rules in force (decisions 015, 025, 026). V
 - **Tokens.** All colors, radii, shadows and fonts are semantic tokens from `app/assets/css/tokens.css` (`@theme`):
   `surface`, `surface-alt`, `border`, `text`, `text-muted`, `neu-light`, `neu-dark`, the `--shadow-neu*` shadows and,
   for each tone (`primary … danger`), `-`, `-fg`, `-soft`. Dark mode = same names under `.dark`; no component
-  writes `dark:`. No raw color or shadow value outside this file.
+  writes `dark:`. No raw color or shadow value outside this file. Spacing **between sibling elements**
+  (`gap-*`, `mb-*`/`mt-*`/`space-y-*`/`space-x-*`) is the same: raw steps 2-3 (0.5-0.75rem) become
+  `-custom-sm`, steps 4-6 (1-1.5rem) become `-custom-lg` (decisions 050, 053, 055 — named `custom-sm`/
+  `custom-lg`, not `sm`/`lg`, to avoid colliding with Tailwind's own default spacing scale keys used by
+  `max-w-*`, `h-*`, etc.), in `pages.css` too. Micro gaps below 0.5rem (steps 0.5-1.5), gaps above 1.5rem, all
+  padding (including `Size`-governed control padding) and page/section rhythm stay raw; the exact list is in
+  `styles.md`.
 - **One CSS file per component** (rule 08). `app/assets/css/components/<kebab>.css`, imported in `main.css`, with the
   `.kebab` block and BEM-lite (`.kebab--modifier`, `.kebab__element`). Everything via `@apply` of tokens/utilities inside
   `@layer components`. Test: `tests/arch/css-per-component.spec.ts`. Pages and layout: `pages.css` and `base.css`.
