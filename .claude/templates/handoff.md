@@ -2,6 +2,25 @@
 
 _Updated: YYYY-MM-DD HH:MM. REAL state of the `feat/<slug>` branch._
 
+## Workflow progress
+
+One line per `pre-push` step of `.claude/workflow-steps.json`, in order. Tick a step only when it is really
+done: `- [x] <id> — evidence: <commit sha / gate output line / date>`. Evidence is mandatory once ticked
+(blocked at commit time otherwise). `push-pr` is ticked last, after the push and the PR exist; the post-merge
+steps (`merge`, `deploy-check`) are not listed here.
+
+- [ ] story — evidence:
+- [ ] contract — evidence:
+- [ ] build — evidence:
+- [ ] consolidate — evidence:
+- [ ] validate — evidence:
+- [ ] handoff — evidence:
+- [ ] commit — evidence:
+- [ ] review — evidence:
+- [ ] close-out — evidence:
+- [ ] gate-push — evidence:
+- [ ] push-pr — evidence:
+
 ## Done (verified)
 
 - …
@@ -23,7 +42,7 @@ pnpm gate → …
 
 Not covered: …
 
-## Review (workflow step 8, rule 09)
+## Review (workflow step `review`, rule 09)
 
 Review checklist (`.claude/templates/review-checklist.md`) run over the full branch diff:
 
@@ -31,7 +50,7 @@ Review checklist (`.claude/templates/review-checklist.md`) run over the full bra
       subagents/accessibility/UI-consistency — go through every line of the template, mark n/a where a
       category doesn't apply to this diff, otherwise checked
 
-`/code-review` result: <effort level>, <N findings, outcome of each — fixed / no_change_needed / left as
+`/code-review` result: <effort level>, <date>, <N findings, outcome of each — fixed / no_change_needed / left as
 backlog with a reason>.
 
 ## Pending on the user
@@ -40,11 +59,9 @@ backlog with a reason>.
 | --- | ---- | ------ | ------- |
 | 1   | …    | …      | pending |
 
-## Post-merge deploy check (decision 042, only after the user merges)
-
-- [ ] `gh run list --branch main --limit 1 --workflow deploy.yml` shows `success` for this merge's commit.
-- If not: this is an open bug on this task, not a footnote — fix before closing.
-
 ## Decisions made in this task
 
 - → `.claude/docs/decisions/NNN-….md`
+
+At close-out, `## Review` and `## Workflow progress` are copied into `.claude/tasks/closed/<slug>.md`; the
+deploy check after merge is reported in chat, not tracked here.

@@ -15,19 +15,72 @@ Living documentation (rule 07): every new or changed script, gate, hook or workf
 
 ## Gates and hooks
 
-| Hook                                                          | Runs                                                                               | Blocks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.githooks/pre-commit`                                        | `pnpm gate`                                                                        | the commit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `.githooks/pre-push`                                          | `pnpm gate:push`                                                                   | the push                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `.claude/hooks/require-contract.sh` (PreToolUse Bash, Claude) | `require-contract.py`: looks for real `git commit`/`git push` calls in the command | `--no-verify`/`-n` (rule 09); with `ACTIVE` empty, any staged file outside `.claude/` (rule 10); with `ACTIVE` set and not closing, no `contract.md` with "Given" (rule 10); with `ACTIVE` set and the commit deletes the whole `.claude/tasks/<slug>/` tree, no fully-checked `.claude/tasks/closed/<slug>.md` staged alongside (rule 10, task-close-gate, decision 051); `git commit` staging `nuxt.config.ts` or `eslint.config.mjs` without also staging a file under `.claude/docs/decisions/` (rule 11, added in decision 041); `git push` on a `feat/*` branch with `ACTIVE` set and no fully-checked `## Review` section (mentioning `code-review`) in `.claude/tasks/<slug>/handoff.md` (rule 09, push-review-gate, decision 054) |
+| Hook                                                          | Runs                                                                               | Blocks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.githooks/pre-commit`                                        | `pnpm gate`                                                                        | the commit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `.githooks/pre-push`                                          | `pnpm gate:push`                                                                   | the push                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `.claude/hooks/require-contract.sh` (PreToolUse Bash, Claude) | `require-contract.py`: looks for real `git commit`/`git push` calls in the command | `--no-verify`/`-n` (rule 09); with `ACTIVE` empty, any staged file outside `.claude/` (rule 10); with `ACTIVE` set and not closing, no `contract.md` with "Given" (rule 10); with `ACTIVE` set and the commit deletes the whole `.claude/tasks/<slug>/` tree, no fully-checked `.claude/tasks/closed/<slug>.md` staged alongside (rule 10, task-close-gate, decision 051); `git commit` staging `nuxt.config.ts` or `eslint.config.mjs` without also staging a file under `.claude/docs/decisions/` (rule 11, added in decision 041); `git push` on a `feat/*` branch with `ACTIVE` set and no fully-checked `## Review` section (mentioning `code-review`) in `.claude/tasks/<slug>/handoff.md` (rule 09, push-review-gate, decision 054); decision 057 extends the commit and push checks (see "Workflow step list and progress block" below) |
 
 Manual check of the hook (criterion 11 of the `bootstrap` contract): from Claude, with `ACTIVE` empty, `git commit -m x` must fail with "Rule 10: no commit without an active contract"; with a valid contract, `git commit --no-verify -m x` must fail with "Rule 09: --no-verify / -n is not allowed". It only looks at actual git invocations (start of line or after `;`, `&&`, `||`, `|`), not prose inside heredocs. Staging `nuxt.config.ts`/`eslint.config.mjs` alone (no decision file staged) must fail with "Rule 11: this commit changes nuxt.config.ts or eslint.config.mjs...".
 
-**Post-merge deploy verification (decision 042):** CI green on the PR only proves the code is correct — it
-never proves `deploy.yml` actually reached Cloudflare (PR #2, 2026-09-18: CI green, deploy failed on
-Cloudflare error 10215, unnoticed for 2 days because no step checked). Manual, mandatory step between merge
-and closing a task: `gh run list --branch main --limit 1 --workflow deploy.yml` must show `success` for that
-commit before the task is marked done. Tracked per-task in `handoff.md`'s "Post-merge deploy check" section.
+## Workflow step list and progress block (decision 057)
+
+`.claude/workflow-steps.json` is the single ordered list of workflow steps: an array of
+`{ "id", "phase", "title", "gate" }`. `phase` is `pre-push` (everything on the `feat/<slug>` branch before the
+single push) or `post-merge`; `gate` names what mechanically fails if the step is skipped (`require-contract`,
+`pre-commit`, `task-close-gate`, `push-review-gate`, `pre-push`, `ci`) or `human` where no mechanical check
+exists today.
+
+| Id             | Phase      | Title           | Gate               |
+| -------------- | ---------- | --------------- | ------------------ |
+| `story`        | pre-push   | Story           | `human`            |
+| `contract`     | pre-push   | Contract        | `require-contract` |
+| `build`        | pre-push   | Build / iterate | `pre-commit`       |
+| `consolidate`  | pre-push   | Consolidate     | `pre-commit`       |
+| `validate`     | pre-push   | Validate        | `human`            |
+| `handoff`      | pre-push   | Handoff         | `require-contract` |
+| `commit`       | pre-push   | Commit          | `pre-commit`       |
+| `review`       | pre-push   | Review          | `push-review-gate` |
+| `close-out`    | pre-push   | Close-out       | `task-close-gate`  |
+| `gate-push`    | pre-push   | Gate push       | `pre-push`         |
+| `push-pr`      | pre-push   | Push and PR     | `push-review-gate` |
+| `merge`        | post-merge | Merge           | `ci`               |
+| `deploy-check` | post-merge | Deploy check    | `human`            |
+
+Consumers: `workflow.md` (one numbered entry per id, same order and titles, plus the Gates table), the handoff
+template and the close checklist template (one progress line per `pre-push` id), and
+`tests/arch/workflow-steps.spec.ts`. A step added to the json without an entry, a checkbox and a named gate row
+fails the test.
+
+**Handoff `## Workflow progress`** (first section of `.claude/templates/handoff.md`, copied into the closed
+archive at close-out). One line per `pre-push` id: `- [ ] <id> — evidence:`; ticked is
+`- [x] <id> — evidence: <commit sha / gate output line / date>`. Machine format (regex used by the hook):
+`^- \[( |x)\] (\S+) — evidence:\s*(.*)$`. `push-pr` is ticked last (after the push), so it is the one line
+allowed to be unticked in the archive; the post-merge ids are not listed.
+
+**Intended hook behavior (decision 057; the `require-contract.py` rewrite lands in the next commit of
+`close-workflow-redesign`, not yet implemented by this catalog entry):**
+
+- `git commit`: a staged `handoff.md` whose progress block ticks a step with an empty `evidence:` is blocked.
+  A commit that stages the deletion of every tracked file of any `.claude/tasks/<slug>/` folder is a closing
+  commit regardless of `ACTIVE`; it must stage a fully-checked `closed/<slug>.md` (only the `push-pr` progress
+  line may stay unticked).
+- `git push` on `feat/<slug>`: with `ACTIVE` set, the committed handoff is checked as in decision 054 plus all
+  `pre-push` steps before `push-pr` ticked with evidence; with `ACTIVE` empty, `<slug>` comes from the branch
+  name and `closed/<slug>.md` in `HEAD` is checked the same way (review section mentioning `code-review`,
+  fully ticked progress block); a missing archive no longer skips the gate.
+
+**Post-merge deploy check (decision 042, relaxed by 057):** CI green on the PR only proves the code is correct
+— it never proves `deploy.yml` actually reached Cloudflare (PR #2, 2026-09-18: CI green, deploy failed on
+Cloudflare error 10215, unnoticed for 2 days because no step checked). After the user merges, the AI runs
+`gh run list --branch main --limit 1 --workflow deploy.yml` and reports the result in chat. It is
+non-blocking and not archived; a failed deploy opens a new task/commit and never reopens a closed task folder.
+
+**Arch test `tests/arch/workflow-steps.spec.ts`:** keeps `workflow-steps.json`, `workflow.md`, the handoff and
+close-checklist templates and the Gates table consistent (ids, order, titles, gates); checks the close
+checklist has only pre-merge-provable items and the `## Review` / `## Workflow progress` sections; checks
+close-out precedes gate-push/push and `deploy-check` is a post-merge, non-blocking step; checks decision 057
+and this catalog exist.
 
 ## Environments and deploy
 
