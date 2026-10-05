@@ -12,6 +12,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workflow-gate:
+    name: workflow-gate
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feat/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Workflow gate (review, close-out and progress evidence)
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 .claude/hooks/require-contract.py --ci "$HEAD_REF" "$HEAD_SHA"
+
   gate:
     name: gate
     runs-on: ubuntu-latest

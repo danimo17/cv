@@ -11,8 +11,13 @@ const HANDOFF_TEMPLATE = join(CLAUDE, 'templates', 'handoff.md')
 const CLOSE_TEMPLATE = join(CLAUDE, 'templates', 'close-checklist.md')
 const DECISIONS_DIR = join(CLAUDE, 'docs', 'decisions')
 const CATALOG = join(CLAUDE, 'docs', 'catalog', 'ai-workflow.md')
+const GATE_SCRIPT = 'require-contract.py'
+const PRE_COMMIT_HOOK = join(ROOT, '.githooks', 'pre-commit')
+const PRE_PUSH_HOOK = join(ROOT, '.githooks', 'pre-push')
+const CI_WORKFLOW = join(ROOT, '.github', 'workflows', 'ci.yml')
+const ARCH_DIR = join(ROOT, 'tests', 'arch')
 
-const PROGRESS_LINE = /^- \[( |x)\] (\S+) — evidence:\s*(.*)$/
+const PROGRESS_LINE = /^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$/
 const ALLOWED_GATES = [
   'require-contract',
   'pre-commit',
@@ -170,5 +175,39 @@ describe('close-workflow-redesign: workflow documents', () => {
     expect(decision).toMatch(/042/)
     expect(decision).toMatch(/051/)
     expect(read(CATALOG)).toContain('workflow-steps.json')
+  })
+})
+
+describe('close-workflow-redesign: the gate holds from any client', () => {
+  it('git hooks and CI call the workflow gate script', () => {
+    const call = (mode: string): RegExp =>
+      new RegExp(`${GATE_SCRIPT.replace('.', '\\.')}"? ${mode}( \\|\\| exit \\$\\?)?$`, 'm')
+
+    const preCommit = read(PRE_COMMIT_HOOK)
+    expect(preCommit).toMatch(call('--commit'))
+    expect(preCommit.search(call('--commit'))).toBeLessThan(preCommit.indexOf('pnpm gate'))
+    expect(preCommit).toMatch(/--commit \|\| exit \$\?/)
+
+    const prePush = read(PRE_PUSH_HOOK)
+    expect(prePush).toMatch(call('--pre-push'))
+    expect(prePush.search(call('--pre-push'))).toBeLessThan(prePush.indexOf('pnpm gate:push'))
+    expect(prePush).toMatch(/--pre-push \|\| exit \$\?/)
+    expect(prePush).toMatch(/exec pnpm gate:push/)
+
+    const ci = read(CI_WORKFLOW)
+    expect(ci).toContain(`${GATE_SCRIPT} --ci "$HEAD_REF" "$HEAD_SHA"`)
+    expect(ci).toMatch(/startsWith\(github\.head_ref, 'feat\/'\)/)
+    expect(ci).toContain('github.event.pull_request.head.sha')
+    expect(ci).toMatch(/fetch-depth:\s*0/)
+    expect(existsSync(join(CLAUDE, 'hooks', GATE_SCRIPT))).toBe(true)
+  })
+
+  it('arch specs have no test-only hook overrides', () => {
+    const needle = ['HOOK_UNDER', 'TEST'].join('_')
+    const offenders = readdirSync(ARCH_DIR)
+      .filter((f) => f.endsWith('.spec.ts'))
+      .filter((f) => readFileSync(join(ARCH_DIR, f), 'utf8').includes(needle))
+    expect(offenders, 'specs referencing a test-only hook override').toEqual([])
+    expect(read(CATALOG)).not.toContain(needle)
   })
 })

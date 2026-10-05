@@ -1,3 +1,4 @@
 #!/bin/sh
-# Regla 09: cap push sense build + e2e en verd.
+root=$(git rev-parse --show-toplevel) || exit 1
+python3 "$root/.claude/hooks/require-contract.py" --pre-push || exit $?
 exec pnpm gate:push
