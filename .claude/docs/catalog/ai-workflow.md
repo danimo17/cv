@@ -54,6 +54,8 @@ There is no staging. Previews don't work until the Worker exists (first merge to
 
 Dependabot (`.github/dependabot.yml`): npm (pnpm-lock) weekly with minor+patch grouped, GitHub Actions weekly grouped.
 
+Audit configuration (decision 056, 2026-10-04): `pnpm-workspace.yaml` carries `overrides` (patched `brace-expansion`, `devalue`, `undici`) and `auditConfig.ignoreGhsas` (`GHSA-86w9-cpqp-85rv` node-forge, `GHSA-vfj7-8cjw-p6xm` braces: no patched version on npm). The `audit` job still fails on any other high advisory; each ignore has a REMOVE-WHEN condition in the decision.
+
 Action versions (verified 2026-09-14): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6` (reads `packageManager` from `package.json`), `actions/upload-artifact@v7`, `actions/github-script@v9`, `cloudflare/wrangler-action@v4`, `gitleaks/gitleaks-action@v3`, `github/codeql-action@v4`. Dependabot keeps them up to date.
 
 Why `workflow_run` and not `push`: it only deploys the commit that has already passed the gate, without re-running it or duplicating its definition. Trade-off: the workflow has to already exist on `main` to trigger, and the deploy run doesn't show up on the PR (it shows up under Actions → deploy).

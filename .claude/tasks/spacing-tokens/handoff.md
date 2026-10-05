@@ -20,9 +20,28 @@ Ready to push once the user gives explicit go-ahead (rule 06).
 | `85ec463` | merge `main` at `3e9d66d` (2026-10-04), no conflicts                                 |
 | `cc99091` | handoff note for the 2026-10-04 merge                                                |
 | `13626c2` | review fixes 1-3: decision 055 mapping, micro gaps reverted, `pages.css` migrated    |
-| this      | handoff update for the 2026-10-04 high-effort review                                 |
+| `0918657` | handoff update for the 2026-10-04 high-effort review                                 |
+| `a5eca98` | queued two workflow stories (docs only)                                              |
+| audit fix | overrides + ignored advisories, decision 056, criterion 6 (2 commits, see below)     |
 
 Working tree clean. The debug spec `e2e/_debug-tmp.spec.ts` was deleted by the user.
+
+## Scope addition: CI `audit` fix (2026-10-04)
+
+User decision (rule 11, not asked again): fix the red CI `audit` job inside this branch. Advisories published
+2026-10-01/02 for transitive deps (`brace-expansion`, `devalue`, `undici`, `node-forge`, `braces`) turned
+`pnpm audit --audit-level=high` red on `main`-based code and on this PR, which touches no dependencies.
+Contract criterion 6 added first (`contract.md`, plus a scope note in `story.md`).
+
+- `pnpm-workspace.yaml`: 3 `overrides` (`brace-expansion@>=2.0.0 <2.1.6`, `devalue@<5.9.3`,
+  `undici@>=7.0.0 <7.29.1`) and `auditConfig.ignoreGhsas` for `GHSA-86w9-cpqp-85rv` (`node-forge`, dev server
+  `listhen` only) and `GHSA-vfj7-8cjw-p6xm` (`braces`, build-time globbing only). Neither has a patched version
+  on npm (verified 2026-10-04: `node-forge` latest `1.4.0`, `braces` latest `3.0.3`).
+- `pnpm-lock.yaml`: only `brace-expansion` 2.1.4 to 2.1.7, `devalue` 5.9.2 to 5.9.4, `undici` 7.29.0 to 7.30.0
+  moved, plus the new `overrides:` block.
+- Decision 056 written (with a REMOVE-WHEN per ignore); `catalog/ai-workflow.md` notes the audit config (rule 07).
+- Audit output after the change: `pnpm audit --audit-level=high` exits 0, summary `3 vulnerabilities found` /
+  `Severity: 1 low | 2 high (2 ignored)`.
 
 ## Merge with main (2026-10-04)
 
@@ -134,6 +153,11 @@ catalog, standards, decision 055 and contract updated in the same change (rule 0
 purpose of decision 055, every migrated and reverted utility derived mechanically from a diff against
 `origin/main`; `pnpm gate:push` green after the fixes.
 
+Review of the audit fix (added after the blocks above): the commit(s) for contract criterion 6 (`pnpm-workspace.yaml`,
+`pnpm-lock.yaml`, decision 056, `catalog/ai-workflow.md`) were added AFTER the high-effort `/code-review` block
+above, are dependency/config-only, and are not covered by it. They need their own fresh review before merge; whether
+to run `/code-review` again is the user's call.
+
 ## Contract criteria
 
 | #   | State | Evidence                                                                                           |
@@ -143,6 +167,7 @@ purpose of decision 055, every migrated and reverted utility derived mechanicall
 | 3   | done  | `pnpm gate:push` green — 5/5 e2e passing, `getByTestId('hero-image')` included                     |
 | 4   | done  | `docs/catalog/styles.md` row for `--spacing-custom-sm/lg` + decisions 050, 053                     |
 | 5   | done  | `docs/standards/styling.md` covers sibling-element spacing with the `custom-sm`/`custom-lg` names  |
+| 6   | done  | `pnpm audit --audit-level=high` exit 0 (2 high ignored per decision 056) + `pnpm gate:push` green  |
 
 ## Decisions taken here
 
@@ -158,6 +183,10 @@ purpose of decision 055, every migrated and reverted utility derived mechanicall
   micro gaps (0.5-1.5) and gaps from step 8 up stay raw; padding is never migrated. Amends decision 050's scope
   text only. Also migrated the in-range `gap` utilities in `custom-button.css`/`custom-input.css` that the old
   "control padding" exception had over-covered.
+
+- Audit overrides and two ignored advisories (decision 056, 2026-10-04): 3 `overrides` plus
+  `auditConfig.ignoreGhsas` for `node-forge` and `braces`, which have no patched version on npm. Re-evaluate the
+  ignores when upstream publishes a fix.
 
 ## User pendings
 

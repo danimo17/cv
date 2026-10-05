@@ -6,3 +6,11 @@ minimumReleaseAgeExclude:
   - miniflare@5.20260911.1-alpha
   - wrangler@4.131.2
 minimumReleaseAge: 1440
+overrides:
+  'brace-expansion@>=2.0.0 <2.1.6': '^2.1.6'
+  'devalue@<5.9.3': '^5.9.3'
+  'undici@>=7.0.0 <7.29.1': '^7.29.1'
+auditConfig:
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv
+    - GHSA-vfj7-8cjw-p6xm

@@ -31,6 +31,13 @@ tokens is closer to today's value.
   not a generic "gap") — left as a literal value, documented as an exception in `styles.md` (rule 14 forbids
   a code comment explaining it inline).
 
+## Scope addition (2026-10-04)
+
+- Fix the failing CI `audit` job inside this branch (user decision, rule 11): dependency overrides and two
+  ignored advisories with no patched version, `pnpm-workspace.yaml` + lockfile only, decision 056, contract
+  criterion 6. Independent of the spacing-token work; no application code touched.
+
 ## External dependencies
 
-- None (pure CSS refactor, no new package, no i18n, no API surface change).
+- None for the spacing refactor itself (pure CSS, no new package, no i18n, no API surface change). The audit fix
+  only re-resolves existing transitive dependencies (`brace-expansion`, `devalue`, `undici`).
