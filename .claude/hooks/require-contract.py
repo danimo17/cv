@@ -47,11 +47,36 @@ GLOBAL_GIT_OPTIONS = (
     r"((?:\s+(?:(?:-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env|--attr-source|--super-prefix)"
     r"(?:=\S+|\s+(?:\"[^\"]*\"|'[^']*'|\S+))|--?[A-Za-z][\w-]*))*)"
 )
+ENV_PREFIX = r"(?:[A-Za-z_][A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|\S+)\s+)*"
 GIT_CALL = re.compile(
-    r"(?:^|[;&|]\s*)(?:[A-Za-z_]+=\S+\s+)*git" + GLOBAL_GIT_OPTIONS + r"\s+(commit|push)\b([^\n;&|]*)",
+    r"(?:^|[;&|]\s*)" + ENV_PREFIX + r"git" + GLOBAL_GIT_OPTIONS + r"\s+(commit|push)\b([^\n;&|]*)",
     re.M,
 )
 HOOKS_PATH_OVERRIDE = re.compile(r"(?<![\w-])(?:-c|--config-env)(?:=|\s+)[\"']?core\.hookspath\b", re.I)
+HOOKS_PATH_WRITE = re.compile(
+    r"(?:(?:^|[;&|]\s*)" + ENV_PREFIX + r"git" + GLOBAL_GIT_OPTIONS + r"\s+config\b[^\n;&|]*\s"
+    r"|GIT_CONFIG_KEY_\d+=[\"']?)core\.hookspath\b",
+    re.I | re.M,
+)
+COMMIT_VALUE_FLAGS = "mFCcSu"
+TEST_PREFIXES = ("tests/", "e2e/")
+FINDING_LINE = re.compile(r"^\s*[-*+]\s+finding\b")
+FINDING_FORMAT = re.compile(r"^\s*[-*+]\s+finding\s+(\S+)\s+—\s+outcome:\s*(\S+)\s+—\s+proof:\s*(.*)$")
+PROOF_HEAD = re.compile(r"^(strengthened|new)\s+((?:tests|e2e)/\S+?\.spec\.ts)\s+›\s+(.+)$", re.S)
+PROOF_PART = re.compile(r"^(searched|differs):\s*(.*)$", re.S)
+EM_DASH_SPLIT = re.compile(r"\s+—\s+")
+TITLE_CALL = re.compile(
+    r"^[ \t]*(?:it|test|describe)(?:\.\w+)*\(\s*(['\"`])((?:\\.|(?!\1).)*)\1", re.M
+)
+TITLE_EACH = re.compile(
+    r"^[ \t]*(?:it|test|describe)\.each\(\s*\[[\s\S]*?\]\s*\)\(\s*(['\"`])((?:\\.|(?!\1).)*)\1", re.M
+)
+SLUG_TOKEN = re.compile(r"[a-z0-9][a-z0-9-]+")
+FINDING_OUTCOMES = ("fixed", "queued", "no_change_needed")
+FIXED_FORMS = (
+    "`proof:` of a `fixed` finding must be `strengthened <tests/file.spec.ts> › <test name>` or "
+    "`new <tests/file.spec.ts> › <test name> — searched: <term>[, <term>...]` (a spec under tests/ or e2e/)"
+)
 PUSH_VALUE_FLAGS = ("-o", "--push-option", "--receive-pack", "--exec", "--repo")
 USAGE = (
     "usage: require-contract.py [--commit | --pre-push | --ci <branch> <sha> [--base <ref>]] "
@@ -231,32 +256,36 @@ def evidence_problem(step, evidence, tip, slug):
     return None
 
 
+def is_test_path(path):
+    return path.startswith(TEST_PREFIXES)
+
+
 def is_code_path(path):
-    return (
+    return not is_test_path(path) and (
         not path.startswith(CLAUDE_PREFIX)
         or path.startswith(GATE_CODE_PREFIXES)
         or path in GATE_CODE_FILES
     )
 
 
-def base_ref(explicit):
+def resolve_base(explicit):
     for candidate in ([explicit] if explicit else ["origin/main", "main"]):
         if resolve_commit(candidate):
             return candidate
     return None
 
 
-def branch_diff_paths(base, rev):
-    out = git(["diff", "--name-only", "--no-renames", "-z", f"{base}...{rev}"])
+def branch_diff_paths(base_ref, rev):
+    out = git(["diff", "--name-only", "--no-renames", "-z", f"{base_ref}...{rev}"])
     if out is None:
         return None
     return [p for p in out.split("\0") if p and is_code_path(p)]
 
 
-def branch_diff(base, rev, paths):
+def branch_diff(base_ref, rev, paths):
     out = git(
         ["--literal-pathspecs", "diff", "--binary", "-U0", "--no-renames", "--no-color",
-         f"{base}...{rev}", "--"] + paths
+         f"{base_ref}...{rev}", "--"] + paths
     )
     if out is None:
         return None
@@ -267,42 +296,39 @@ def branch_diff(base, rev, paths):
     ]
 
 
-def changed_branch_code(base, review_commit, tip_commit):
-    at_review = branch_diff_paths(base, review_commit)
-    at_tip = branch_diff_paths(base, tip_commit)
+def changed_branch_code(base_ref, review_commit, tip_commit):
+    at_review = branch_diff_paths(base_ref, review_commit)
+    at_tip = branch_diff_paths(base_ref, tip_commit)
     if at_review is None or at_tip is None:
         return None
     paths = sorted(set(at_review) | set(at_tip))
     if not paths:
         return []
-    if branch_diff(base, review_commit, paths) == branch_diff(base, tip_commit, paths):
+    old = branch_diff(base_ref, review_commit, paths)
+    new = branch_diff(base_ref, tip_commit, paths)
+    if old is None or new is None:
+        return None
+    if old == new:
         return []
     differing = [
         p for p in paths
-        if branch_diff(base, review_commit, [p]) != branch_diff(base, tip_commit, [p])
+        if branch_diff(base_ref, review_commit, [p]) != branch_diff(base_ref, tip_commit, [p])
     ]
     return differing or paths
 
 
-def reachable_code_changes(review_commit, tip_commit):
+def code_changes_after(review_commit, tip_commit, wanted):
     later = (git(["rev-list", "--reverse", f"{review_commit}..{tip_commit}"]) or "").split()
+    hits = []
     for commit in later:
-        outside = [p for p in commit_paths(commit) if is_code_path(p)]
-        if outside:
-            return commit, outside[0]
-    return None
-
-
-def first_change_after(review_commit, tip_commit, paths):
-    later = (git(["rev-list", "--reverse", f"{review_commit}..{tip_commit}"]) or "").split()
-    for commit in later:
-        hit = [p for p in commit_paths(commit) if p in paths]
+        paths = commit_paths(commit)
+        hit = [p for p in paths if wanted(p)]
         if hit:
-            return commit, hit[0]
-    return None, paths[0]
+            hits.append((commit, hit[0], any(is_test_path(p) for p in paths)))
+    return hits
 
 
-def stale_review_problem(content, tip, slug, base=None):
+def stale_review_problem(content, tip, slug, base_ref=None):
     for step, ticked, evidence in progress_entries(content) or []:
         if step != "review" or not ticked:
             continue
@@ -310,28 +336,158 @@ def stale_review_problem(content, tip, slug, base=None):
         tip_commit = resolve_commit(tip)
         if not review_commit or not tip_commit:
             return None
-        compared = base_ref(base)
+        compared = resolve_base(base_ref)
         changed = changed_branch_code(compared, review_commit, tip_commit) if compared else None
         if changed is None:
-            found = reachable_code_changes(review_commit, tip_commit)
-            if not found:
-                return None
-            commit, path = found
+            hits = code_changes_after(review_commit, tip_commit, is_code_path)
             scope = "commits after it, no base branch to compare with"
+            untested = next((h for h in hits if not h[2]), None)
         else:
             if not changed:
                 return None
-            commit, path = first_change_after(review_commit, tip_commit, changed)
+            hits = code_changes_after(review_commit, tip_commit, lambda p: p in changed)
             scope = f"the branch's own diff against {compared}"
+            untested = next((h for h in hits if not h[2]), None) if hits else (None, changed[0], False)
+        if not untested:
+            return None
+        commit, path, _ = untested
         where = f"commit {commit[:10]} (after it) changes {path}" if commit else f"{path} differs"
         return (
             f"the review is stale: `review` evidence cites {review_commit[:10]}, but {where} "
-            f"({scope}; code outside .claude/, .claude/hooks/ and .claude/workflow-steps.json), so the "
-            "review did not see the final code. Run `/code-review high` on the final diff, record its "
-            "result in the ## Review section, and re-record the `review` evidence with the sha of the "
-            "commit that records it."
+            f"({scope}; code outside .claude/, .claude/hooks/ and .claude/workflow-steps.json, with no "
+            "change under tests/ or e2e/ in that commit), so the review did not see the final code. A fix "
+            "needs its test: a code commit that also changes a file under tests/ or e2e/ does not stale "
+            "the review. Otherwise run `/code-review high` on the final diff, record its result in the "
+            "## Review section, and re-record the `review` evidence with the sha of the commit that "
+            "records it."
         )
     return None
+
+
+def backlog_slugs(rev):
+    rows = (git_show(rev, ".claude/backlog.md") or "").splitlines()
+    return {m.group(1) for m in (re.match(r"^\|\s*([a-z0-9][a-z0-9-]*)\s*\|", r) for r in rows) if m}
+
+
+def test_titles(content):
+    found = []
+    for pattern in (TITLE_CALL, TITLE_EACH):
+        found += [re.sub(r"\\(.)", r"\1", m.group(2)) for m in pattern.finditer(content)]
+    return found
+
+
+def spec_titles(rev):
+    if rev == "":
+        listing = git_nul(["ls-files", "-z", "--", "tests", "e2e"])
+    else:
+        listing = git_nul(["ls-tree", "-r", "-z", "--name-only", rev, "--", "tests", "e2e"])
+    return {
+        path: test_titles(git_show(rev, path) or "") for path in listing if path.endswith(".spec.ts")
+    }
+
+
+def unquote(name):
+    if len(name) > 1 and name[0] == name[-1] and name[0] in "\"'`":
+        return name[1:-1]
+    return name
+
+
+def fixed_proof_problem(proof, rev, base_ref):
+    parts = EM_DASH_SPLIT.split(proof)
+    head = PROOF_HEAD.match(parts[0].strip())
+    options = {}
+    for part in parts[1:]:
+        option = PROOF_PART.match(part.strip())
+        if not option or option.group(1) in options:
+            return FIXED_FORMS
+        options[option.group(1)] = option.group(2).strip()
+    if not head:
+        return FIXED_FORMS
+    kind, path, name = head.group(1), head.group(2), unquote(head.group(3).strip())
+    at_tip = git_show(rev, path)
+    if at_tip is None:
+        return f"{path} does not exist in the pushed tree"
+    if name not in test_titles(at_tip):
+        return f"{path} does not contain a test or describe titled \"{name}\""
+    if base_ref is None:
+        return "there is no base ref (--base, origin/main or main) to compare the proof against"
+    at_base = git_show(base_ref, path)
+    if kind == "strengthened":
+        if at_base is None or name not in test_titles(at_base):
+            return (
+                f"strengthened: \"{name}\" must already exist at the base ref ({base_ref}) in {path}; a test "
+                "added on this branch is `new <file> › <name> — searched: <terms>`"
+            )
+        if at_base == at_tip:
+            return (
+                f"strengthened: {path} is identical to the base ({base_ref}), so no existing test was "
+                "improved"
+            )
+        return None
+    for other, titles in spec_titles(base_ref).items():
+        if name in titles:
+            return (
+                f"new: \"{name}\" already exists at the base ({base_ref}) in {other}: strengthen that test "
+                "(`strengthened <file> › <name>`) instead of adding a duplicate"
+            )
+    if "searched" not in options:
+        return "new: add `— searched: <term>[, <term>...]` (the terms the gate greps in the test titles)"
+    terms = [t.strip() for t in options["searched"].split(",") if t.strip()]
+    if not terms:
+        return "new: `searched:` needs at least one term"
+    hits = []
+    for other, titles in spec_titles(rev).items():
+        for title in titles:
+            if (other, title) != (path, name) and any(t.lower() in title.lower() for t in terms):
+                hits.append(f"{other} › {title}")
+    if hits and not options.get("differs"):
+        shown = "; ".join(hits[:6]) + (f"; and {len(hits) - 6} more" if len(hits) > 6 else "")
+        return (
+            "a test for this may already exist: strengthen it, or justify with `— differs: <why a new "
+            f"test is needed>`. Matching titles: {shown}"
+        )
+    return None
+
+
+def finding_proof_problem(outcome, proof, rev, base_ref, slugs):
+    if outcome == "no_change_needed":
+        return None if proof else "give the reason in `proof:`"
+    if outcome == "fixed":
+        return fixed_proof_problem(proof, rev, base_ref)
+    for token in SLUG_TOKEN.findall(proof):
+        story = git_ok(["cat-file", "-e", f"{rev}:{TASKS_PREFIX}{token}/story.md"])
+        if token in slugs or story or git_ok(["cat-file", "-e", f"{rev}:{CLOSED_PREFIX}{token}.md"]):
+            return None
+    return "`proof:` must name a slug that is a row of .claude/backlog.md or an existing task folder/archive"
+
+
+def review_findings_problems(path, review, rev, base_ref=None):
+    found = []
+    slugs = backlog_slugs(rev)
+    compared = resolve_base(base_ref)
+    count = 0
+    for _, line in outside_fences(review):
+        if not FINDING_LINE.match(line):
+            continue
+        count += 1
+        m = FINDING_FORMAT.match(line)
+        if not m:
+            found.append(
+                f"{path}'s ## Review has a malformed finding line (`- finding <id> — outcome: "
+                f"<fixed|queued|no_change_needed> — proof: <text>`): {line.strip()}"
+            )
+            continue
+        fid, outcome, proof = m.group(1), m.group(2), m.group(3).strip()
+        problem = (
+            f"outcome `{outcome}` is not one of {'/'.join(FINDING_OUTCOMES)}"
+            if outcome not in FINDING_OUTCOMES
+            else finding_proof_problem(outcome, proof, rev, compared, slugs)
+        )
+        if problem:
+            found.append(f"{path}'s ## Review: finding {fid} ({outcome}): {problem}")
+    if not count and "findings: none" not in "\n".join(review).lower():
+        found.append(f"{path}'s ## Review has no `- finding <id> — ...` line and no `findings: none`")
+    return found
 
 
 def check_progress_evidence(path, content):
@@ -351,7 +507,7 @@ def check_progress_evidence(path, content):
         )
 
 
-def progress_problem(path, content, rev, slug, steps_ref=None):
+def progress_problem(path, content, rev, slug, base_ref=None):
     entries = progress_entries(content)
     if entries is None:
         return (
@@ -360,7 +516,7 @@ def progress_problem(path, content, rev, slug, steps_ref=None):
         )
     state = {step: (ticked, evidence) for step, ticked, evidence in entries}
     missing = []
-    for step in required_push_steps(steps_ref, rev):
+    for step in required_push_steps(base_ref, rev):
         ticked, evidence = state.get(step, (False, ""))
         if not ticked:
             missing.append(f"{step} (not ticked)")
@@ -411,6 +567,10 @@ def check_close(slug, status):
             "close-checklist box must be checked before the task can close (only the `push-pr` progress "
             f"line may stay open, it is ticked after the push). Unchecked: {items}"
         )
+    review = section(content, REVIEW_HEADING)
+    bad = review_findings_problems(archive, review, "") if review is not None else []
+    if bad:
+        fail(f"Rule 10 (task-close-gate): {'; '.join(bad)}")
     stale = stale_review_problem(content, "HEAD", slug)
     if stale:
         fail(f"Rule 10 (task-close-gate): {archive}: {stale}")
@@ -440,6 +600,27 @@ def special_commit_in_progress():
         if out and os.path.exists(os.path.join(root, out)):
             return True
     return False
+
+
+def review_recorded(slug):
+    for path in (f"{TASKS_PREFIX}{slug}/handoff.md", f"{CLOSED_PREFIX}{slug}.md"):
+        content = git_show("HEAD", path)
+        for step, ticked, _ in (progress_entries(content) if content is not None else None) or []:
+            if step == "review" and ticked:
+                return True
+    return False
+
+
+def untested_code_problem(slug, staged):
+    code = [f for f in staged if is_code_path(f)]
+    if not code or any(is_test_path(f) for f in staged) or not review_recorded(slug):
+        return
+    fail(
+        "Rule 09 (after a recorded review, every code change needs its test): this commit stages code "
+        f"({', '.join(code[:5])}) but no file under tests/ or e2e/. A finding becomes a test: search the "
+        "existing tests first and strengthen one, add a new test only when none covers it (.claude/workflow.md "
+        "`## Review policy`)."
+    )
 
 
 def commit_checks():
@@ -493,8 +674,11 @@ def commit_checks():
             "commit — write one (see decision 041 for the pattern) and stage it."
         )
 
+    if slug and not closing and not special_commit_in_progress():
+        untested_code_problem(slug, staged)
 
-def push_gate(branch, sha, steps_ref=None):
+
+def push_gate(branch, sha, base_ref=None):
     slug = branch[len(FEAT_PREFIX):]
     problems = []
 
@@ -509,7 +693,7 @@ def push_gate(branch, sha, steps_ref=None):
             found.append(f"{path}'s ## Review section has {len(unchecked)} unchecked item(s): {items}")
         if not re.search(r"code-review", "\n".join(review), re.IGNORECASE):
             found.append(f"{path}'s ## Review section never mentions code-review having run")
-        return found
+        return found + review_findings_problems(path, review, sha, base_ref)
 
     handoff_path = f"{TASKS_PREFIX}{slug}/handoff.md"
     archive_path = f"{CLOSED_PREFIX}{slug}.md"
@@ -517,10 +701,10 @@ def push_gate(branch, sha, steps_ref=None):
 
     if handoff is not None:
         problems += review_problems(handoff_path, section(handoff, r"^## Review\b"))
-        problem = progress_problem(handoff_path, handoff, sha, slug, steps_ref)
+        problem = progress_problem(handoff_path, handoff, sha, slug, base_ref)
         if problem:
             problems.append(problem)
-        stale = stale_review_problem(handoff, sha, slug, steps_ref)
+        stale = stale_review_problem(handoff, sha, slug, base_ref)
         if stale:
             problems.append(f"{handoff_path}: {stale}")
     else:
@@ -543,10 +727,12 @@ def push_gate(branch, sha, steps_ref=None):
             )
         elif not re.search(r"code-review", "\n".join(review), re.IGNORECASE):
             problems.append(f"{archive_path}'s ## Review section never mentions code-review having run")
-        problem = progress_problem(archive_path, archive, sha, slug, steps_ref)
+        if review is not None:
+            problems += review_findings_problems(archive_path, review, sha, base_ref)
+        problem = progress_problem(archive_path, archive, sha, slug, base_ref)
         if problem:
             problems.append(problem)
-        stale = stale_review_problem(archive, sha, slug, steps_ref)
+        stale = stale_review_problem(archive, sha, slug, base_ref)
         if stale:
             problems.append(f"{archive_path}: {stale}")
 
@@ -642,6 +828,25 @@ def run_commit_hook(hits):
                 push_gate(branch, sha)
 
 
+def skips_hooks(sub, rest):
+    if "--no-verify" in rest:
+        return True
+    if sub != "commit":
+        return False
+    try:
+        tokens = shlex.split(rest)
+    except ValueError:
+        tokens = rest.split()
+    for token in tokens:
+        if token.startswith("-") and not token.startswith("--"):
+            for letter in token[1:]:
+                if letter == "n":
+                    return True
+                if letter in COMMIT_VALUE_FLAGS:
+                    break
+    return False
+
+
 def claude_hook():
     global root
     root = os.environ.get("CLAUDE_PROJECT_DIR", ".")
@@ -653,8 +858,15 @@ def claude_hook():
         return
     hits = [(sub, rest) for _opts, sub, rest in calls]
 
-    for opts, _sub, rest in calls:
-        if re.search(r"--no-verify|(?:^|\s)-n\b", rest):
+    if HOOKS_PATH_WRITE.search(cmd):
+        fail(
+            "Rule 09: setting core.hooksPath (git config, GIT_CONFIG_KEY_*) in a command that commits or "
+            "pushes switches the git hooks off exactly like --no-verify, which is not allowed. Pass the "
+            "gate (pnpm gate)."
+        )
+
+    for opts, sub, rest in calls:
+        if skips_hooks(sub, rest):
             fail("Rule 09: --no-verify / -n is not allowed. Pass the gate (pnpm gate).")
         if HOOKS_PATH_OVERRIDE.search(opts):
             fail(
@@ -692,9 +904,9 @@ def pre_push_hook():
 
 def ci_hook(args):
     use_cwd_repo()
-    base = None
+    base_ref = None
     if len(args) == 4 and args[2] == "--base":
-        base = args[3]
+        base_ref = args[3]
         args = args[:2]
     if len(args) != 2:
         fail(USAGE)
@@ -705,9 +917,12 @@ def ci_hook(args):
         return
     if not git_ok(["cat-file", "-e", f"{sha}^{{commit}}"]):
         fail(f"Rule 09 (push-review-gate): commit {sha} is not in this checkout (fetch-depth: 0?).")
-    if base is not None and not git_ok(["cat-file", "-e", f"{base}^{{commit}}"]):
-        fail(f"Rule 09 (push-review-gate): the --base ref {base} does not resolve to a commit in this checkout.")
-    push_gate(branch, sha, base)
+    if base_ref is not None and not git_ok(["cat-file", "-e", f"{base_ref}^{{commit}}"]):
+        fail(
+            f"Rule 09 (push-review-gate): the --base ref {base_ref} does not resolve to a commit in this "
+            "checkout."
+        )
+    push_gate(branch, sha, base_ref)
 
 
 def main():

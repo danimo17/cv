@@ -246,6 +246,50 @@ describe('close-workflow-redesign: workflow documents', () => {
     }
   })
 
+  it('workflow.md states the review convergence policy', () => {
+    const workflow = read(WORKFLOW)
+    const policy = section(workflow, '## Review policy')
+    expect(policy).toMatch(/a\s+finding\s+becomes\s+a\s+test/i)
+    expect(policy).toMatch(/search\s+first/i)
+    expect(policy).toMatch(/strengthen(?:s|ing)?\s+an\s+existing\s+test/i)
+    expect(policy).toMatch(/new\s+one\s+only\s+when\s+none\s+exists/i)
+    expect(policy).toMatch(/gate\s+(?:performs|runs)\s+the\s+search/i)
+    expect(policy).toMatch(/titles?\s+(?:are|is)\s+unique\s+per\s+file/i)
+    expect(policy).toMatch(/not\s+a\s+second\s+review/i)
+    expect(policy).toMatch(/at\s+most\s+two\s+review\s+rounds/i)
+    expect(policy).toMatch(/only\s+the\s+delta/i)
+    expect(policy).toContain('git diff <last-reviewed-sha>..HEAD')
+    expect(policy).toContain('workflow-integrity-hardening')
+    expect(policy).toMatch(/severity/i)
+    expect(policy).toMatch(/normal-use/i)
+    expect(policy).toMatch(/cannot\s+return/i)
+    expect(policy).toMatch(/gate:push/)
+    expect(policy).toMatch(/new\s+bug\s+class/i)
+    expect(policy).toMatch(/not\s+semantic/i)
+    expect(workflow.indexOf('\n## Review policy')).toBeGreaterThan(workflow.indexOf('\n## Gates'))
+
+    const rule09 = read(RULE_09)
+    expect(rule09).toMatch(/a\s+finding\s+becomes\s+a\s+test/i)
+    expect(rule09).toMatch(/search\s+first/i)
+    expect(rule09).toMatch(/at\s+most\s+two\s+review\s+rounds/i)
+    expect(rule09).toMatch(/-\s+finding\s+<id>\s+—\s+outcome:/)
+
+    const decision = read(join(DECISIONS_DIR, '057-close-out-before-single-push.md'))
+    expect(decision).toContain(
+      '## Amendment 2026-10-06 (third review: findings become tests, search first)'
+    )
+    expect(read(CATALOG)).toMatch(/findings:\s+none/)
+
+    const formats = [
+      /- finding <id> — outcome: .* — proof:/,
+      /strengthened/,
+      /searched:/,
+      /differs:/,
+    ]
+    for (const template of [HANDOFF_TEMPLATE, CLOSE_TEMPLATE])
+      for (const format of formats) expect(read(template)).toMatch(format)
+  })
+
   it('decision 057 and ai-workflow catalog exist', () => {
     const file = readdirSync(DECISIONS_DIR).find((f) => f.startsWith('057-'))
     expect(file, 'decision 057 file').toBe('057-close-out-before-single-push.md')

@@ -158,7 +158,7 @@ function progressBlock(ticks: Ticks = {}, omit: string[] = []): string {
 }
 
 const REVIEW_OK =
-  '## Review\n\n- [x] checklist\n- [x] code-review ran at high effort, 2026-10-05, no findings\n'
+  '## Review\n\n- [x] checklist\n- [x] code-review ran at high effort, 2026-10-05\n- findings: none\n'
 
 function handoffDoc(opts: { ticks?: Ticks; omit?: string[]; review?: string | null } = {}): string {
   const review = opts.review === undefined ? REVIEW_OK : opts.review
@@ -352,7 +352,7 @@ describe('push gate with ACTIVE set: 054 behavior unchanged', () => {
   it('every problem is reported at once: review and progress together', () => {
     const repo = activeRepo(
       handoffDoc({
-        review: '## Review\n\n- [ ] code-review ran\n',
+        review: '## Review\n\n- [ ] code-review ran\n- findings: none\n',
         ticks: { build: null, review: null },
       })
     )
@@ -369,7 +369,9 @@ describe('push gate with ACTIVE set: 054 behavior unchanged', () => {
 
   it('a heading with a suffix still counts as the review section', () => {
     const repo = activeRepo(
-      handoffDoc({ review: '## Review (workflow step `review`)\n\n- [x] code-review ran\n' })
+      handoffDoc({
+        review: '## Review (workflow step `review`)\n\n- [x] code-review ran\n- findings: none\n',
+      })
     )
     expectAllowed(repo, PUSH)
   })
@@ -540,10 +542,30 @@ describe('push requires every pre-push step ticked with evidence', () => {
 })
 
 describe('commit rules that predate decision 057 still hold', () => {
-  it('--no-verify and -n are blocked', () => {
+  it('--no-verify and -n are blocked, also as a short-flag cluster (-nm, -anm, -sn, a trailing -n)', () => {
     const repo = activeRepo(handoffDoc())
     expectBlocked(repo, 'git commit --no-verify -m x', 'Rule 09')
     expectBlocked(repo, 'git commit -n -m x', 'Rule 09')
+    for (const cmd of [
+      'git commit -nm "x"',
+      'git commit -anm x',
+      'git commit -an -m x',
+      'git commit -m x -n',
+      'git commit -sn -m x',
+      'git -C . commit -nm x',
+      'git commit -n',
+    ])
+      expectBlocked(repo, cmd, 'Rule 09', '--no-verify')
+  })
+
+  it('flags that merely contain the letter n, message values and a dry-run push are not refused', () => {
+    const repo = activeRepo(handoffDoc())
+    expectAllowed(repo, 'git commit -am x')
+    expectAllowed(repo, 'git commit -mn')
+    expectAllowed(repo, 'git commit -m "use -n for dry runs"')
+    expectAllowed(repo, 'git commit --amend -m x')
+    expectAllowed(repo, `git push -n origin feat/${SLUG}`)
+    expectBlocked(repo, `git push --no-verify origin feat/${SLUG}`, 'Rule 09')
   })
 
   it('prose that merely mentions git commit is ignored', () => {
@@ -603,6 +625,9 @@ describe('commit rules that predate decision 057 still hold', () => {
       repo.git('add', '-A')
       expectBlocked(repo, COMMIT, 'Rule 11')
       repo.write({ '.claude/docs/decisions/001-x.md': '# x\n' })
+      repo.git('add', '-A')
+      expectBlocked(repo, COMMIT, 'Rule 09', 'needs its test')
+      repo.write({ 'tests/unit/config.spec.ts': "it('config', () => {})\n" })
       repo.git('add', '-A')
       expectAllowed(repo, COMMIT)
     }
@@ -1206,6 +1231,19 @@ describe('a code commit after the review evidence makes the review stale', () =>
     commitFile(repo, 'app/late.ts')
     expectBlocked(repo, PUSH, 'stale', '/code-review high')
   })
+
+  it('freshness fails closed when git diff errors: two unreadable diffs are not "equal"', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFile(repo, 'app/thing.ts', 'export const a = 1\n')
+    const before = repo.git('rev-parse', 'HEAD:app/thing.ts').trim()
+    const rereview = recordReview(repo, 'after the first code commit')
+    reviewedAt(repo, rereview)
+    const code = commitFile(repo, 'app/thing.ts', 'export const a = 2\n')
+    const after = repo.git('rev-parse', 'HEAD:app/thing.ts').trim()
+    for (const blob of [before, after])
+      rmSync(join(repo.dir, '.git', 'objects', blob.slice(0, 2), blob.slice(2)), { force: true })
+    expectBlocked(repo, PUSH, 'stale', short(code), 'app/thing.ts')
+  })
 })
 
 describe('merge, rebase and revert commits are not blocked by the docs-only rule', () => {
@@ -1346,6 +1384,14 @@ describe('global git options do not hide commit or push from the hook', () => {
     expectBlocked(noContract(), 'cd sub && git --no-pager commit -m x', 'Rule 10')
   })
 
+  it('an environment prefix whose variable name has a digit does not hide commit or push', () => {
+    const repo = activeRepo(handoffDoc())
+    expectBlocked(repo, 'FOO1=bar git commit --no-verify -m x', 'Rule 09')
+    expectBlocked(repo, 'GIT_CONFIG_KEY_0=user.name git commit -n -m x', 'Rule 09')
+    expectBlocked(repo, `FOO1="a b" git push --no-verify origin feat/${SLUG}`, 'Rule 09')
+    expectBlocked(noContract(), 'GIT_AUTHOR_NAME2=x git -C . commit -m x', 'Rule 10')
+  })
+
   it('other subcommands with global options are not gated', () => {
     const repo = noContract()
     expectAllowed(repo, 'git -C . status')
@@ -1480,7 +1526,7 @@ describe('unchecked scan ignores fenced code and prose', () => {
   })
 
   it('handoff ## Review (push): fenced and prose boxes pass, a real one blocks', () => {
-    const ok = `## Review\n\nSee:\n\n${fenced}\n${prose}\n- [x] code-review ran at high effort\n`
+    const ok = `## Review\n\nSee:\n\n${fenced}\n${prose}\n- [x] code-review ran at high effort\n- findings: none\n`
     expectAllowed(activeRepo(handoffDoc({ review: ok })), PUSH)
     expectBlocked(
       activeRepo(handoffDoc({ review: `${ok}- [ ] still open\n` })),
@@ -1491,7 +1537,7 @@ describe('unchecked scan ignores fenced code and prose', () => {
   })
 
   it('closed archive review section (push): same rule', () => {
-    const review = `## Review\n\n${fenced}\n${prose}\n- [x] code-review ran\n`
+    const review = `## Review\n\n${fenced}\n${prose}\n- [x] code-review ran\n- findings: none\n`
     expectAllowed(closedBranchRepo(archiveDoc({ review })), PUSH)
     expectBlocked(
       closedBranchRepo(archiveDoc({ review: `${review}- [ ] open\n` })),
@@ -1727,6 +1773,31 @@ describe('core.hooksPath override is refused like --no-verify', () => {
     expectAllowed(repo, 'git -c core.hooksPathExtra=1 commit -m x')
     expectAllowed(repo, `git --config-env=user.name=NAME push origin feat/${SLUG}`)
   })
+
+  it.each([
+    'git config core.hooksPath /tmp/x && git commit -m x',
+    'git config --global core.hooksPath /tmp/x; git commit -m x',
+    `git config --local CORE.HOOKSPATH /tmp/x && git push origin feat/${SLUG}`,
+    'git -C . config core.hookspath /dev/null && git commit -m x',
+    'FOO=1 git config core.hooksPath "" && git commit -m x',
+    'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/tmp/x git commit -m x',
+    `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="core.hooksPath" GIT_CONFIG_VALUE_0=/tmp/x git push origin feat/${SLUG}`,
+    'export GIT_CONFIG_KEY_0=core.HOOKSPATH; git commit -m x',
+  ])('a chained git config write or GIT_CONFIG_KEY env prefix is refused too: %s', (cmd) => {
+    expectBlocked(activeRepo(handoffDoc()), cmd, 'Rule 09', 'core.hooksPath')
+  })
+
+  it('other config writes, a standalone config call and prose are not refused', () => {
+    const repo = activeRepo(handoffDoc())
+    expectAllowed(repo, 'git config user.name x && git commit -m x')
+    expectAllowed(repo, 'git config core.hooksPathExtra 1 && git commit -m x')
+    expectAllowed(
+      repo,
+      'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0=x git commit -m x'
+    )
+    expectAllowed(repo, 'git config core.hooksPath .githooks')
+    expectAllowed(repo, 'git commit -m "notes about git config core.hooksPath"')
+  })
 })
 
 describe('unchecked scan covers every list marker', () => {
@@ -1772,6 +1843,487 @@ describe('unchecked scan covers every list marker', () => {
       '- [x] done\n* just a bullet\n1. a numbered line\nsee the 1. [ ] form in the docs\n'
     const repo = activeRepo(handoffDoc())
     stageClose(repo, archiveDoc({ checklist }))
+    expectAllowed(repo, COMMIT)
+  })
+})
+
+function commitFiles(repo: Repo, files: Record<string, string>): string {
+  repo.write(files)
+  repo.commitAll(`touch ${Object.keys(files).join(', ')}`)
+  return head(repo)
+}
+
+describe('a later code commit with a test does not stale the review, without a test it does', () => {
+  const TEST = 'tests/unit/thing.spec.ts'
+
+  it('a code commit that also changes a file under tests/ keeps the review fresh', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFiles(repo, { 'app/thing.ts': 'export {}\n', [TEST]: "it('thing', () => {})\n" })
+    expectAllowed(repo, PUSH)
+    expectCliAllowed(runCli(repo, ['--pre-push'], prePushLine(repo)))
+    expectCliAllowed(runCli(repo, ['--ci', `feat/${SLUG}`, head(repo), '--base', 'main']))
+  })
+
+  it('the same code commit without a tests/ change makes it stale and names the commit', () => {
+    const repo = activeRepo(handoffDoc())
+    const code = commitFile(repo, 'app/thing.ts')
+    expectBlocked(repo, PUSH, 'stale', short(code), 'app/thing.ts', 'needs its test')
+  })
+
+  it('one untested code commit among tested ones still stales it, naming that one', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFiles(repo, { 'app/a.ts': 'export {}\n', [TEST]: "it('a', () => {})\n" })
+    const untested = commitFile(repo, 'app/b.ts')
+    commitFiles(repo, { 'app/c.ts': 'export {}\n', 'tests/unit/c.spec.ts': "it('c', () => {})\n" })
+    expectBlocked(repo, PUSH, 'stale', short(untested), 'app/b.ts')
+  })
+
+  it('a fix to the gate itself counts as code and is exempt only with a test', () => {
+    const repo = activeRepo(handoffDoc())
+    const gate = '.claude/hooks/require-contract.py'
+    commitFiles(repo, { [gate]: '# fixed\n', 'tests/arch/gate.spec.ts': "it('gate', () => {})\n" })
+    expectAllowed(repo, PUSH)
+    const untested = commitFile(repo, gate, '# fixed again\n')
+    expectBlocked(repo, PUSH, 'stale', short(untested), gate)
+  })
+
+  it('a code commit that also changes a file under e2e/ keeps the review fresh', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFiles(repo, {
+      'app/thing.ts': 'export {}\n',
+      'e2e/thing.spec.ts': "test('t', () => {})\n",
+    })
+    expectAllowed(repo, PUSH)
+  })
+
+  it('a test-only commit does not stale it', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFile(repo, TEST, "it('thing', () => {})\n")
+    expectAllowed(repo, PUSH)
+  })
+
+  it('a tested fix plus a merge of main keeps it fresh, an untested fix does not', () => {
+    const repo = activeRepo(handoffDoc())
+    repo.git('switch', '-q', 'main')
+    commitFile(repo, 'app/from-main.ts')
+    repo.git('switch', '-q', `feat/${SLUG}`)
+    commitFiles(repo, { 'app/thing.ts': 'export {}\n', [TEST]: "it('thing', () => {})\n" })
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+    expectAllowed(repo, PUSH)
+    const untested = commitFile(repo, 'app/other.ts')
+    expectBlocked(repo, PUSH, 'stale', short(untested))
+  })
+
+  it('without any base ref the same exemption applies', () => {
+    const repo = activeRepo(handoffDoc())
+    repo.git('branch', '-m', 'main', 'trunk')
+    commitFiles(repo, { 'app/thing.ts': 'export {}\n', [TEST]: "it('thing', () => {})\n" })
+    expectAllowed(repo, PUSH)
+    commitFile(repo, 'app/other.ts')
+    expectBlocked(repo, PUSH, 'stale', 'app/other.ts')
+  })
+
+  it('the closing commit follows the same rule', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFiles(repo, { 'app/thing.ts': 'export {}\n', [TEST]: "it('thing', () => {})\n" })
+    stageClose(repo, archiveDoc())
+    expectAllowed(repo, COMMIT)
+  })
+})
+
+describe('review findings must cite proof: a strengthened test, a new test after a real search, a backlog slug or a reason', () => {
+  const SPEC = 'tests/arch/thing.spec.ts'
+  const OTHER = 'tests/unit/other.spec.ts'
+  const E2E = 'e2e/flow.spec.ts'
+  const SPEC_BODY = "describe('thing', () => {\n  it('does the thing', () => {})\n})\n"
+  const OTHER_BODY = "describe('other', () => {\n  it('handles widgets', () => {})\n})\n"
+  const E2E_BODY = "test('opens the gallery page', async () => {})\n"
+  const BACKLOG = [
+    '| Slug | Story | Status |',
+    '| --- | --- | --- |',
+    '| later-task | something for later | todo |',
+    '',
+  ].join('\n')
+  const BASE_FILES: Record<string, string> = {
+    [SPEC]: SPEC_BODY,
+    [OTHER]: OTHER_BODY,
+    [E2E]: E2E_BODY,
+    '.claude/backlog.md': BACKLOG,
+    '.claude/tasks/open-task/story.md': '# Story\n',
+    '.claude/tasks/closed/old-task.md': '# archive\n',
+  }
+  const withIt = (body: string, title: string): string =>
+    body.replace(/\}\)\n$/, `  it('${title}', () => {})\n})\n`)
+
+  const fixedLine = (proof: string, id = 'F1'): string =>
+    `- finding ${id} — outcome: fixed — proof: ${proof}`
+  const queued = (proof: string, id = 'F2'): string =>
+    `- finding ${id} — outcome: queued — proof: ${proof}`
+  const noChange = (proof: string, id = 'F3'): string =>
+    `- finding ${id} — outcome: no_change_needed — proof: ${proof}`
+  const strengthened = (name: string, file = SPEC): string => `strengthened ${file} › ${name}`
+  const fresh = (name: string, searched?: string, differs?: string, file = SPEC): string =>
+    `new ${file} › ${name}` +
+    (searched === undefined ? '' : ` — searched: ${searched}`) +
+    (differs === undefined ? '' : ` — differs: ${differs}`)
+  const review = (...lines: string[]): string =>
+    `## Review\n\n- [x] code-review ran at high effort, 2026-10-06\n${lines.join('\n')}\n`
+
+  const handoffRepo = (text: string, onBranch: Record<string, string> = {}): Repo => {
+    const repo = createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ review: text })),
+      ...BASE_FILES,
+    })
+    if (Object.keys(onBranch).length) {
+      repo.write(onBranch)
+      repo.commitAll('branch work')
+    }
+    return repo
+  }
+  const archiveRepo = (text: string, onBranch: Record<string, string> = {}): Repo => {
+    const repo = handoffRepo(review('- findings: none'), onBranch)
+    stageClose(repo, archiveDoc({ review: text }))
+    return repo
+  }
+  const improved = { [SPEC]: withIt(SPEC_BODY, 'rejects a null thing') }
+  const added = { [SPEC]: withIt(SPEC_BODY, 'rejects a null widget') }
+
+  it('strengthened: a test that exists at the base and whose file the branch changed passes', () => {
+    const text = review(fixedLine(strengthened('does the thing')))
+    expectAllowed(handoffRepo(text, improved), PUSH)
+    expectAllowed(handoffRepo(review(fixedLine(strengthened('"does the thing"'))), improved), PUSH)
+  })
+
+  it('strengthened: the file identical to the base is not an improvement', () => {
+    expectBlocked(
+      handoffRepo(review(fixedLine(strengthened('does the thing')))),
+      PUSH,
+      'finding F1',
+      'strengthened',
+      'identical to the base'
+    )
+  })
+
+  it('strengthened: a test that does not exist at the base is not strengthened but new', () => {
+    expectBlocked(
+      handoffRepo(review(fixedLine(strengthened('rejects a null thing'))), improved),
+      PUSH,
+      'finding F1',
+      'must already exist at the base',
+      'new'
+    )
+  })
+
+  it('strengthened: the name must still be in the file at the tip, and the file must exist', () => {
+    const renamed = { [SPEC]: SPEC_BODY.replace('does the thing', 'does something else') }
+    expectBlocked(
+      handoffRepo(review(fixedLine(strengthened('does the thing'))), renamed),
+      PUSH,
+      'finding F1',
+      'does not contain'
+    )
+    expectBlocked(
+      handoffRepo(review(fixedLine(strengthened('does the thing', 'tests/arch/missing.spec.ts')))),
+      PUSH,
+      'finding F1',
+      'does not exist'
+    )
+  })
+
+  it('new: a title absent from the base, with a search that finds no other test, passes', () => {
+    const text = review(fixedLine(fresh('rejects a null widget', 'null, rejects')))
+    expectAllowed(handoffRepo(text, added), PUSH)
+    expectAllowed(
+      handoffRepo(review(fixedLine(fresh('"rejects a null widget"', 'NULL'))), added),
+      PUSH
+    )
+  })
+
+  it('new: without a `searched:` list, or with only empty terms, it blocks', () => {
+    const noSearch = review(fixedLine(fresh('rejects a null widget')))
+    expectBlocked(handoffRepo(noSearch, added), PUSH, 'finding F1', 'searched:')
+    for (const terms of ['', ' , ,'])
+      expectBlocked(
+        handoffRepo(review(fixedLine(fresh('rejects a null widget', terms))), added),
+        PUSH,
+        'finding F1',
+        'at least one term'
+      )
+  })
+
+  it('new: the gate runs the search itself, case-insensitive, and names what it found', () => {
+    const text = review(fixedLine(fresh('rejects a null widget', 'WIDGETS')))
+    expectBlocked(
+      handoffRepo(text, added),
+      PUSH,
+      'finding F1',
+      'may already exist',
+      'strengthen it',
+      '— differs:',
+      OTHER,
+      'handles widgets'
+    )
+  })
+
+  it('new: a hit in a describe title, in the same file or in e2e/ also blocks', () => {
+    const inDescribe = review(fixedLine(fresh('rejects a null widget', 'thing')))
+    expectBlocked(handoffRepo(inDescribe, added), PUSH, 'finding F1', 'does the thing')
+    const inE2e = review(fixedLine(fresh('rejects a null widget', 'gallery, null')))
+    expectBlocked(handoffRepo(inE2e, added), PUSH, 'finding F1', E2E, 'opens the gallery page')
+  })
+
+  it('new: the hit is justified with `— differs: <reason>`, an empty reason does not count', () => {
+    const justified = review(
+      fixedLine(fresh('rejects a null widget', 'widgets', 'null input is a different path'))
+    )
+    expectAllowed(handoffRepo(justified, added), PUSH)
+    const empty = review(fixedLine(fresh('rejects a null widget', 'widgets', '')))
+    expectBlocked(handoffRepo(empty, added), PUSH, 'finding F1', 'differs')
+  })
+
+  it('new: the cited test itself is never a hit for its own search', () => {
+    const text = review(fixedLine(fresh('rejects a null widget', 'rejects a null widget')))
+    expectAllowed(handoffRepo(text, added), PUSH)
+  })
+
+  it('new: a title that already exists at the base (anywhere under tests/ or e2e/) must be strengthened', () => {
+    const dup = { [OTHER]: withIt(OTHER_BODY, 'does the thing') }
+    expectBlocked(
+      handoffRepo(review(fixedLine(fresh('does the thing', 'zzz', undefined, OTHER))), dup),
+      PUSH,
+      'finding F1',
+      'already exists at the base',
+      'strengthened'
+    )
+  })
+
+  it('new: the file must exist at the tip and contain the name', () => {
+    expectBlocked(
+      handoffRepo(review(fixedLine(fresh('rejects a null widget', 'null'))), improved),
+      PUSH,
+      'finding F1',
+      'does not contain'
+    )
+    expectBlocked(
+      handoffRepo(review(fixedLine(fresh('x', 'null', undefined, 'tests/arch/missing.spec.ts')))),
+      PUSH,
+      'finding F1',
+      'does not exist'
+    )
+  })
+
+  it.each([
+    ['prose instead of a test', 'fixed in the last commit'],
+    ['the old bare form with no strengthened/new', `${SPEC} › "does the thing"`],
+    [
+      'a path outside tests/ and e2e/',
+      'new app/thing.spec.ts › rejects a null widget — searched: null',
+    ],
+    ['a path without a name', `new ${SPEC} — searched: null`],
+  ])('fixed: %s blocks, naming the finding and the two accepted forms', (_label, proof) => {
+    expectBlocked(
+      handoffRepo(review(fixedLine(proof)), added),
+      PUSH,
+      'finding F1',
+      'fixed',
+      'strengthened',
+      'new'
+    )
+  })
+
+  it('fixed: the spec is read from the pushed tree, not the working tree', () => {
+    const repo = handoffRepo(review(fixedLine(fresh('rejects a null widget', 'null'))))
+    repo.write(added)
+    expectBlocked(repo, PUSH, 'finding F1', 'does not contain')
+    const search = handoffRepo(review(fixedLine(fresh('rejects a null widget', 'null'))), added)
+    search.write({ 'tests/unit/extra.spec.ts': "it('handles a null value', () => {})\n" })
+    expectAllowed(search, PUSH)
+  })
+
+  it('queued: a backlog slug, an open task folder or a closed archive passes', () => {
+    for (const slug of ['later-task', 'open-task', 'old-task'])
+      expectAllowed(handoffRepo(review(queued(`queued as ${slug}, reason: out of scope`))), PUSH)
+  })
+
+  it('queued: a slug found nowhere blocks, and so does an empty proof', () => {
+    expectBlocked(
+      handoffRepo(review(queued('queued as imaginary-task'))),
+      PUSH,
+      'finding F2',
+      'queued'
+    )
+    expectBlocked(handoffRepo(review(queued(''))), PUSH, 'finding F2')
+  })
+
+  it('no_change_needed: a reason passes, an empty one blocks', () => {
+    expectAllowed(handoffRepo(review(noChange('the guard already covers that path'))), PUSH)
+    expectBlocked(handoffRepo(review(noChange(''))), PUSH, 'finding F3', 'no_change_needed')
+  })
+
+  it('an unknown outcome and a malformed finding line block', () => {
+    const odd = '- finding F4 — outcome: ignored — proof: whatever'
+    expectBlocked(handoffRepo(review(odd)), PUSH, 'F4', 'outcome')
+    expectBlocked(handoffRepo(review('- finding F5 fixed with a test')), PUSH, 'F5', 'finding line')
+  })
+
+  it('a Review with no finding line needs the literal "findings: none"', () => {
+    expectBlocked(
+      handoffRepo('## Review\n\n- [x] code-review ran at high effort\n'),
+      PUSH,
+      'findings: none'
+    )
+    expectAllowed(handoffRepo(review('- findings: none')), PUSH)
+  })
+
+  it('finding lines inside a fenced block are examples, not findings', () => {
+    const text = `${review('- findings: none')}\n\`\`\`\n- finding X — outcome: fixed — proof: nothing\n\`\`\`\n`
+    expectAllowed(handoffRepo(text), PUSH)
+  })
+
+  it('every bad finding is reported in the same output', () => {
+    const text = review(
+      fixedLine(strengthened('does the thing')),
+      fixedLine('prose', 'F7'),
+      queued('imaginary-task', 'F8'),
+      noChange('', 'F9')
+    )
+    expectBlocked(handoffRepo(text), PUSH, '4 problems', 'F1', 'F7', 'F8', 'F9')
+  })
+
+  it('the closed archive review is checked at the closing commit and at push, with the same forms', () => {
+    const good = review(fixedLine(fresh('rejects a null widget', 'null')))
+    expectAllowed(archiveRepo(good, added), COMMIT)
+    expectBlocked(
+      archiveRepo(review(fixedLine(fresh('rejects a null widget', 'widgets'))), added),
+      COMMIT,
+      'task-close-gate',
+      'finding F1',
+      'may already exist'
+    )
+    expectBlocked(
+      archiveRepo(review(fixedLine(strengthened('does the thing')))),
+      COMMIT,
+      'task-close-gate',
+      'identical to the base'
+    )
+    expectBlocked(archiveRepo(review(fixedLine('prose'))), COMMIT, 'task-close-gate', 'finding F1')
+    expectBlocked(
+      archiveRepo('## Review\n\n- [x] code-review ran\n'),
+      COMMIT,
+      'task-close-gate',
+      'findings: none'
+    )
+    const repo = createRepo({
+      '.claude/tasks/ACTIVE': '',
+      [ARCHIVE]: archiveDoc({ review: review(fixedLine('prose')) }),
+      ...BASE_FILES,
+    })
+    expectBlocked(repo, PUSH, 'finding F1')
+    expectCliBlocked(runCli(repo, ['--pre-push'], prePushLine(repo)), 'finding F1')
+    expectCliBlocked(runCli(repo, ['--ci', `feat/${SLUG}`, head(repo)]), 'finding F1')
+  })
+
+  it('--ci --base compares against the given base ref', () => {
+    const repo = handoffRepo(review(fixedLine(strengthened('does the thing'))), improved)
+    repo.git('branch', 'trunk', 'HEAD~1')
+    expectCliAllowed(runCli(repo, ['--ci', `feat/${SLUG}`, head(repo), '--base', 'trunk']))
+    repo.git('branch', 'same', 'HEAD')
+    expectCliBlocked(
+      runCli(repo, ['--ci', `feat/${SLUG}`, head(repo), '--base', 'same']),
+      'identical to the base'
+    )
+  })
+})
+
+describe('after a recorded review a code commit without a test is blocked at commit time', () => {
+  const stage = (repo: Repo, files: Record<string, string>): void => {
+    repo.write(files)
+    repo.git('add', '-A')
+  }
+  const CODE = { 'app/thing.ts': 'export {}\n' }
+  const marker = (repo: Repo, name: string): void =>
+    writeFileSync(join(repo.dir, '.git', name), `${head(repo)}\n`)
+
+  it('staged code with no tests/ or e2e/ file is blocked, naming the fix', () => {
+    const repo = activeRepo(handoffDoc())
+    stage(repo, CODE)
+    expectBlocked(repo, COMMIT, 'Rule 09', 'recorded review', 'needs its test', 'app/thing.ts')
+    expectCliBlocked(runCli(repo, ['--commit']), 'needs its test')
+  })
+
+  it('the same code with a staged file under tests/ passes, and so does one under e2e/', () => {
+    const repo = activeRepo(handoffDoc())
+    stage(repo, { ...CODE, 'tests/unit/thing.spec.ts': "it('x', () => {})\n" })
+    expectAllowed(repo, COMMIT)
+    expectCliAllowed(runCli(repo, ['--commit']))
+    const e2e = activeRepo(handoffDoc())
+    stage(e2e, { ...CODE, 'e2e/thing.spec.ts': "test('x', () => {})\n" })
+    expectAllowed(e2e, COMMIT)
+  })
+
+  it('a staged test alone, or docs under .claude/, is not code and passes', () => {
+    const repo = activeRepo(handoffDoc())
+    stage(repo, { 'tests/unit/thing.spec.ts': "it('x', () => {})\n", '.claude/notes.md': 'n\n' })
+    expectAllowed(repo, COMMIT)
+  })
+
+  it('a change to the gate itself is code too', () => {
+    const repo = activeRepo(handoffDoc())
+    stage(repo, { '.claude/hooks/require-contract.py': '# changed\n' })
+    expectBlocked(repo, COMMIT, 'needs its test', '.claude/hooks/require-contract.py')
+    stage(repo, { 'tests/arch/gate.spec.ts': "it('gate', () => {})\n" })
+    expectAllowed(repo, COMMIT)
+    const steps = activeRepo(handoffDoc())
+    stage(steps, { '.claude/workflow-steps.json': '[]\n' })
+    expectBlocked(steps, COMMIT, 'needs its test')
+  })
+
+  it('before the review is ticked a code commit without a test is not blocked', () => {
+    const repo = activeRepo(handoffDoc({ ticks: { review: null } }))
+    stage(repo, CODE)
+    expectAllowed(repo, COMMIT)
+    expectCliAllowed(runCli(repo, ['--commit']))
+  })
+
+  it('merge, rebase, cherry-pick and revert commits are exempt', () => {
+    for (const name of ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD']) {
+      const repo = activeRepo(handoffDoc())
+      stage(repo, CODE)
+      marker(repo, name)
+      expectAllowed(repo, COMMIT)
+    }
+    for (const name of ['rebase-merge', 'rebase-apply']) {
+      const repo = activeRepo(handoffDoc())
+      stage(repo, CODE)
+      mkdirSync(join(repo.dir, '.git', name))
+      expectAllowed(repo, COMMIT)
+    }
+  })
+
+  it('a closing commit is exempt, and a closed branch still takes only docs commits', () => {
+    const repo = activeRepo(handoffDoc())
+    stageClose(repo, archiveDoc())
+    expectAllowed(repo, COMMIT)
+    const closed = closedBranchRepo(archiveDoc())
+    stage(closed, { ...CODE, 'tests/unit/thing.spec.ts': "it('x', () => {})\n" })
+    expectBlocked(closed, COMMIT, 'Rule 10', 'outside .claude/')
+    marker(closed, 'MERGE_HEAD')
+    expectAllowed(closed, COMMIT)
+  })
+
+  it('a non-feat branch uses the ACTIVE slug the same way', () => {
+    const repo = activeRepo(handoffDoc(), 'work')
+    stage(repo, CODE)
+    expectBlocked(repo, COMMIT, 'needs its test')
+    const unticked = activeRepo(handoffDoc({ ticks: { review: null } }), 'work')
+    stage(unticked, CODE)
+    expectAllowed(unticked, COMMIT)
+  })
+
+  it('the state is read from HEAD: a handoff that ticks review in the same commit is not yet recorded', () => {
+    const repo = activeRepo(handoffDoc({ ticks: { review: null } }))
+    stage(repo, { ...CODE, [HANDOFF]: handoffDoc() })
     expectAllowed(repo, COMMIT)
   })
 })

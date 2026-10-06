@@ -23,15 +23,6 @@ describe('parseSearchQuery', () => {
     ['q longer than 50 chars', { q: 'a'.repeat(51) }],
     ['q with control characters', { q: 'cat\u0000dog' }],
     ['q with a newline', { q: 'cat\ndog' }],
-  ])('rejects %s with GiphyQueryError', (_label, input) => {
-    expect(() => parseSearchQuery(input)).toThrow(GiphyQueryError)
-  })
-
-  it('accepts q of exactly 50 chars', () => {
-    expect(parseSearchQuery({ q: 'a'.repeat(50) }).q).toHaveLength(50)
-  })
-
-  it.each([
     ['limit 0', { q: 'cat', limit: '0' }],
     ['limit 26', { q: 'cat', limit: '26' }],
     ['limit abc', { q: 'cat', limit: 'abc' }],
@@ -40,6 +31,10 @@ describe('parseSearchQuery', () => {
     ['offset above 4999', { q: 'cat', offset: '5000' }],
   ])('rejects %s with GiphyQueryError', (_label, input) => {
     expect(() => parseSearchQuery(input)).toThrow(GiphyQueryError)
+  })
+
+  it('accepts q of exactly 50 chars', () => {
+    expect(parseSearchQuery({ q: 'a'.repeat(50) }).q).toHaveLength(50)
   })
 
   it('throws a GiphyQueryError that is also an Error', () => {
