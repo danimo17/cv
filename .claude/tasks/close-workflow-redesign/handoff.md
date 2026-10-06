@@ -43,9 +43,9 @@ steps (`merge`, `deploy-check`) are not listed here.
 
 ## In progress / not done
 
-- closer slice (criterion 10): close `spacing-tokens`, then this task, through the fixed hook. When closing, the
-  `commit`, `review` and `close-out` progress lines now need a real commit sha as evidence.
-- Review (`/code-review`) of the whole branch, including this slice, not run yet.
+- closer slice (criterion 10): `spacing-tokens` closed in `35e6a39`; the close of this task follows the review
+  commit through the same hook.
+- Fresh `/code-review` of the whole branch, including the gate-everywhere slice: not run, recommended (Pending 2).
 - Not run anywhere: the `workflow-gate` job of `ci.yml` (Actions can't be run locally; it was checked for YAML
   validity and by reading, its first real run is the first `feat/*` PR). If the ruleset should make it blocking,
   `workflow-gate` has to be added to the required checks (user action, see Pending).
@@ -81,16 +81,75 @@ criterion 9 happens in `## Review`.
 
 ## Review (workflow step `review`, rule 09)
 
-Not run yet (runs over the full branch diff once the hook slice lands).
+Review checklist (`.claude/templates/review-checklist.md`) run on 2026-10-05 over `git diff origin/main...HEAD`
+(after `git fetch origin`): 28 files, +2513/-572, all under `.claude/`, `tests/arch/`, `.githooks/`,
+`.github/workflows/ci.yml`, plus one-line changes in `CLAUDE.md` and `README.md`. No file under `app/`, `server/`,
+`shared/`, `i18n/`, `public/` or `e2e/` is touched (checked with `git diff --name-only`).
 
-- [ ] Review checklist over the full branch diff
-- [ ] `/code-review` effort level, date and outcome of each finding
+- [x] **Secrets (01):** grep of the added lines for key/token/password assignments and `AKIA`/`ghp_`/`sk-` patterns:
+      no match; the only tracked env file is `.env.example`; `tests/arch/secrets.spec.ts` is green in `pnpm gate`.
+- [x] **Company (02):** the contract declares no external sources; the diff is own process code (Python hook, arch
+      tests, docs). The only `PDPAOLA` string in the added lines is rule 02's own text in `hard-rules.md`.
+- [x] **Giphy boundary (03):** n/a, no `app/` or `server/` file in the diff; no `api.giphy.com` in the added lines.
+- [x] **PII (04):** n/a, no data, i18n or PDF changed; the only long digit runs in the added lines are GitHub
+      Actions run ids, no phone number or postal address.
+- [x] **i18n (05):** n/a, no template or locale file in the diff.
+- [x] **Branch (06):** `git branch --show-current` is `feat/close-workflow-redesign`; nothing committed to `main`,
+      nothing pushed.
+- [x] **Catalog (07):** `.claude/docs/catalog/ai-workflow.md` (+159 lines) documents the hook modes, the step list,
+      the progress block and the CI job in the same changes; `tests/arch/docs-sync.spec.ts` is green; no
+      component, store or composable was touched.
+- [x] **CSS (08):** n/a, no component or CSS file in the diff.
+- [x] **Gates (09):** `pnpm gate` ran green at every commit through the pre-commit hook (last: `35e6a39`, 23 files,
+      415 tests, lint 0 errors); `pnpm gate:push` real log on `0b2b180`: 415 tests, `Build complete!`,
+      `5 passed (14.1s)` e2e, `EXIT=0`; the final run is recorded in `## Workflow progress`.
+- [x] **Contract (10):** all 16 criteria have a named test or commit; grep confirmed that the 17 test names cited
+      in `contract.md` exist verbatim under `tests/arch/`; criterion 10 is the closing commits themselves; the
+      `CLAUDE.md`/`README.md` lines only restate criterion 12/13 behavior, nothing in the diff lacks a criterion.
+- [x] **Decisions (11):** decision 057 (with its `Amendment 2026-10-05`) plus "Superseded in part by 057" notes in
+      042 and 051; no open rule-11 conflict, the only user decision outstanding is in the table below.
+- [x] **Primitives (026, 038):** n/a, no template in the diff.
+- [x] **Living docs (027):** the catalog was read before changing the hook docs; every mode, step and gate is in
+      `ai-workflow.md`; rules 09/10, `hard-rules.md` and `workflow.md` were read and describe the same order
+      (close-out before `gate:push`/push, deploy check post-merge and non-blocking), which is also asserted by
+      `workflow.md orders close-out before push and deploy-check after merge`.
+- [x] **Subagents (12):** the Subagents table names `workflow-docs`, `hook-and-tests`, `gate-everywhere` and
+      `closer`.
+- [x] **Accessibility:** n/a, no UI.
+- [x] **UI pattern consistency (16):** n/a for UI; the one repeated role in this diff is "entry point of the workflow
+      gate", checked: `.githooks/pre-commit`, `.githooks/pre-push`, the `workflow-gate` CI job and the Claude hook
+      all call `.claude/hooks/require-contract.py`.
+- [x] **Rules 13/14/15 (not in the template):** English only; no code comments or lint suppressions added outside
+      `.claude/` and `tests/` (grep of the added lines finds `eslint-disable` only as rule 15's own text).
+
+`/code-review` result: `code-review` at high effort, 2026-10-05, 6 findings on the hook rewrite, all fixed, in
+`15908bf` (script, tests, git hooks, CI) and `29cbbbd` (docs):
+
+1. Slug read from `ACTIVE` blinded the gate on parallel branches: fixed, the slug is the `feat/<slug>` branch name
+   and `ACTIVE` is ignored on feat branches (criterion 12).
+2. The checks only ran inside Claude's Bash tool: fixed, the same script now runs from `.githooks/pre-commit`,
+   `.githooks/pre-push` and the `workflow-gate` CI job (criterion 13).
+3. Progress evidence was free text: fixed, `commit`, `review` and `close-out` evidence must contain a commit sha
+   that resolves in the repository (criterion 15).
+4. The push gate looked at the checked-out branch, not the pushed ref: fixed, it parses the refspec and gates the
+   destination `feat/*` branch on the tip of its source ref (criterion 14).
+5. `[X]` (uppercase) was not read as ticked: fixed (criterion 15).
+6. `HOOK_UNDER_TEST` test-only override in the hook spec: fixed, removed and forbidden by
+   `arch specs have no test-only hook overrides` (criterion 16).
+
+Limit, stated plainly: the gate-everywhere slice (`15908bf`, `29cbbbd`, `0b2b180`) was written after that review,
+so those fixes are covered by tests (`pnpm gate` 415 tests green, hook spec red first then green) but were not
+re-reviewed. A fresh `/code-review` over the whole branch is recommended before merge (user's call, row 2 below).
 
 ## Pending on the user
 
-| #   | What                                                                                                                       | Blocks                      | Status |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------ |
-| 1   | Decide whether `workflow-gate` becomes a required check in the `main` ruleset (a skipped job passes, so it is safe to add) | making the CI backstop hard | open   |
+| #   | What                                                                                                                                                                                                                      | Blocks                             | Status  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
+| 1   | Explicit permission for the single `git push` of `feat/close-workflow-redesign` (rule 06, decision 031); the AI then opens the PR                                                                                         | `push-pr`                          | pending |
+| 2   | Run a fresh `/code-review` over the whole branch before merging: the gate-everywhere slice (`15908bf`, `29cbbbd`, `0b2b180`) was written after the 2026-10-05 high-effort review and is covered by tests, not re-reviewed | confidence in the merge            | pending |
+| 3   | Add the `workflow-gate` CI job to the required checks of the `main` ruleset (a skipped job passes, so it is safe to add); until then the CI backstop for `git push --no-verify` is not blocking                           | making the CI backstop hard        | pending |
+| 4   | Know that after the merge the new flow applies: `merge` is yours, `deploy-check` is post-merge and non-blocking (the AI reports `deploy.yml` in chat; a failed deploy is a new task, never a reopened one)                | nothing, awareness of the new flow | info    |
+| 5   | `button-system`, `css-tailwind-first` and `workflow-integrity-hardening` stay `todo` in the backlog and were not touched by this branch                                                                                   | nothing                            | info    |
 
 ## Decisions made in this task
 
