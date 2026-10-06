@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Workflow gate. One script, three callers (decisions 051, 054 and 057, incl. its 2026-10-05 amendment).
+"""Workflow gate. One script, three callers (decisions 051, 054 and 057, incl. its 2026-10-05 and 2026-10-06
+amendments).
 
   require-contract.py                      Claude Code PreToolUse hook (Bash): JSON on stdin
   require-contract.py --commit             git pre-commit: checks the index
   require-contract.py --pre-push           git pre-push: reads "<local ref> <local sha> <remote ref> <remote sha>"
                                            lines on stdin, gates every remote ref refs/heads/feat/<slug> on the
                                            LOCAL SHA's tree
-  require-contract.py --ci <branch> <sha>  CI: the push checks for one branch + commit
+  require-contract.py --ci <branch> <sha> [--base <ref>]
+                                           CI: the push checks for one branch + commit; with --base the step
+                                           list (workflow-steps.json) is read from that ref, not the PR's copy
 
 Behavior is documented in .claude/docs/catalog/ai-workflow.md; tests in tests/arch/require-contract-hook.spec.ts.
 Exit 2 = blocked, the reason is printed on stderr. The task slug of a feat/<slug> branch is <slug>;
@@ -24,19 +27,30 @@ import shlex
 import subprocess
 import sys
 
+CLAUDE_PREFIX = ".claude/"
 CLOSED_PREFIX = ".claude/tasks/closed/"
 TASKS_PREFIX = ".claude/tasks/"
 FEAT_PREFIX = "feat/"
-UNCHECKED = re.compile(r"-\s\[\s\]")
+UNCHECKED = re.compile(r"^\s*- \[ \]")
+FENCE = re.compile(r"^\s*(```|~~~)")
 PROGRESS_LINE = re.compile(r"^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$")
 PUSH_PR_OPEN = re.compile(r"^- \[ \] push-pr — evidence:\s*$")
 HANDOFF_PATH = re.compile(r"^\.claude/tasks/[^/]+/handoff\.md$")
 ARCHIVE_PATH = re.compile(r"^\.claude/tasks/closed/[^/]+\.md$")
 HEX_TOKEN = re.compile(r"(?<![0-9A-Za-z])[0-9a-fA-F]{7,40}(?![0-9A-Za-z])")
 SHA_EVIDENCE_STEPS = ("commit", "review", "close-out")
+SPECIAL_COMMIT_MARKERS = ("MERGE_HEAD", "rebase-merge", "rebase-apply", "CHERRY_PICK_HEAD", "REVERT_HEAD")
+GLOBAL_GIT_OPTIONS = (
+    r"(?:\s+(?:(?:-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env|--attr-source|--super-prefix)"
+    r"(?:=\S+|\s+(?:\"[^\"]*\"|'[^']*'|\S+))|--?[A-Za-z][\w-]*))*"
+)
+GIT_CALL = re.compile(
+    r"(?:^|[;&|]\s*)(?:[A-Za-z_]+=\S+\s+)*git" + GLOBAL_GIT_OPTIONS + r"\s+(commit|push)\b([^\n;&|]*)",
+    re.M,
+)
 PUSH_VALUE_FLAGS = ("-o", "--push-option", "--receive-pack", "--exec", "--repo")
 USAGE = (
-    "usage: require-contract.py [--commit | --pre-push | --ci <branch> <sha>] "
+    "usage: require-contract.py [--commit | --pre-push | --ci <branch> <sha> [--base <ref>]] "
     "(no argument: Claude PreToolUse hook, JSON on stdin)"
 )
 
@@ -79,25 +93,39 @@ def current_branch():
     return (git(["rev-parse", "--abbrev-ref", "HEAD"]) or "").strip()
 
 
+def outside_fences(lines):
+    fenced = False
+    for i, line in enumerate(lines, start=1):
+        if FENCE.match(line):
+            fenced = not fenced
+        elif not fenced:
+            yield i, line
+
+
 def section(content, heading_pattern):
     lines = []
     found = False
+    fenced = False
     for line in content.splitlines():
-        if not found:
-            if re.match(heading_pattern, line):
-                found = True
-            continue
-        if re.match(r"^## ", line):
-            break
-        lines.append(line)
+        if FENCE.match(line):
+            fenced = not fenced
+        elif not fenced:
+            if not found:
+                if re.match(heading_pattern, line):
+                    found = True
+                continue
+            if re.match(r"^## ", line):
+                break
+        if found:
+            lines.append(line)
     return lines if found else None
 
 
 def unchecked_items(lines, exempt_push_pr=False):
     return [
         (i, line.strip())
-        for i, line in enumerate(lines, start=1)
-        if UNCHECKED.search(line) and not (exempt_push_pr and PUSH_PR_OPEN.match(line))
+        for i, line in outside_fences(lines)
+        if UNCHECKED.match(line) and not (exempt_push_pr and PUSH_PR_OPEN.match(line))
     ]
 
 
@@ -106,15 +134,19 @@ def progress_entries(content):
     if lines is None:
         return None
     entries = []
-    for line in lines:
+    for _, line in outside_fences(lines):
         m = PROGRESS_LINE.match(line)
         if m:
             entries.append((m.group(2), m.group(1) in ("x", "X"), m.group(3).strip()))
     return entries
 
 
-def required_push_steps(rev):
-    raw = git_show(rev, ".claude/workflow-steps.json") if rev else None
+def required_push_steps(*revs):
+    raw = None
+    for rev in revs:
+        raw = git_show(rev, ".claude/workflow-steps.json") if rev else None
+        if raw is not None:
+            break
     try:
         if raw is None:
             with open(os.path.join(root, ".claude", "workflow-steps.json"), encoding="utf-8") as f:
@@ -128,24 +160,87 @@ def required_push_steps(rev):
         )
 
 
-def evidence_problem(step, evidence):
+def resolve_commit(rev):
+    out = git(["rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}"])
+    return out.strip() if out and out.strip() else None
+
+
+def commit_paths(commit):
+    parents = (git(["rev-list", "--parents", "-n", "1", commit]) or "").split()[1:]
+    if parents:
+        return git_nul(["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", parents[0], commit])
+    return git_nul(["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "--root", commit])
+
+
+def slug_of_progress_path(path):
+    if ARCHIVE_PATH.match(path):
+        return path[len(CLOSED_PREFIX):-len(".md")]
+    return path[len(TASKS_PREFIX):].split("/")[0]
+
+
+def step_commit(step, evidence, tip, slug):
+    tip_commit = resolve_commit(tip)
+    resolved = [c for c in (resolve_commit(t) for t in HEX_TOKEN.findall(evidence)) if c]
+    if not resolved:
+        return None, (
+            "evidence must contain a 7-40 character commit sha that resolves to a commit in this "
+            "repository"
+        )
+    ancestors = [c for c in resolved if tip_commit and git_ok(["merge-base", "--is-ancestor", c, tip_commit])]
+    if not ancestors:
+        return None, (
+            "the cited commit sha is not an ancestor of the tip being checked "
+            f"({(tip_commit or tip)[:10]}): cite a commit from this branch's history"
+        )
+    if step != "review":
+        return ancestors[0], None
+    recorded = {f"{TASKS_PREFIX}{slug}/handoff.md", f"{CLOSED_PREFIX}{slug}.md"}
+    for commit in ancestors:
+        if recorded & set(commit_paths(commit)):
+            return commit, None
+    return None, (
+        "the cited commit sha must be the commit that recorded the review result: one that changed "
+        f"{TASKS_PREFIX}{slug}/handoff.md or {CLOSED_PREFIX}{slug}.md"
+    )
+
+
+def evidence_problem(step, evidence, tip, slug):
     if not evidence:
         return "no evidence"
     if step in SHA_EVIDENCE_STEPS:
-        tokens = HEX_TOKEN.findall(evidence)
-        if not any(git_ok(["cat-file", "-e", f"{t}^{{commit}}"]) for t in tokens):
-            return (
-                "evidence must contain a 7-40 character commit sha that resolves to a commit in this "
-                "repository"
-            )
+        return step_commit(step, evidence, tip, slug)[1]
+    return None
+
+
+def stale_review_problem(content, tip, slug):
+    for step, ticked, evidence in progress_entries(content) or []:
+        if step != "review" or not ticked:
+            continue
+        review_commit, _ = step_commit("review", evidence, tip, slug)
+        tip_commit = resolve_commit(tip)
+        if not review_commit or not tip_commit:
+            return None
+        later = (git(["rev-list", "--reverse", f"{review_commit}..{tip_commit}"]) or "").split()
+        for commit in later:
+            outside = [p for p in commit_paths(commit) if not p.startswith(CLAUDE_PREFIX)]
+            if outside:
+                return (
+                    f"the review is stale: `review` evidence cites {review_commit[:10]}, but commit "
+                    f"{commit[:10]} (after it) changes {outside[0]} outside .claude/, so the review did not "
+                    "see the final code. Run `/code-review high` on the final diff, record its result in the "
+                    "## Review section, and re-record the `review` evidence with the sha of the commit that "
+                    "records it."
+                )
+        return None
     return None
 
 
 def check_progress_evidence(path, content):
+    slug = slug_of_progress_path(path)
     entries = progress_entries(content) or []
     problems = []
     for step, ticked, evidence in entries:
-        problem = evidence_problem(step, evidence) if ticked else None
+        problem = evidence_problem(step, evidence, "HEAD", slug) if ticked else None
         if problem:
             problems.append(f"{step} ({problem})")
     if problems:
@@ -157,7 +252,7 @@ def check_progress_evidence(path, content):
         )
 
 
-def progress_problem(path, content, rev):
+def progress_problem(path, content, rev, slug, steps_ref=None):
     entries = progress_entries(content)
     if entries is None:
         return (
@@ -166,12 +261,12 @@ def progress_problem(path, content, rev):
         )
     state = {step: (ticked, evidence) for step, ticked, evidence in entries}
     missing = []
-    for step in required_push_steps(rev):
+    for step in required_push_steps(steps_ref, rev):
         ticked, evidence = state.get(step, (False, ""))
         if not ticked:
             missing.append(f"{step} (not ticked)")
             continue
-        problem = evidence_problem(step, evidence)
+        problem = evidence_problem(step, evidence, rev, slug)
         if problem:
             missing.append(f"{step} ({problem})")
     if missing:
@@ -217,6 +312,9 @@ def check_close(slug, status):
             "close-checklist box must be checked before the task can close (only the `push-pr` progress "
             f"line may stay open, it is ticked after the push). Unchecked: {items}"
         )
+    stale = stale_review_problem(content, "HEAD", slug)
+    if stale:
+        fail(f"Rule 10 (task-close-gate): {archive}: {stale}")
 
 
 def working_tree_active():
@@ -237,6 +335,14 @@ def task_slug_for_commit():
     return "" if archived and not folder_present else slug
 
 
+def special_commit_in_progress():
+    for name in SPECIAL_COMMIT_MARKERS:
+        out = (git(["rev-parse", "--git-path", name]) or "").strip()
+        if out and os.path.exists(os.path.join(root, out)):
+            return True
+    return False
+
+
 def commit_checks():
     status = staged_changes()
     staged = list(status)
@@ -248,7 +354,8 @@ def commit_checks():
     slug = task_slug_for_commit()
 
     if closing or not slug:
-        if not all(f.startswith(".claude/") for f in staged):
+        docs_only_exempt = not closing and special_commit_in_progress()
+        if not docs_only_exempt and not all(f.startswith(CLAUDE_PREFIX) for f in staged):
             fail(
                 "Rule 10: no active task (a non-feat branch with .claude/tasks/ACTIVE empty, or a "
                 "feat/<slug> branch whose task is already closed) or a closing commit, and this commit "
@@ -288,7 +395,7 @@ def commit_checks():
         )
 
 
-def push_gate(branch, sha):
+def push_gate(branch, sha, steps_ref=None):
     slug = branch[len(FEAT_PREFIX):]
     problems = []
 
@@ -311,9 +418,12 @@ def push_gate(branch, sha):
 
     if handoff is not None:
         problems += review_problems(handoff_path, section(handoff, r"^## Review\b"))
-        problem = progress_problem(handoff_path, handoff, sha)
+        problem = progress_problem(handoff_path, handoff, sha, slug, steps_ref)
         if problem:
             problems.append(problem)
+        stale = stale_review_problem(handoff, sha, slug)
+        if stale:
+            problems.append(f"{handoff_path}: {stale}")
     else:
         archive = git_show(sha, archive_path)
         if archive is None:
@@ -334,9 +444,12 @@ def push_gate(branch, sha):
             )
         elif not re.search(r"code-review", "\n".join(review), re.IGNORECASE):
             problems.append(f"{archive_path}'s ## Review section never mentions code-review having run")
-        problem = progress_problem(archive_path, archive, sha)
+        problem = progress_problem(archive_path, archive, sha, slug, steps_ref)
         if problem:
             problems.append(problem)
+        stale = stale_review_problem(archive, sha, slug)
+        if stale:
+            problems.append(f"{archive_path}: {stale}")
 
     if len(problems) == 1:
         fail(f"Rule 09 (push-review-gate): {problems[0]}")
@@ -436,10 +549,7 @@ def claude_hook():
     data = json.load(sys.stdin)
     cmd = data.get("tool_input", {}).get("command", "")
 
-    git_call = re.compile(
-        r"(?:^|[;&|]\s*)(?:[A-Za-z_]+=\S+\s+)*git\s+(commit|push)\b([^\n;&|]*)", re.M
-    )
-    hits = git_call.findall(cmd)
+    hits = GIT_CALL.findall(cmd)
     if not hits:
         return
 
@@ -477,6 +587,10 @@ def pre_push_hook():
 
 def ci_hook(args):
     use_cwd_repo()
+    base = None
+    if len(args) == 4 and args[2] == "--base":
+        base = args[3]
+        args = args[:2]
     if len(args) != 2:
         fail(USAGE)
     branch, sha = args
@@ -486,7 +600,9 @@ def ci_hook(args):
         return
     if not git_ok(["cat-file", "-e", f"{sha}^{{commit}}"]):
         fail(f"Rule 09 (push-review-gate): commit {sha} is not in this checkout (fetch-depth: 0?).")
-    push_gate(branch, sha)
+    if base is not None and not git_ok(["cat-file", "-e", f"{base}^{{commit}}"]):
+        fail(f"Rule 09 (push-review-gate): the --base ref {base} does not resolve to a commit in this checkout.")
+    push_gate(branch, sha, base)
 
 
 def main():

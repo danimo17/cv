@@ -25,7 +25,16 @@ jobs:
         env:
           HEAD_REF: ${{ github.head_ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: python3 .claude/hooks/require-contract.py --ci "$HEAD_REF" "$HEAD_SHA"
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          base_gate="$RUNNER_TEMP/base-require-contract.py"
+          if git show "origin/$BASE_REF:.claude/hooks/require-contract.py" > "$base_gate" 2>/dev/null \
+            && grep -q -e '--ci' "$base_gate"; then
+            python3 "$base_gate" --ci "$HEAD_REF" "$HEAD_SHA" --base "origin/$BASE_REF"
+          else
+            echo "::notice::base branch has no --ci gate yet (this PR introduces it), using the PR copy"
+            python3 .claude/hooks/require-contract.py --ci "$HEAD_REF" "$HEAD_SHA"
+          fi
 
   gate:
     name: gate
