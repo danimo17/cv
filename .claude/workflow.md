@@ -39,11 +39,15 @@ same id order and title as that file, the handoff's `## Workflow progress` block
    written into the handoff's `## Review` section (checklist fully checked, `/code-review` outcome noted with
    its effort level and date) — `push-review-gate` mechanically requires it, so it can't be silently skipped
    under time pressure. The `review` progress evidence is the sha of the commit that recorded the review
-   (it must be an ancestor of the tip and have changed `handoff.md` or `closed/<slug>.md`). A review is only
-   valid for the code it saw: if any later commit changes a path outside `.claude/`, the review is stale
-   and the gates (`push-review-gate`, `task-close-gate`) block, naming the sha, the first later code commit
-   and the command `/code-review high` to run again; the result is recorded in a new commit and the `review`
-   evidence re-pointed at it (decision 057 amendment 2026-10-06).
+   (an ancestor of the tip whose diff changed the content of the `## Review` section of `handoff.md` or
+   `closed/<slug>.md`: a commit that only ticks progress or edits Pending does not count). A review is only
+   valid for the code it saw: if the branch's own diff against its base (`main`) changes in any path outside
+   `.claude/`, or in `.claude/hooks/` or `.claude/workflow-steps.json` (the gate itself), after the review
+   commit, the review is stale and the gates (`push-review-gate`, `task-close-gate`) block, naming the sha,
+   the path and the first later commit, and the command `/code-review high` to run again; the result is
+   recorded in a new commit and the `review` evidence re-pointed at it. Merging `main` into the branch
+   after the review does not stale it (only the branch's own changes are compared; decision 057 amendments
+   2026-10-06).
 9. **Close-out** (decision 057) — still on the same branch, before the push, so the one PR the user merges
    carries the feature **and** its own closing. Fill `.claude/templates/close-checklist.md`'s copy at
    `.claude/tasks/<slug>/close-checklist.md` with items provable before merge only (contract criteria, real

@@ -8,8 +8,10 @@ One line per `pre-push` step of `.claude/workflow-steps.json`, in order. Tick a 
 done: `- [x] <id> — evidence: <commit sha / gate output line / date>`. Evidence is mandatory once ticked
 (blocked at commit time otherwise), and for `commit`, `review` and `close-out` it must contain a real commit
 sha (7-40 hex characters that exist in the repository and are ancestors of the branch tip); the `review` sha is
-the commit that recorded the review in this file. A code commit after that sha makes the review stale: re-run
-`/code-review high`, record it, and re-point the evidence. `push-pr` is ticked last, after the push and the PR exist; the post-merge
+the commit that recorded the review in this file (its diff must change the content of `## Review` below; a
+progress tick or Pending edit does not count). A code change of the branch after that sha (outside `.claude/`,
+or in `.claude/hooks/` or `.claude/workflow-steps.json`; merging `main` does not count) makes the review stale:
+re-run `/code-review high`, record it, and re-point the evidence. `push-pr` is ticked last, after the push and the PR exist; the post-merge
 steps (`merge`, `deploy-check`) are not listed here.
 
 - [ ] story — evidence:

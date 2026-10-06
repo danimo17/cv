@@ -24,7 +24,8 @@ append-only record of how the task actually closed.
 
 The close-out is the **last commit before the push**: it is made only after the final review of the full diff
 (a user-run `/code-review` included) and the fixes that review asked for, and the archive's `review` evidence
-must not be stale (no later commit touching a path outside `.claude/`, rule 09). If a later review finds
+must not be stale (no later change of the branch's own diff outside `.claude/`, in `.claude/hooks/` or in
+`.claude/workflow-steps.json`, rule 09). If a later review finds
 something after the close-out, reopen it with `git revert <close-out sha>` (the task folder returns, the
 archive is removed), fix, re-review, and close again. Merge, rebase, cherry-pick and revert commits on a closed
 branch or detached HEAD are exempt from the "docs-only" rule; every other check still applies to them.

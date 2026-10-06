@@ -17,20 +17,27 @@ the pushed ref, or `.claude/tasks/closed/<slug>.md` when the task was closed on 
 script (`.claude/hooks/require-contract.py`) wherever the push or commit comes from: Claude's hook (which
 follows the pushed refspec), `.githooks/pre-commit` and `.githooks/pre-push` (any git client), and the
 `workflow-gate` job of `ci.yml` on every `feat/*` pull request; on a pull request CI runs the **base branch's**
-copy of the script and step list (`--base origin/<base>`) when that copy supports `--ci`, so a PR cannot weaken
+copy of the script and step list (`--base origin/<base>`) when that copy supports `--ci` and `--base`, so a PR cannot weaken
 its own gate (the PR that introduces the gate falls back to its own copy and prints a notice). Hard block, no
 escape hatch.
 
 A review is only good for the code it saw. The `review` evidence must be the sha of a commit on the pushed
-branch that recorded the review (it changed the task's `handoff.md` or `closed/<slug>.md`); if any later commit
-touches a path outside `.claude/`, the review is **stale** and the push (and the closing commit) is blocked with
-the sha, the first later code commit and the command to run: `/code-review high`, then re-record the result and
-the evidence. For the same reason the close-out is the last commit before the push, taken only after the final
+branch that recorded the review: one whose diff changed the content of the `## Review` section of the task's
+`handoff.md` or `closed/<slug>.md` (a progress tick or a Pending edit does not count). If the branch's own
+diff against its base ref (`--base` in CI, else `origin/main`, else `main`) changes after that commit in any
+path outside `.claude/`, in `.claude/hooks/` or in `.claude/workflow-steps.json` (the gate itself counts as
+code), the review is **stale** and the push (and the closing commit) is blocked with the sha, the path, the
+first later commit and the command to run: `/code-review high`, then re-record the result and the evidence.
+A merge of `main` into the branch after the review does not stale it: the comparison is of the branch's own
+changes (three-dot diff), so only what main brings is ignored. For the same reason the close-out is the last commit before the push, taken only after the final
 review of the full diff (a user-run `/code-review` included) and its fixes. If a later review finds something
 after the close-out, reopen with `git revert <close-out sha>` (the folder comes back, the archive goes), fix,
 re-review and close again. Evidence shas are tied to their step: `commit` and `close-out` must be ancestors of
 the tip, `review` an ancestor that recorded the review. Unchecked-box scans only count real list items
-(`- [ ]`) outside fenced code blocks, never prose. Merge, rebase, cherry-pick and revert commits are not
+(`-`, `*`, `+`, `1.` or `1)` followed by `[ ]`) outside fenced code blocks, never prose. The Claude hook also
+refuses a `core.hooksPath` override on `git commit`/`push` (`-c core.hooksPath=...`, `--config-env`) exactly like
+`--no-verify`, since it switches the git hooks off. In CI the base copy of the gate is only used when it
+supports both `--ci` and `--base`; otherwise the PR's own copy runs with a notice. Merge, rebase, cherry-pick and revert commits are not
 blocked by the docs-only rule of rule 10 (their other checks stay).
 
 The post-merge `deploy-check` (decision 042, relaxed by 057) is **non-blocking**: after the user merges, the AI

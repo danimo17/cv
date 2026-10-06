@@ -10,8 +10,9 @@ The only line allowed to stay unticked in this file is `push-pr` inside `## Work
 after the push, which comes after this commit).
 
 This commit is the last commit before the push: take it only after the final review of the full diff (a
-user-run `/code-review` included) and its fixes. A code commit after the review makes the review stale and the
-gates block (`/code-review high`, then re-record). To reopen after a later finding: `git revert <close-out sha>`
+user-run `/code-review` included) and its fixes. A code change of the branch after the review (outside
+`.claude/`, or in `.claude/hooks/` or `.claude/workflow-steps.json`; a merge of `main` does not count) makes the
+review stale and the gates block (`/code-review high`, then re-record). To reopen after a later finding: `git revert <close-out sha>`
 restores the task folder and removes this archive; fix, re-review, close again.
 
 - [ ] Every acceptance criterion in `contract.md` is verified done, one by one (list them if it helps)

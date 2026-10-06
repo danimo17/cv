@@ -140,7 +140,48 @@ amendment stay as written; this section adds the following.
    `rules/09-gates.md` and `rules/10-contract-first.md`, tested by `hard-rules rows stay short`).
 
 **Consequences.** After a review the only commits that do not stale it are `.claude/`-only ones (docs, handoff,
-archive, backlog). A `.claude/` change after the review (even to the hook script) does not stale it (stated limit: the gate
-protects the product code; process files are covered by the review's own diff scan). The first CI run of
-`workflow-gate` on this branch uses the PR copy (the base has no `--ci` yet); from the next PR on, the base
+archive, backlog). (Superseded in part by the second 2026-10-06 amendment below: edits to the gate itself under
+`.claude/hooks/` and `.claude/workflow-steps.json` do stale a review, and merging `main` does not.) The first CI
+run of `workflow-gate` on this branch uses the PR copy (the base has no `--ci` yet); from the next PR on, the base
 copy gates. The user adds `workflow-gate` to the `main` ruleset's required checks after the first CI run.
+
+## Amendment 2026-10-06 (second review)
+
+Prompted by the user's second high-effort `/code-review` of the same branch, which found six more weaknesses in
+the gate added by the previous amendment. Everything above stays as written except where this section says it is
+superseded; the criteria are 25-30 of the task contract.
+
+1. **Review evidence is the commit that changed the `## Review` section (tightens amendment 2026-10-06, point
+   3).** Touching `handoff.md` or `closed/<slug>.md` was too weak: a progress tick or a Pending edit would
+   qualify. The cited commit must have changed the content of the `## Review` section versus its first parent (a
+   root commit counts if the section exists; dropping the section does not). If several shas are cited, any
+   qualifying one passes.
+2. **Freshness compares the branch's own diff, not every reachable commit (supersedes the commit-walk of point 2
+   of the previous amendment).** Walking `<review>..<tip>` made a merge of `main` stale the review for what
+   main brought. The base ref is `--base` (CI), else `origin/main` if it resolves, else `main`; the review is
+   fresh when `git diff <base>...<review>` and `git diff <base>...<tip>`, restricted to code paths and compared
+   after dropping `index` lines and hunk headers (`-U0`, `--binary`), are equal. A three-dot diff is taken
+   against the merge-base, so main's own changes drop out. With no base or no merge-base it falls back to the old
+   walk (first-parent diff per commit). Known imprecision, stated: a stale local `origin/main`, or a main edit
+   that overlaps a hunk the branch changed, reads as a branch change and errs towards stale.
+3. **The gate itself counts as code (supersedes "a `.claude/` change after the review does not stale it").** Code
+   paths for freshness are everything outside `.claude/` plus `.claude/hooks/` and `.claude/workflow-steps.json`
+   (`.githooks/` is outside `.claude/` already). Other `.claude/` files (docs, rules, handoff, archive, backlog)
+   still do not.
+4. **`core.hooksPath` overrides are refused like `--no-verify`.** `git -c core.hooksPath=<x> commit|push` (key
+   matched case-insensitively), `--config-env=core.hooksPath=...` and `--config-env core.hooksPath ...` switch
+   the git hooks off; the Claude hook refuses them with a rule 09 message. Limit: the same effect through git
+   config files or `GIT_CONFIG_*` environment variables is not seen by the Claude hook (CI is the backstop).
+5. **CI probes both `--ci` and `--base` in the base copy (tightens point 4 of the previous amendment).** A base
+   script that supports `--ci` but not `--base` would fail on the unknown argument; the job now requires both
+   strings in the base copy, else it falls back to the PR copy with the notice `base branch has no --ci/--base
+gate yet`. `workflow-steps.spec.ts` also runs the extracted job script against fake base scripts.
+6. **The unchecked scan covers every list marker (extends point 5 of the previous amendment).** `^\s*(?:[-*+]|\d+[.)])\s+\[ \]`
+   outside fenced code: `* [ ]`, `+ [ ]`, `1. [ ]` and `1) [ ]` count like `- [ ]`. The exempt progress line is
+   still `- [ ] push-pr`.
+
+**Consequences.** The review recorded before this amendment is stale by construction (this amendment changes
+`.claude/hooks/`), so a fresh user-run `/code-review high` of the final diff is required before the close-out.
+Merging `main` into a feature branch after its review is now safe. Editing the gate (`.claude/hooks/`,
+`.claude/workflow-steps.json`) after a review always asks for a new review, which is the point: the gate protects
+the process the same way the product code is protected.
