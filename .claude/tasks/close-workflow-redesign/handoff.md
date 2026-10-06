@@ -1,6 +1,6 @@
 # Handoff: close-workflow-redesign
 
-_Updated: 2026-10-06 (reopened after the user's full-branch review; review-fixes slice and the second review round built). REAL state of the `feat/close-workflow-redesign` branch._
+_Updated: 2026-10-06 (review-fixes-3 slice built: findings become tests, search first; the user's third review applied). REAL state of the `feat/close-workflow-redesign` branch._
 
 ## Workflow progress
 
@@ -68,35 +68,60 @@ steps (`merge`, `deploy-check`) are not listed here.
   the hook spec were adapted (the `@REVIEW@` commit now adds a Review section; re-record steps change the
   Review). Commits `49ba305`, `d196717`.
 
+- review-fixes-3 slice (criteria 31-34, from the user's third `/code-review` and the user's decision that findings
+  must become tests, search first; see decision 057 `Amendment 2026-10-06 (third review: findings become tests,
+search first)`): `require-contract.py` blocks, at commit time, a code commit with no staged `tests/` or `e2e/` file
+  once the handoff's `review` step is ticked at `HEAD` (merge/rebase/cherry-pick/revert and closing commits exempt);
+  freshness ignores a later code commit that also changes a test file (`tests/` and `e2e/` are no longer code
+  paths) and fails closed when `git diff` errors; every `## Review` finding line is checked at push (all callers)
+  and at close: `fixed` = `strengthened <file> › <name>` (exists at the base, file differs) or `new <file> › <name> —
+searched: <terms>` (not at the base, and the gate greps every test/describe/it title itself, `— differs:` to
+  justify a hit), `queued` = a backlog slug / task folder / archive, `no_change_needed` = a reason, none = `findings:
+none`; `git config ... core.hooksPath` and `GIT_CONFIG_KEY_<n>=core.hooksPath` are refused, `git commit -nm`/`-anm`
+  are refused like `--no-verify` (`git push -n` stays a dry run), env prefixes with digits no longer hide the git
+  call, one `base_ref` name and one `code_changes_after` helper. New `tests/arch/no-duplicate-test-titles.spec.ts`
+  (it found and I merged one duplicate: the two `rejects %s with GiphyQueryError` tables of
+  `tests/unit/server/giphy.spec.ts`). The third-round cases were added next to their siblings
+  (`core.hooksPath override is refused like --no-verify`, `commit rules that predate decision 057 still hold`,
+  `global git options do not hide commit or push from the hook`, `a code commit after the review evidence makes the
+review stale`) instead of new describes (search first), and contract criterion 33's test column says so. Docs:
+  workflow.md step 8 + `## Review policy`, rule 09, decision 057 third amendment, catalog, both templates,
+  `workflow-integrity-hardening` item 8 (the Review-text-edit finding, queued). The `workflow-steps.json` gates are
+  unchanged on purpose: `build` stays `pre-commit` and `review` stays `push-review-gate`, which is what really
+  fails today (the post-review test requirement is a `require-contract` commit-time check and is listed in the
+  Gates table, not claimed as the build step's gate).
+
 ## In progress / not done
 
 - Reopened. The premature close commit `ebeb029` was reverted in `c1d0785` (folder and `ACTIVE` back, archive
   removed): the user's review found issues after the close, and a close-out must come after the final review.
   `spacing-tokens` stays closed (`35e6a39`, criterion 10 for that half).
-- A fresh `/code-review high` of the final diff (user-run) is pending: the second review round changed
-  the hook itself (`.claude/hooks/require-contract.py`) and `ci.yml`, so the previous review is stale by design
-  (the new rule 27 counts the gate files as code). After its fixes the order is: record the
-  review in `## Review` (a commit that changes this file), tick `commit` and `review` with those shas, run
-  `pnpm gate:push`, then the close-out commit (archive + folder deletion + backlog `done`) LAST, then the push
-  with the user's permission. Until then the push gate blocks on purpose (review, commit, close-out and
-  gate-push are unticked).
+- Round 3 (the user's third `/code-review`, applied in the review-fixes-3 slice) is the last full review under the
+  new policy. Next: the review is recorded in `## Review` by a commit that changes this section, `commit` and
+  `review` are ticked with those shas (main thread), `pnpm gate:push` runs, then the close-out commit (archive +
+  folder deletion + backlog `done`) LAST, then the push with the user's permission. Any code change after the
+  recorded review must carry a test (commit-time gate) or the review goes stale. `review`, `commit`, `close-out`
+  and `gate-push` stay unticked until then, so the push gate blocks on purpose.
 - Not run anywhere: the `workflow-gate` job of `ci.yml` (Actions can't be run locally; it was checked for YAML
   validity and by reading, its first real run is the first `feat/*` PR). If the ruleset should make it blocking,
   `workflow-gate` has to be added to the required checks (user action, see Pending).
 
 ## Subagents (rule 12)
 
-| Subagent        | What it did                                                                                                                                                                                                                                                                                                                      | Result                                                                                                                                           |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| workflow-docs   | step list json, workflow.md, templates, rules 09/10, hard-rules, decision 057, catalog, workflow-steps arch test                                                                                                                                                                                                                 | done in 73871d8 (see Validation)                                                                                                                 |
-| hook-and-tests  | `require-contract.py` rewrite + hook spec (56 tests, written red first: 28 failed, then all green)                                                                                                                                                                                                                               | done in b206a86; interrupted once, a second agent reviewed, finished and verified the partial work (old-hook comparison, docs, handoff evidence) |
-| gate-everywhere | criteria 12-16: branch-keyed slug, `--commit`/`--pre-push`/`--ci` modes + git hook and CI wiring, refspec-aware push gate, sha-verified evidence, `HOOK_UNDER_TEST` removed (spec written red first: 50 failed, then green)                                                                                                      | done in 15908bf (script, tests, git hooks, CI) and 29cbbbd (docs); see Validation                                                                |
-| review-fixes    | criteria 17-24: stale-review gate, merge/rebase exemption, `--base` CI copy, global git options, evidence tied to its step, fenced unchecked scan, short hard-rules rows, close-out-last docs, story item 6 (specs written red first: hook spec 57 failed, workflow-steps spec 3 failed, then green)                             | done in 959bb0c (hook, hook spec, ci.yml) and 6c2bd7f (docs, workflow-steps spec); see Validation                                                |
-| review-fixes-2  | criteria 25-30: Review-section review evidence, branch-diff freshness (merge of main stays fresh), gate files count as code, `core.hooksPath` refused, `--ci`/`--base` probe, every list marker; docs and decision 057 second amendment (specs written red first: hook spec 32 failed, workflow-steps spec 3 failed, then green) | done in 49ba305 (hook, specs, ci.yml) and d196717 (contract, docs, decision); see Validation                                                     |
+| Subagent        | What it did                                                                                                                                                                                                                                                                                                                                                                                         | Result                                                                                                                                           |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| workflow-docs   | step list json, workflow.md, templates, rules 09/10, hard-rules, decision 057, catalog, workflow-steps arch test                                                                                                                                                                                                                                                                                    | done in 73871d8 (see Validation)                                                                                                                 |
+| hook-and-tests  | `require-contract.py` rewrite + hook spec (56 tests, written red first: 28 failed, then all green)                                                                                                                                                                                                                                                                                                  | done in b206a86; interrupted once, a second agent reviewed, finished and verified the partial work (old-hook comparison, docs, handoff evidence) |
+| gate-everywhere | criteria 12-16: branch-keyed slug, `--commit`/`--pre-push`/`--ci` modes + git hook and CI wiring, refspec-aware push gate, sha-verified evidence, `HOOK_UNDER_TEST` removed (spec written red first: 50 failed, then green)                                                                                                                                                                         | done in 15908bf (script, tests, git hooks, CI) and 29cbbbd (docs); see Validation                                                                |
+| review-fixes    | criteria 17-24: stale-review gate, merge/rebase exemption, `--base` CI copy, global git options, evidence tied to its step, fenced unchecked scan, short hard-rules rows, close-out-last docs, story item 6 (specs written red first: hook spec 57 failed, workflow-steps spec 3 failed, then green)                                                                                                | done in 959bb0c (hook, hook spec, ci.yml) and 6c2bd7f (docs, workflow-steps spec); see Validation                                                |
+| review-fixes-2  | criteria 25-30: Review-section review evidence, branch-diff freshness (merge of main stays fresh), gate files count as code, `core.hooksPath` refused, `--ci`/`--base` probe, every list marker; docs and decision 057 second amendment (specs written red first: hook spec 32 failed, workflow-steps spec 3 failed, then green)                                                                    | done in 49ba305 (hook, specs, ci.yml) and d196717 (contract, docs, decision); see Validation                                                     |
+| review-fixes-3  | criteria 31-34 (interrupted once; the partial work was reviewed, corrected and finished): post-review test requirement at commit time, tested-fix freshness exemption, finding proof with search first, `no-duplicate-test-titles` arch test, third-round fixes next to their sibling tests, review policy docs, handoff Review rewritten in the finding format (specs written red first: 27 failed | 274 passed of 301, then green)                                                                                                                   | done in the commits listed in Done; see Validation |
 
 ## Validation (actual output of the last gate)
 
 ```
+pnpm gate (working tree of the review-fixes-3 slice, before its commits, 2026-10-06) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 24 passed (24), Tests 593 passed (593)
+review-fixes-3 specs written first: tests/arch/require-contract-hook.spec.ts + workflow-steps.spec.ts 27 failed | 274 passed (301) against the partial hook of the interrupted agent, 304 passed after; the third-round cases (-nm cluster, chained config / GIT_CONFIG_KEY, env prefix digits, fails closed) 11 failed against the committed hook of 968394a; tests/arch/no-duplicate-test-titles.spec.ts 1 failed (tests/unit/server/giphy.spec.ts repeated a title) | 2 passed, 3 passed after merging the two tables
 pnpm gate (on d196717, review-fixes-2 slice, pre-commit run, 2026-10-06) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 23 passed (23), Tests 533 passed (533)
 pnpm test:arch (on the same tree) → Test Files 7 passed (7), Tests 399 passed (399)
 review-fixes-2 specs written first: tests/arch/require-contract-hook.spec.ts 32 failed | 200 passed (232) against the hook of 19dfb69, 232 passed after; tests/arch/workflow-steps.spec.ts 3 failed | 9 passed (12) before ci.yml, 12 passed after
@@ -113,7 +138,7 @@ the rewritten hook 56 passed. That override was removed afterwards (criterion 16
 Not covered: the hook can't prove evidence is true (a resolvable commit sha tied to its step, not that the review
 actually happened or covered the whole diff), doesn't judge `story` content or `validate`; the freshness check
 compares branch diffs textually against a locally known base (a stale `origin/main`, or a main edit overlapping
-a hunk the branch changed, errs towards stale), and the `core.hooksPath` refusal only sees `-c`/`--config-env` on the command (git config files and `GIT_CONFIG_*` variables are not seen); the
+a hunk the branch changed, errs towards stale), and the `core.hooksPath` refusal sees `-c`/`--config-env`, a chained `git config ... core.hooksPath` and `GIT_CONFIG_KEY_<n>=core.hooksPath` in the same command (a setting made in an earlier command, a config file or an exported variable is not seen); the finding proof checks titles textually (no semantic duplicate detection) and proves that bug cannot return, not that the fix adds none elsewhere; tests created on this branch can only be cited as `new` because the base has none; the
 Claude hook only sees commands run through Claude's Bash tool, the git hooks can be skipped with `--no-verify`
 (CI `workflow-gate` is the backstop, only blocking if it is a required check); the `workflow-gate` job has
 never run in Actions (it was checked for YAML validity with `yaml.safe_load`, by reading, and its shell logic
@@ -121,44 +146,72 @@ with a local base-copy probe) and on this very PR it will take the fallback bran
 
 ## Review (workflow step `review`, rule 09)
 
-Status: pending. A fresh `/code-review` of the full diff after the second review round (user-run, at high
-effort, `/code-review high`) has not happened yet. This round changed the hook itself
-(`.claude/hooks/require-contract.py`) and `ci.yml`, so the previous review is stale by design: no check of any
-earlier review is carried over as done, and the section is rewritten when the new review runs. The `review`
-progress line stays unticked until then (`push-review-gate` blocks the push meanwhile, which is intended); the
-review is recorded by a commit that changes this section (criterion 25), and that commit's sha is what the
-`review` evidence cites.
+Status: the review of the final diff is user-run (`/code-review high`) and recorded by a commit that changes this
+section (criterion 25); the `review`, `commit`, `close-out` and `gate-push` progress lines stay unticked until the
+main thread ticks them. Rounds 0-3 below are the reviews already run on this branch: round 3 is the last full
+review under the new policy (workflow.md `## Review policy`: a finding becomes a test, search first, at most two
+rounds per task, the second only the delta).
 
-History, kept so nothing is lost: the 2026-10-05 checklist run covered 28 files and the first `code-review` at
-high effort found six issues in the hook rewrite, all fixed in `15908bf` and `29cbbbd` (criteria 12-16):
-the slug read from `ACTIVE` (fixed: branch name), checks only inside Claude's Bash tool (fixed: git hooks and
-CI run the same script), free-text evidence (fixed: real commit sha), the push gate reading the checked-out
-branch (fixed: refspec-aware), `[X]` not read as ticked (fixed), and the `HOOK_UNDER_TEST` override in the spec
-(fixed: removed and forbidden by a test). The user's later full-branch `/code-review` (2026-10-06, high) found
-six more, which are criteria 17-24 and are fixed in `959bb0c` and `6c2bd7f`: stale reviews were not detected
-(17, 21), merge/rebase/revert commits hit the docs-only rule (18), a PR could weaken its own CI gate (19),
-`git -C`/`-c`/`--git-dir` hid commit and push from the Claude hook (20), the unchecked scan matched prose and
-fenced code (22), and the `hard-rules.md` rows were too long to edit safely (23); the close-out-last order and
-the way to reopen are documented (24). The user's second high-effort `/code-review` (2026-10-06) of the result
-found six more, criteria 25-30, all fixed in `49ba305` and `d196717`: `review` evidence only had to touch the
-handoff (fixed: it must change the `## Review` section, 25), freshness walked every reachable commit so a merge
-of `main` staled it (fixed: branch-own diff against the base, 26), edits to the gate itself did not stale a
-review (fixed: `.claude/hooks/` and `.claude/workflow-steps.json` count as code, 27), `-c core.hooksPath=...`
-bypassed the git hooks (fixed: refused like `--no-verify`, 28), the CI base-copy probe only checked `--ci`
-(fixed: `--ci` and `--base`, 29) and the unchecked scan missed `*`, `+` and numbered items (fixed, 30). These
-fixes are covered by tests and have not been re-reviewed, which is exactly what the pending review is for.
+- [x] review-checklist (`.claude/templates/review-checklist.md`) run over the full branch diff on 2026-10-05 (28 files); the changes since are the hook, its specs and `.claude/` docs
+- [x] `code-review` ran at high effort on 2026-10-05 and three times on 2026-10-06 (rounds 0 to 3 below); every finding has its outcome and proof, checked by the gate
+
+Proof format (decision 057, third amendment): all the spec files cited below were created on this branch, so the
+base ref (`origin/main`) has no earlier test to strengthen and every `fixed` proof is a `new` test; where the
+search finds sibling tests of the same gate, the `differs` reason says why. The three findings whose fix is not a
+new test are explained in their line (`no_change_needed` for behavior-preserving refactors, `queued` for the
+deliberate-evasion finding).
+
+### Round 0 — first `/code-review` at high effort, 2026-10-05 (criteria 12-16)
+
+- finding r0-1 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › slug comes from the feat branch name, ACTIVE is ignored on feat branches — searched: ACTIVE, slug, branch name — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r0-2 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › git pre-push mode gates the pushed ref — searched: pre-push, pushed ref — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r0-3 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › evidence must be a real commit sha for commit/review/close-out — searched: real commit sha, evidence — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r0-4 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › push gate follows the pushed refspec, not the checked-out branch — searched: refspec, checked-out — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r0-5 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › uppercase [X] ticks are parsed — searched: uppercase, ticks — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r0-6 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › arch specs have no test-only hook overrides — searched: override, HOOK_UNDER_TEST
+
+### Round 1 — user full-branch `/code-review` at high effort, 2026-10-06 (criteria 17-24)
+
+- finding r1-1 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › a code commit after the review evidence makes the review stale — searched: stale, review evidence — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r1-2 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › merge, rebase and revert commits are not blocked by the docs-only rule — searched: merge, rebase, revert — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r1-3 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › ci runs the base branch copy of the workflow gate — searched: base branch copy, workflow gate — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r1-4 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › global git options do not hide commit or push from the hook — searched: global git options — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r1-5 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › unchecked scan ignores fenced code and prose — searched: fenced, prose, unchecked scan — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r1-6 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › hard-rules rows stay short — searched: hard-rules, rows
+
+### Round 2 — user second `/code-review` at high effort, 2026-10-06 (criteria 25-30)
+
+- finding r2-1 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › review evidence must be a commit that changed the Review section — searched: Review section, review evidence — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r2-2 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › merging main after the review does not make it stale — searched: merging main — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r2-3 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › edits to the gate itself make the review stale — searched: gate itself — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r2-4 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › core.hooksPath override is refused like --no-verify — searched: hooksPath, no-verify — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r2-5 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › ci falls back unless the base copy supports --ci and --base — searched: falls back, base copy — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r2-6 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › unchecked scan covers every list marker — searched: list marker — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+
+### Round 3 — user third `/code-review` at high effort, 2026-10-06 (criteria 31-34); the last full review under the new policy
+
+- finding r3-1 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › a chained git config write or GIT_CONFIG_KEY env prefix is refused too: %s — searched: chained git config, GIT_CONFIG_KEY — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r3-2 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › --no-verify and -n are blocked, also as a short-flag cluster (-nm, -anm, -sn, a trailing -n) — searched: short-flag cluster, -nm — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r3-3 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › freshness fails closed when git diff errors: two unreadable diffs are not "equal" — searched: fails closed, git diff errors — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
+- finding r3-4 — outcome: no_change_needed — proof: the three names for the comparison ref (`steps_ref`, `base`, `base_ref`) were unified to `base_ref`/`resolve_base`; a behavior-preserving rename has no test that can fail before and pass after, the behavior stays covered by `--ci --base reads the step list from the base ref` and `a later code commit with a test does not stale the review, without a test it does` (both green)
+- finding r3-5 — outcome: no_change_needed — proof: the two commit walks for the first later code commit were merged into one helper (`code_changes_after`); behavior-preserving refactor, covered by `a code commit after the review evidence makes the review stale` and `merging main after the review does not make it stale` (both green)
+- finding r3-6 — outcome: queued — proof: workflow-integrity-hardening item 8 (editing the `## Review` text after later code changes resets freshness; residual risk accepted by the user decision 2026-10-06, mitigated by the test requirement and the finding proof)
+
+Counting note: the earlier prose history named the 2026-10-05 review as the "first" and the two 2026-10-06 user
+reviews as the "full-branch" and "second" ones; with today's they are rounds 0, 1, 2 and 3.
 
 ## Pending on the user
 
-| #   | What                                                                                                                                                                                                                                                                        | Blocks                             | Status  |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
-| 1   | Run `/code-review high` on the final diff of this branch (after the review-fixes-2 slice, `49ba305`, `d196717`; the previous review is stale by design), then have the findings fixed and the review recorded; the gates block the push and the close-out until it is fresh | `review`, `close-out`, `push-pr`   | pending |
-| 2   | Explicit permission for the single `git push` of `feat/close-workflow-redesign` (rule 06, decision 031); the AI then opens the PR                                                                                                                                           | `push-pr`                          | pending |
-| 3   | After the PR's first CI run, add the `workflow-gate` job to the required checks of the `main` ruleset (a skipped job passes, so it is safe to add); until then the CI backstop for `git push --no-verify` is not blocking                                                   | making the CI backstop hard        | pending |
-| 4   | Know that after the merge the new flow applies: `merge` is yours, `deploy-check` is post-merge and non-blocking (the AI reports `deploy.yml` in chat; a failed deploy is a new task, never a reopened one)                                                                  | nothing, awareness of the new flow | info    |
-| 5   | `button-system`, `css-tailwind-first` and `workflow-integrity-hardening` stay `todo` in the backlog; the latter's item 6 now only owes the proactive `/code-review` nudge wording and an effort-level minimum                                                               | nothing                            | info    |
+| #   | What                                                                                                                                                                                                                                                                                                                                                            | Blocks                             | Status  |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
+| 1   | Decide whether the review-fixes-3 delta needs a second pass: round 3 is the last full review (policy: at most two rounds, the second only the delta, `/code-review` on `git diff <last-reviewed-sha>..HEAD`); the findings are recorded with their proofs in `## Review`, and the push and close gates block until `review` is ticked with the recording commit | `review`, `close-out`, `push-pr`   | pending |
+| 2   | Explicit permission for the single `git push` of `feat/close-workflow-redesign` (rule 06, decision 031); the AI then opens the PR                                                                                                                                                                                                                               | `push-pr`                          | pending |
+| 3   | After the PR's first CI run, add the `workflow-gate` job to the required checks of the `main` ruleset (a skipped job passes, so it is safe to add); until then the CI backstop for `git push --no-verify` is not blocking                                                                                                                                       | making the CI backstop hard        | pending |
+| 4   | Know that after the merge the new flow applies: `merge` is yours, `deploy-check` is post-merge and non-blocking (the AI reports `deploy.yml` in chat; a failed deploy is a new task, never a reopened one)                                                                                                                                                      | nothing, awareness of the new flow | info    |
+| 5   | `button-system`, `css-tailwind-first` and `workflow-integrity-hardening` stay `todo` in the backlog; the latter's item 6 now only owes the proactive `/code-review` nudge wording and an effort-level minimum                                                                                                                                                   | nothing                            | info    |
 
 ## Decisions made in this task
 
 - → `.claude/docs/decisions/057-close-out-before-single-push.md` (with its `Amendment 2026-10-05`,
-  `Amendment 2026-10-06` and `Amendment 2026-10-06 (second review)`)
+  `Amendment 2026-10-06`, `Amendment 2026-10-06 (second review)` and
+  `Amendment 2026-10-06 (third review: findings become tests, search first)`)

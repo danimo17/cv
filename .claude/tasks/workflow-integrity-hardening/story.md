@@ -124,6 +124,18 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    `close-workflow-redesign` (Problem 3) — this item makes sure the step list it mirrors is itself complete and
    enforced.
 
+8. **Editing the `## Review` text after later code changes resets freshness** (queued 2026-10-06, third
+   `/code-review` of `close-workflow-redesign`; severity: low, a deliberate evasion of the gate, not normal use).
+   The `review` evidence must be a commit that changed the content of the `## Review` section; the freshness
+   check compares the code the branch has at that commit with the tip. Rewriting the Review text in a later
+   commit (after code changed) and re-pointing the evidence at it makes the review look fresh without a review
+   having seen that code. Option: a `reviewed: <sha>` marker inside the Review block, naming the code tip the
+   review saw, which the gate compares with the tip instead of trusting the commit that edited the text.
+   Mitigated by the review policy built in `close-workflow-redesign` (code after a recorded review needs its test
+   at commit time, and every finding needs proof, decision 057 third amendment); residual risk accepted (user
+   decision 2026-10-06). Same bucket by policy: other deliberate-evasion findings found by later reviews go here
+   with a severity and do not block a close.
+
 ## Out of scope
 
 - Actually building the CSS architecture change (`css-tailwind-first`, separate story/task).

@@ -30,7 +30,16 @@ restores the task folder and removes this archive; fix, re-review, close again.
 ## Review
 
 Paste the handoff's `## Review` section here (checklist fully checked, `/code-review` effort level, date and
-the outcome of each finding). It must mention `code-review`: the push gate reads it from this archive.
+one line per finding). It must mention `code-review`: the push gate reads it from this archive. Findings use the
+same format as the handoff template (decision 057, third amendment, search first), checked at the closing commit
+and at push; the formats, in a fence so that they are not counted as findings:
+
+```
+- finding <id> — outcome: fixed — proof: strengthened <tests/file> › <test name>
+- finding <id> — outcome: fixed — proof: new <tests/file> › <test name> — searched: <term>[, <term>...] [— differs: <why a new test is needed>]
+- finding <id> — outcome: queued — proof: <backlog slug | tasks/<slug> folder | closed archive> and the reason
+- finding <id> — outcome: no_change_needed — proof: <reason>
+```
 
 - [ ] …
 

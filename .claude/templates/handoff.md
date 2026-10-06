@@ -55,8 +55,22 @@ Review checklist (`.claude/templates/review-checklist.md`) run over the full bra
       subagents/accessibility/UI-consistency — go through every line of the template, mark n/a where a
       category doesn't apply to this diff, otherwise checked
 
-`/code-review` result: <effort level>, <date>, <N findings, outcome of each — fixed / no_change_needed / left as
-backlog with a reason>.
+`/code-review` result: <effort level>, <date>, round <1|2>. One line per finding, written as real list items
+outside the fence below (an empty review says `- findings: none`); the gate checks every such line at push and at
+close (decision 057, third amendment; search first: strengthen an existing test, create a new one only when none
+exists). The formats, kept in a fence so that this template's own examples are not counted as findings:
+
+```
+- finding <id> — outcome: fixed — proof: strengthened <tests/file> › <test name>
+- finding <id> — outcome: fixed — proof: new <tests/file> › <test name> — searched: <term>[, <term>...]
+- finding <id> — outcome: fixed — proof: new <tests/file> › <test name> — searched: <terms> — differs: <why a new test is needed>
+- finding <id> — outcome: queued — proof: <backlog slug | tasks/<slug> folder | closed archive> and the reason
+- finding <id> — outcome: no_change_needed — proof: <reason>
+```
+
+`strengthened`: the test already exists at the base ref (`origin/main`) and its file differs from the base. `new`:
+the title is not at the base, and the gate searches every test/describe/it title under `tests/` and `e2e/` for each
+`searched:` term; any other match blocks unless `— differs:` gives the reason.
 
 ## Pending on the user
 

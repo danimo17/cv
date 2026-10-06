@@ -47,7 +47,10 @@ same id order and title as that file, the handoff's `## Workflow progress` block
    the path and the first later commit, and the command `/code-review high` to run again; the result is
    recorded in a new commit and the `review` evidence re-pointed at it. Merging `main` into the branch
    after the review does not stale it (only the branch's own changes are compared; decision 057 amendments
-   2026-10-06).
+   2026-10-06). A fix after the review is exempt from staleness only when its commit also changes a file under
+   `tests/` or `e2e/` (a finding becomes a test), and once the `review` step is ticked a commit that stages code
+   without a test is blocked at commit time. Every finding is written as a `- finding <id> — outcome: ... —
+proof: ...` line of `## Review` and checked at push and close (see `## Review policy`).
 9. **Close-out** (decision 057) — still on the same branch, before the push, so the one PR the user merges
    carries the feature **and** its own closing. Fill `.claude/templates/close-checklist.md`'s copy at
    `.claude/tasks/<slug>/close-checklist.md` with items provable before merge only (contract criteria, real
@@ -109,3 +112,32 @@ reported in chat. That is stated, not hidden (rule 19). (`story` is gated by `re
 without `story.md` blocks commits.)
 
 Legitimately unblocking = making it pass. Never `--no-verify`, never `skip`, never delete the test.
+
+## Review policy
+
+Decision 057, amendment `2026-10-06 (third review: findings become tests, search first)`. This is the
+convergence policy of the review step; the mechanisms named here are checks in `require-contract.py`, not
+reminders.
+
+- **A finding becomes a test.** Every bug a review finds is closed by a test that fails without the fix, never by
+  prose. After the `review` step is ticked, a commit that stages code must stage a file under `tests/` or `e2e/`
+  (commit time); a later code commit without a test makes the review stale; every finding is a line of `## Review`,
+  `- finding <id> — outcome: <fixed|queued|no_change_needed> — proof: <text>`, whose proof is checked at push and at
+  the close. Enforced by hooks, not memory (rule 19).
+- **Search first.** Before writing a test, search `tests/` and `e2e/` for one that already covers the behavior and
+  strengthen an existing test; create a new one only when none exists. `fixed` therefore has two proofs:
+  `strengthened <tests/file> › <test name>` (the test exists at the base ref and its file differs from the base) or
+  `new <tests/file> › <test name> — searched: <term>[, <term>...]` (the title is not at the base, and the gate
+  performs the search itself: any other describe/it/test title matching a term blocks the push unless the line
+  adds `— differs: <why a new test is needed>`). Titles are unique per file
+  (`tests/arch/no-duplicate-test-titles.spec.ts`).
+- **The test is the verification, not a second review.** A fix is not re-reviewed: the test that failed before and
+  passes now is the evidence.
+- **At most two review rounds per task.** The second reviews only the delta (`/code-review` on
+  `git diff <last-reviewed-sha>..HEAD`), then the close.
+- **Deliberate evasions are queued, not blocking.** A finding that only a deliberate attack on the gate triggers
+  goes to `workflow-integrity-hardening` with a severity (`outcome: queued`); only normal-use correctness findings
+  block the close.
+- **Honest limit.** A test proves that bug cannot return, not that the fix adds none elsewhere: the full suite,
+  `gate:push` and CI are the net, and a new bug class gets a new test. Duplicate detection is by titles and search
+  terms, not semantic.

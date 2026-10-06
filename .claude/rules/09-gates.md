@@ -3,7 +3,7 @@
 **What.** `pnpm gate` (format:check, lint, typecheck, unit+arch) must be green before every commit;
 `pnpm gate:push` (gate + build + e2e) before every push; CI (gate + build + e2e + security) green before
 every merge to `main`; production deploy only comes from `main` and only if CI is green there. Never
-`--no-verify` or `-n`. A test that's bothersome gets fixed or justified in the contract, not skipped.
+`--no-verify` or `git commit -n` (also as a cluster such as `-nm`; `git push -n` is a dry run). A test that's bothersome gets fixed or justified in the contract, not skipped.
 
 The workflow is one list of steps (`.claude/workflow-steps.json`, decision 057): everything up to the push
 happens on the `feat/<slug>` branch, in this order: review, close-out (archive + task folder deletion, still
@@ -35,10 +35,27 @@ after the close-out, reopen with `git revert <close-out sha>` (the folder comes 
 re-review and close again. Evidence shas are tied to their step: `commit` and `close-out` must be ancestors of
 the tip, `review` an ancestor that recorded the review. Unchecked-box scans only count real list items
 (`-`, `*`, `+`, `1.` or `1)` followed by `[ ]`) outside fenced code blocks, never prose. The Claude hook also
-refuses a `core.hooksPath` override on `git commit`/`push` (`-c core.hooksPath=...`, `--config-env`) exactly like
+refuses a `core.hooksPath` override on `git commit`/`push` (`-c core.hooksPath=...`, `--config-env`, a chained `git config ... core.hooksPath`, `GIT_CONFIG_KEY_<n>=core.hooksPath`) exactly like
 `--no-verify`, since it switches the git hooks off. In CI the base copy of the gate is only used when it
 supports both `--ci` and `--base`; otherwise the PR's own copy runs with a notice. Merge, rebase, cherry-pick and revert commits are not
 blocked by the docs-only rule of rule 10 (their other checks stay).
+
+**A finding becomes a test (review policy, decision 057 third amendment; see `workflow.md` `## Review policy`).**
+Enforced by the same script, not by memory (rule 19). (1) Once the `review` step is ticked (handoff or archive at
+`HEAD`), a commit that stages code (outside `.claude/`, plus `.claude/hooks/` and `.claude/workflow-steps.json`;
+`tests/` and `e2e/` are not code) must also stage a file under `tests/` or `e2e/`; merge, rebase, cherry-pick,
+revert and closing commits are exempt. (2) For freshness a later code commit that also changes a test file is a
+fix with its test and does not stale the review; one without a test does. (3) Every `## Review` finding is a line
+`- finding <id> — outcome: <fixed|queued|no_change_needed> — proof: <text>` checked at push (every caller) and at
+close: `fixed` is `strengthened <tests/file> › <test name>` (the test exists at the base ref and its file differs
+from the base) or `new <tests/file> › <test name> — searched: <terms>` (not at the base, and the gate performs the
+search itself: another matching test/describe/it title blocks unless the line adds `— differs: <reason>`);
+`queued` names a backlog slug, an open task folder or an archive; `no_change_needed` gives the reason; no finding
+line needs `findings: none`. Search first: strengthen an existing test, create a new one only when none exists;
+titles are unique per file (`tests/arch/no-duplicate-test-titles.spec.ts`). The test is the verification, not a
+second review; at most two review rounds per task, the second only the delta. Honest limit: a test proves that bug
+cannot return, not that the fix adds none elsewhere (suite, `gate:push` and CI are the net); duplicate detection is
+by titles and search terms, not semantic.
 
 The post-merge `deploy-check` (decision 042, relaxed by 057) is **non-blocking**: after the user merges, the AI
 runs `gh run list --branch main --workflow deploy.yml` and reports the result in chat. A failed deploy is fixed

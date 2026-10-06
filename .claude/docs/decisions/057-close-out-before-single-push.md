@@ -185,3 +185,56 @@ gate yet`. `workflow-steps.spec.ts` also runs the extracted job script against f
 Merging `main` into a feature branch after its review is now safe. Editing the gate (`.claude/hooks/`,
 `.claude/workflow-steps.json`) after a review always asks for a new review, which is the point: the gate protects
 the process the same way the product code is protected.
+
+## Amendment 2026-10-06 (third review: findings become tests, search first)
+
+Prompted by the user's third high-effort `/code-review` of the same branch (six findings, the third round) and by
+the user's decision that the review loop must converge: every bug a review finds must produce a test or gate so
+it cannot return, the test is the verification, and there is no second review of the fix. That rule had only
+existed as prose (workflow step 3, "every correction earns a test") and nothing enforced it, a rule 19 failure.
+The criteria are 31-34 of the task contract.
+
+1. **After a recorded review every code change needs its test (commit time).** On a branch whose handoff (or
+   archive) at `HEAD` has the `review` step ticked, a commit that stages any code path (outside `.claude/`, plus
+   `.claude/hooks/` and `.claude/workflow-steps.json`; `tests/` and `e2e/` themselves are not code) must also stage
+   a file under `tests/` or `e2e/`, else exit 2. Merge, rebase, cherry-pick and revert commits and closing commits
+   are exempt. A finding becomes a test.
+2. **Freshness: a fix with its test does not stale the review.** A later code commit that also changes a file
+   under `tests/` or `e2e/` is a fix-with-test and is ignored by the freshness check; one without a test stales it
+   (the message says a fix needs its test, else re-run `/code-review high`). `tests/` and `e2e/` are no longer
+   code paths for freshness (a test-only commit cannot change the product). The merge-of-main behavior of the
+   second amendment is unchanged.
+3. **Finding proof, search first.** `## Review` lines `- finding <id> — outcome: <fixed|queued|no_change_needed> —
+proof: <text>` are checked at push (every caller) and at the closing commit. `fixed` is one of two forms.
+   `strengthened <tests/file> › <test name>`: the test must already exist at the base ref (`--base`, else
+   `origin/main`, else `main`) and that file must differ between the base and the pushed tip (an existing test was
+   improved, not duplicated). `new <tests/file> › <test name> — searched: <term>[, <term>...]`: the title must not
+   exist anywhere under `tests/` or `e2e/` at the base ref, and the gate performs the search itself: for each term
+   it greps (case-insensitive) every `describe`/`it`/`test` title under `tests/` and `e2e/` in the pushed tree, and
+   any OTHER matching title blocks (the message names the matches) unless the line adds `— differs: <why a new
+test is needed>`. In both forms the cited file must exist at the tip and contain the name. `queued` must name a
+   slug that is a row of `.claude/backlog.md` at the pushed sha, an existing `.claude/tasks/<slug>/` folder or a
+   `.claude/tasks/closed/<slug>.md`; `no_change_needed` needs a reason; a Review with no finding line must say
+   `findings: none`. All problems go through the existing multi-problem output. `tests/arch/no-duplicate-test-titles.spec.ts`
+   additionally fails when a spec repeats a title inside the same describe scope.
+4. **Third-round fixes (criterion 33).** `git config ... core.hooksPath` chained before a commit/push and
+   `GIT_CONFIG_KEY_<n>=core.hooksPath` are refused (supersedes the limit stated in the second amendment, point 4);
+   a short-flag cluster containing `n` on `git commit` (`-nm`, `-anm`) is refused like `--no-verify` (on `git push`,
+   `-n` is `--dry-run` and stays allowed); an environment prefix with digits in the variable name no longer hides
+   the git call; freshness fails closed when `git diff` errors (the commit walk decides, never "equal"); one name,
+   `base_ref`, for the comparison base; one helper walks the commits after the review.
+5. **Review policy (workflow.md `## Review policy`).** At most two review rounds per task, the second reviewing
+   only the delta (`/code-review` on `git diff <last-reviewed-sha>..HEAD`). Findings that are deliberate evasions of
+   the gate go to `workflow-integrity-hardening` with a severity; only normal-use correctness findings block the
+   close. Queued by user decision 2026-10-06 (not built): editing the `## Review` text after later code changes
+   resets freshness (option: a `reviewed: <sha>` marker in the Review block); mitigated by points 1-3, residual
+   risk accepted.
+
+**Honest limit.** A test proves that bug cannot return, not that the fix adds none elsewhere: the full suite,
+`gate:push` and CI are the net, and a new bug class gets a new test. Duplicate detection is by titles and search
+terms, not semantic, and the `strengthened` form needs the test to exist at the base, so tests created on the same
+branch can only be cited as `new` (with `— differs:` where a sibling title matches the search).
+
+**Consequences.** Every finding of every later review on a task leaves a test, a strengthened test, a backlog slug
+or a written reason behind it, and the push and the close are blocked otherwise. The second-round review recorded
+before this amendment is not carried over: round 3 is the last full review under the new policy.
