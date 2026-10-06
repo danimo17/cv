@@ -8,8 +8,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 // Every test builds a throwaway git repo and runs the REAL hook against it, either as the Claude
 // hook (stdin JSON + CLAUDE_PROJECT_DIR) or through its CLI modes (--commit, --pre-push, --ci, cwd = repo).
 // The real repo's git state is never touched. "@SHA@" in a fixture is replaced by a real commit sha of
-// the throwaway repo when the file is written; "@REVIEW@" is a commit that touched the task's handoff.md and
-// closed archive (what a review sha must be, criterion 21), made after the seed and before the base commit.
+// the throwaway repo when the file is written; "@REVIEW@" is a commit that added a `## Review` section to the
+// task's handoff.md and closed archive (what a review sha must be, criteria 21 and 25), made after the seed and
+// before the base commit. The base branch is `main`; the feature branch is cut from its tip.
 
 const ROOT = process.cwd()
 const HOOK = join(ROOT, '.claude', 'hooks', 'require-contract.py')
@@ -86,7 +87,8 @@ function createRepo(base: Record<string, string>, branch = `feat/${SLUG}`): Repo
   repo.commitAll('seed')
   repo.fullSha = git('rev-parse', 'HEAD').trim()
   repo.sha = repo.fullSha.slice(0, 10)
-  repo.write({ [`${TASK}/handoff.md`]: '# review stub\n', [ARCHIVE]: '# review stub\n' })
+  const stub = `# review stub\n\n${REVIEW_OK}`
+  repo.write({ [`${TASK}/handoff.md`]: stub, [ARCHIVE]: stub })
   repo.commitAll('review')
   repo.reviewFullSha = git('rev-parse', 'HEAD').trim()
   repo.reviewSha = repo.reviewFullSha.slice(0, 10)
@@ -1093,6 +1095,12 @@ function commitFile(repo: Repo, path: string, content = 'export {}\n'): string {
   return head(repo)
 }
 
+function recordReview(repo: Repo, note: string): string {
+  repo.write({ [HANDOFF]: handoffDoc({ review: `${REVIEW_OK}- [x] ${note}\n` }) })
+  repo.commitAll(`record review: ${note}`)
+  return head(repo)
+}
+
 function reviewedAt(repo: Repo, sha: string, step = 'review'): void {
   repo.write({ [HANDOFF]: handoffDoc({ ticks: { [step]: sha } }) })
   repo.commitAll(`re-record ${step}`)
@@ -1142,14 +1150,17 @@ describe('a code commit after the review evidence makes the review stale', () =>
     const repo = activeRepo(handoffDoc())
     commitFile(repo, 'app/thing.ts')
     expectBlocked(repo, PUSH, 'stale')
-    const rereview = commitFile(repo, HANDOFF, `${handoffDoc()}\n- second review\n`)
+    const rereview = recordReview(repo, 'second review')
     reviewedAt(repo, rereview)
     expectAllowed(repo, PUSH)
   })
 
   it('a review commit that is itself the last code commit passes', () => {
     const repo = activeRepo(handoffDoc())
-    repo.write({ 'app/thing.ts': 'export {}\n', [HANDOFF]: `${handoffDoc()}\n- review pass\n` })
+    repo.write({
+      'app/thing.ts': 'export {}\n',
+      [HANDOFF]: handoffDoc({ review: `${REVIEW_OK}- [x] review pass\n` }),
+    })
     repo.commitAll('code and review notes together')
     reviewedAt(repo, head(repo))
     expectAllowed(repo, PUSH)
@@ -1162,22 +1173,6 @@ describe('a code commit after the review evidence makes the review stale', () =>
     repo.git('switch', '-q', `feat/${SLUG}`)
     reviewedAt(repo, side)
     expectBlocked(repo, PUSH, 'review', 'ancestor')
-  })
-
-  it('a merge that brings code makes it stale, a docs-only merge does not', () => {
-    const docsOnly = activeRepo(handoffDoc())
-    docsOnly.git('switch', '-q', 'main')
-    commitFile(docsOnly, '.claude/notes.md', '# notes\n')
-    docsOnly.git('switch', '-q', `feat/${SLUG}`)
-    docsOnly.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
-    expectAllowed(docsOnly, PUSH)
-
-    const withCode = activeRepo(handoffDoc())
-    withCode.git('switch', '-q', 'main')
-    const code = commitFile(withCode, 'app/from-main.ts')
-    withCode.git('switch', '-q', `feat/${SLUG}`)
-    withCode.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
-    expectBlocked(withCode, PUSH, 'stale', short(code))
   })
 
   it('close commit: a code commit after the review blocks the closing commit itself', () => {
@@ -1199,7 +1194,7 @@ describe('a code commit after the review evidence makes the review stale', () =>
   it('close commit: a review after the last code commit closes fine', () => {
     const repo = activeRepo(handoffDoc())
     commitFile(repo, 'app/thing.ts')
-    const rereview = commitFile(repo, HANDOFF, `${handoffDoc()}\n- second review\n`)
+    const rereview = recordReview(repo, 'second review')
     reviewedAt(repo, rereview)
     stageClose(repo, archiveDoc({ ticks: { review: rereview } }))
     expectAllowed(repo, COMMIT)
@@ -1283,6 +1278,11 @@ describe('--ci --base reads the step list from the base ref', () => {
     )
     repo.write({ '.claude/workflow-steps.json': JSON.stringify(steps) })
     repo.commitAll('weaken the step list')
+    const rereview = recordReview(repo, 'after the step list edit')
+    repo.write({
+      [HANDOFF]: handoffDoc({ omit: ['gate-push'], ticks: { review: rereview } }),
+    })
+    repo.commitAll('record the review evidence')
     const tip = head(repo)
     expectCliAllowed(runCli(repo, ['--ci', `feat/${SLUG}`, tip]))
     expectCliBlocked(
@@ -1384,7 +1384,7 @@ describe('evidence sha is tied to its step', () => {
 
   it('review: a commit that touched the closed archive counts, one that touched the handoff counts', () => {
     const repo = closedBranchRepo(archiveDoc())
-    const late = commitFile(repo, ARCHIVE, `${archiveDoc()}\n- note\n`)
+    const late = commitFile(repo, ARCHIVE, archiveDoc({ review: `${REVIEW_OK}- [x] late note\n` }))
     repo.write({ [ARCHIVE]: archiveDoc({ ticks: { review: late } }) })
     repo.commitAll('cite the archive commit')
     expectAllowed(repo, PUSH)
@@ -1394,7 +1394,11 @@ describe('evidence sha is tied to its step', () => {
   it('review: a merge commit is judged by its first-parent diff', () => {
     const touching = activeRepo(handoffDoc())
     touching.git('switch', '-q', '-c', 'side', 'main')
-    commitFile(touching, HANDOFF, `${handoffDoc()}\n- notes from the side\n`)
+    commitFile(
+      touching,
+      HANDOFF,
+      handoffDoc({ review: `${REVIEW_OK}- [x] review notes from the side\n` })
+    )
     touching.git('switch', '-q', `feat/${SLUG}`)
     touching.git('merge', '-q', '--no-ff', '-m', 'merge side', 'side')
     reviewedAt(touching, head(touching))
@@ -1499,5 +1503,275 @@ describe('unchecked scan ignores fenced code and prose', () => {
   it('a heading inside a fenced block does not end the section early', () => {
     const review = '## Review\n\n```\n## not a heading\n```\n\n- [x] code-review ran\n- [ ] open\n'
     expectBlocked(activeRepo(handoffDoc({ review })), PUSH, 'unchecked', 'open')
+  })
+})
+
+describe('review evidence must be a commit that changed the Review section', () => {
+  const tickReview = (repo: Repo, sha: string): void => {
+    repo.write({ [HANDOFF]: handoffDoc({ ticks: { review: sha } }) })
+    repo.git('add', '-A')
+  }
+
+  it('a commit that only ticks progress is rejected, at commit time and at push', () => {
+    const repo = activeRepo(handoffDoc())
+    repo.write({ [HANDOFF]: handoffDoc({ ticks: { build: 'built again' } }) })
+    repo.commitAll('tick progress only')
+    const tickOnly = head(repo)
+    tickReview(repo, tickOnly)
+    expectBlocked(repo, COMMIT, 'review', 'Review', 'handoff.md', 'sha')
+    repo.commitAll('cite it anyway')
+    expectBlocked(repo, PUSH, 'review', 'Review')
+  })
+
+  it('a commit that only edits the pending list is rejected', () => {
+    const repo = activeRepo(handoffDoc())
+    repo.write({ [HANDOFF]: `${handoffDoc()}\n- one more pending note\n` })
+    repo.commitAll('edit pending')
+    tickReview(repo, head(repo))
+    expectBlocked(repo, COMMIT, 'review', 'Review')
+  })
+
+  it('a commit that changed the Review section is accepted', () => {
+    const repo = activeRepo(handoffDoc())
+    const recorded = recordReview(repo, 'second pass')
+    tickReview(repo, recorded)
+    expectAllowed(repo, COMMIT)
+    repo.commitAll('cite it')
+    expectAllowed(repo, PUSH)
+  })
+
+  it('a commit that removed the Review section does not record a review', () => {
+    const repo = activeRepo(handoffDoc())
+    repo.write({ [HANDOFF]: handoffDoc({ review: null }) })
+    repo.commitAll('drop the review section')
+    tickReview(repo, head(repo))
+    expectBlocked(repo, COMMIT, 'review', 'Review')
+  })
+
+  it('with several cited shas any qualifying one passes', () => {
+    const repo = activeRepo(handoffDoc())
+    const recorded = recordReview(repo, 'second pass')
+    tickReview(repo, `${repo.fullSha} then ${recorded}`)
+    expectAllowed(repo, COMMIT)
+  })
+
+  it('the closed archive: a commit that changed its Review counts, a progress-only one does not', () => {
+    const repo = closedBranchRepo(archiveDoc())
+    repo.write({ [ARCHIVE]: archiveDoc({ ticks: { build: 'built again' } }) })
+    repo.commitAll('archive progress only')
+    const progressOnly = head(repo)
+    repo.write({ [ARCHIVE]: archiveDoc({ review: `${REVIEW_OK}- [x] archive pass\n` }) })
+    repo.commitAll('archive review changed')
+    const changed = head(repo)
+
+    repo.write({ [ARCHIVE]: archiveDoc({ ticks: { review: progressOnly } }) })
+    repo.commitAll('cite the progress-only commit')
+    expectBlocked(repo, PUSH, 'review', 'Review')
+
+    repo.write({ [ARCHIVE]: archiveDoc({ ticks: { review: changed } }) })
+    repo.commitAll('cite the review commit')
+    expectAllowed(repo, PUSH)
+  })
+
+  it('a root commit that holds a Review section counts as changed', () => {
+    const repo = createRepo({}, 'main')
+    repo.git('checkout', '-q', '--orphan', `feat/${SLUG}`)
+    repo.write({ ...taskFiles(handoffDoc()) })
+    repo.commitAll('root with a review')
+    repo.sha = head(repo).slice(0, 10)
+    repo.reviewSha = repo.sha
+    repo.write({ [HANDOFF]: handoffDoc() })
+    repo.commitAll('tick the evidence')
+    expect(repo.git('rev-list', '--max-parents=0', 'HEAD').trim()).toBe(
+      repo.git('rev-parse', `${repo.sha}^{commit}`).trim()
+    )
+    expectAllowed(repo, PUSH)
+  })
+})
+
+describe('merging main after the review does not make it stale', () => {
+  const onMain = (repo: Repo, fn: () => void): void => {
+    repo.git('switch', '-q', 'main')
+    fn()
+    repo.git('switch', '-q', `feat/${SLUG}`)
+  }
+
+  it('a merge that brings a main-only code file keeps the review fresh', () => {
+    const repo = activeRepo(handoffDoc())
+    onMain(repo, () => commitFile(repo, 'app/from-main.ts'))
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+    expectAllowed(repo, PUSH)
+    expectCliAllowed(runCli(repo, ['--pre-push'], prePushLine(repo)))
+    expectCliAllowed(runCli(repo, ['--ci', `feat/${SLUG}`, head(repo), '--base', 'main']))
+  })
+
+  it('a docs-only merge keeps it fresh too', () => {
+    const repo = activeRepo(handoffDoc())
+    onMain(repo, () => commitFile(repo, '.claude/notes.md', '# notes\n'))
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+    expectAllowed(repo, PUSH)
+  })
+
+  it('a merge that also needs a code edit by the branch makes it stale', () => {
+    const repo = activeRepo(handoffDoc())
+    onMain(repo, () => commitFile(repo, 'app/from-main.ts'))
+    repo.git('merge', '-q', '--no-commit', '--no-ff', 'main')
+    repo.write({ 'app/branch-fix.ts': 'export {}\n' })
+    repo.commitAll('merge main and adapt the branch')
+    expectBlocked(repo, PUSH, 'stale', repo.reviewSha, 'app/branch-fix.ts', '/code-review high')
+  })
+
+  it('a real code commit before the merge still makes it stale', () => {
+    const repo = activeRepo(handoffDoc())
+    const code = commitFile(repo, 'app/thing.ts')
+    onMain(repo, () => commitFile(repo, 'app/from-main.ts'))
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+    expectBlocked(repo, PUSH, 'stale', short(code), 'app/thing.ts')
+  })
+
+  it('main editing another hunk of a file the branch changed before the review keeps it fresh', () => {
+    const repo = activeRepo(handoffDoc())
+    const lines = Array.from({ length: 30 }, (_, i) => `line ${i + 1}`)
+    onMain(repo, () => commitFile(repo, 'app/shared.ts', `${lines.join('\n')}\n`))
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+    commitFile(repo, 'app/shared.ts', `${['branch edit', ...lines.slice(1)].join('\n')}\n`)
+    const rereview = recordReview(repo, 'after the branch edit')
+    reviewedAt(repo, rereview)
+    expectAllowed(repo, PUSH)
+    onMain(repo, () => {
+      const edited = [...lines.slice(0, 29), 'main edit']
+      commitFile(repo, 'app/shared.ts', `${edited.join('\n')}\n`)
+    })
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main again', 'main')
+    expect(repo.git('show', 'HEAD:app/shared.ts')).toContain('branch edit')
+    expect(repo.git('show', 'HEAD:app/shared.ts')).toContain('main edit')
+    expectAllowed(repo, PUSH)
+  })
+
+  it('the base ref is --base in CI, origin/main when it resolves, else main', () => {
+    const repo = activeRepo(handoffDoc())
+    onMain(repo, () => commitFile(repo, 'app/from-main.ts'))
+    repo.git('merge', '-q', '--no-ff', '-m', 'merge main', 'main')
+    expectCliAllowed(runCli(repo, ['--ci', `feat/${SLUG}`, head(repo), '--base', 'main']))
+    repo.git('update-ref', 'refs/remotes/origin/main', 'main')
+    expectAllowed(repo, PUSH)
+    repo.git('update-ref', 'refs/remotes/origin/main', repo.fullSha)
+    expectBlocked(repo, PUSH, 'stale', 'app/from-main.ts')
+  })
+
+  it('without any base ref the old reachable-commit rule applies', () => {
+    const repo = activeRepo(handoffDoc())
+    repo.git('branch', '-m', 'main', 'trunk')
+    commitFile(repo, 'app/thing.ts')
+    expectBlocked(repo, PUSH, 'stale', 'app/thing.ts')
+  })
+})
+
+describe('edits to the gate itself make the review stale', () => {
+  it.each([
+    '.claude/hooks/require-contract.py',
+    '.claude/hooks/require-contract.sh',
+    '.githooks/pre-push',
+    'app/anything.ts',
+  ])('a commit that changes %s after the review blocks', (path) => {
+    const repo = activeRepo(handoffDoc())
+    const sha = commitFile(repo, path, '# changed\n')
+    expectBlocked(repo, PUSH, 'stale', short(sha), path, '/code-review high')
+  })
+
+  it('a commit that changes .claude/workflow-steps.json after the review blocks', () => {
+    const repo = activeRepo(handoffDoc())
+    const sha = commitFile(repo, '.claude/workflow-steps.json', `${STEPS_JSON}\n`)
+    expectBlocked(repo, PUSH, 'stale', short(sha), '.claude/workflow-steps.json')
+  })
+
+  it('other .claude/ paths, even with a similar name, do not', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFile(repo, '.claude/hooks-notes.md', '# notes\n')
+    commitFile(repo, '.claude/workflow-steps-notes.md', '# notes\n')
+    commitFile(repo, '.claude/rules/09-gates.md', '# rule\n')
+    expectAllowed(repo, PUSH)
+  })
+
+  it('the closing commit is blocked by a gate edit after the review as well', () => {
+    const repo = activeRepo(handoffDoc())
+    commitFile(repo, '.claude/hooks/require-contract.py', '# changed\n')
+    stageClose(repo, archiveDoc())
+    expectBlocked(repo, COMMIT, 'task-close-gate', 'stale', '.claude/hooks/require-contract.py')
+  })
+})
+
+describe('core.hooksPath override is refused like --no-verify', () => {
+  const overrides = [
+    '-c core.hooksPath=/dev/null',
+    '-c core.hookspath=/tmp/x',
+    '-c CORE.HOOKSPATH=/tmp/x',
+    '-c "core.hooksPath=/tmp/x"',
+    "-c 'core.hooksPath=/tmp/x'",
+    '-c core.hooksPath=',
+    '-C . -c user.name=x -c core.hooksPath=/tmp/x --no-pager',
+    '--config-env=core.hooksPath=HOOKS_DIR',
+    '--config-env core.hooksPath=HOOKS_DIR',
+    '--config-env=CORE.hooksPATH=HOOKS_DIR',
+  ]
+
+  it.each(overrides)('git %s commit and push are refused', (opt) => {
+    const repo = activeRepo(handoffDoc())
+    expectBlocked(repo, `git ${opt} commit -m x`, 'Rule 09', 'core.hooksPath')
+    expectBlocked(repo, `git ${opt} push origin feat/${SLUG}`, 'Rule 09', 'core.hooksPath')
+  })
+
+  it('other config overrides are still allowed', () => {
+    const repo = activeRepo(handoffDoc())
+    expectAllowed(repo, 'git -c core.pager=cat commit -m x')
+    expectAllowed(repo, 'git -c core.hooksPathExtra=1 commit -m x')
+    expectAllowed(repo, `git --config-env=user.name=NAME push origin feat/${SLUG}`)
+  })
+})
+
+describe('unchecked scan covers every list marker', () => {
+  const archiveWith = (item: string): Repo => {
+    const repo = activeRepo(handoffDoc())
+    stageClose(repo, archiveDoc({ checklist: `- [x] verified\n${item}` }))
+    return repo
+  }
+
+  it.each(['* [ ] star item', '+ [ ] plus item', '1. [ ] numbered item', '12) [ ] paren item'])(
+    'archive: "%s" counts as unchecked',
+    (item) => {
+      expectBlocked(archiveWith(item), COMMIT, 'unchecked', item)
+    }
+  )
+
+  it.each(['  * [ ] nested star item', '\t+ [ ] tabbed plus item', '- [ ] dash item'])(
+    'archive: an indented or dash item "%s" still blocks',
+    (item) => {
+      expectBlocked(archiveWith(item), COMMIT, 'unchecked', item.trim())
+    }
+  )
+
+  it.each(['* [ ] open', '+ [ ] open', '1. [ ] open'])(
+    'push: "%s" inside ## Review blocks',
+    (item) => {
+      const review = `## Review\n\n- [x] code-review ran\n${item}\n`
+      expectBlocked(activeRepo(handoffDoc({ review })), PUSH, 'unchecked', 'open')
+      expectBlocked(closedBranchRepo(archiveDoc({ review })), PUSH, 'unchecked')
+    }
+  )
+
+  it('checked markers and fenced examples of every kind still pass', () => {
+    const checklist =
+      '* [x] star done\n+ [x] plus done\n1. [X] numbered done\n\n```\n* [ ] fenced\n1. [ ] fenced\n```\n'
+    const repo = activeRepo(handoffDoc())
+    stageClose(repo, archiveDoc({ checklist }))
+    expectAllowed(repo, COMMIT)
+  })
+
+  it('a marker with no box, or a box mid-sentence, is prose', () => {
+    const checklist =
+      '- [x] done\n* just a bullet\n1. a numbered line\nsee the 1. [ ] form in the docs\n'
+    const repo = activeRepo(handoffDoc())
+    stageClose(repo, archiveDoc({ checklist }))
+    expectAllowed(repo, COMMIT)
   })
 })

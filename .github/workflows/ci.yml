@@ -29,10 +29,11 @@ jobs:
         run: |
           base_gate="$RUNNER_TEMP/base-require-contract.py"
           if git show "origin/$BASE_REF:.claude/hooks/require-contract.py" > "$base_gate" 2>/dev/null \
-            && grep -q -e '--ci' "$base_gate"; then
+            && grep -q -e '--ci' "$base_gate" \
+            && grep -q -e '--base' "$base_gate"; then
             python3 "$base_gate" --ci "$HEAD_REF" "$HEAD_SHA" --base "origin/$BASE_REF"
           else
-            echo "::notice::base branch has no --ci gate yet (this PR introduces it), using the PR copy"
+            echo "::notice::base branch has no --ci/--base gate yet (this PR introduces it), using the PR copy"
             python3 .claude/hooks/require-contract.py --ci "$HEAD_REF" "$HEAD_SHA"
           fi
 

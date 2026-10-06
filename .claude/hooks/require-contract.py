@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Workflow gate. One script, three callers (decisions 051, 054 and 057, incl. its 2026-10-05 and 2026-10-06
-amendments).
+"""Workflow gate. One script, three callers (decisions 051, 054 and 057, incl. its 2026-10-05, 2026-10-06 and
+second 2026-10-06 amendments).
 
   require-contract.py                      Claude Code PreToolUse hook (Bash): JSON on stdin
   require-contract.py --commit             git pre-commit: checks the index
@@ -28,10 +28,13 @@ import subprocess
 import sys
 
 CLAUDE_PREFIX = ".claude/"
+GATE_CODE_PREFIXES = (".claude/hooks/",)
+GATE_CODE_FILES = (".claude/workflow-steps.json",)
+REVIEW_HEADING = r"^## Review\b"
 CLOSED_PREFIX = ".claude/tasks/closed/"
 TASKS_PREFIX = ".claude/tasks/"
 FEAT_PREFIX = "feat/"
-UNCHECKED = re.compile(r"^\s*- \[ \]")
+UNCHECKED = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\[ \]")
 FENCE = re.compile(r"^\s*(```|~~~)")
 PROGRESS_LINE = re.compile(r"^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$")
 PUSH_PR_OPEN = re.compile(r"^- \[ \] push-pr — evidence:\s*$")
@@ -41,13 +44,14 @@ HEX_TOKEN = re.compile(r"(?<![0-9A-Za-z])[0-9a-fA-F]{7,40}(?![0-9A-Za-z])")
 SHA_EVIDENCE_STEPS = ("commit", "review", "close-out")
 SPECIAL_COMMIT_MARKERS = ("MERGE_HEAD", "rebase-merge", "rebase-apply", "CHERRY_PICK_HEAD", "REVERT_HEAD")
 GLOBAL_GIT_OPTIONS = (
-    r"(?:\s+(?:(?:-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env|--attr-source|--super-prefix)"
-    r"(?:=\S+|\s+(?:\"[^\"]*\"|'[^']*'|\S+))|--?[A-Za-z][\w-]*))*"
+    r"((?:\s+(?:(?:-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env|--attr-source|--super-prefix)"
+    r"(?:=\S+|\s+(?:\"[^\"]*\"|'[^']*'|\S+))|--?[A-Za-z][\w-]*))*)"
 )
 GIT_CALL = re.compile(
     r"(?:^|[;&|]\s*)(?:[A-Za-z_]+=\S+\s+)*git" + GLOBAL_GIT_OPTIONS + r"\s+(commit|push)\b([^\n;&|]*)",
     re.M,
 )
+HOOKS_PATH_OVERRIDE = re.compile(r"(?<![\w-])(?:-c|--config-env)(?:=|\s+)[\"']?core\.hookspath\b", re.I)
 PUSH_VALUE_FLAGS = ("-o", "--push-option", "--receive-pack", "--exec", "--repo")
 USAGE = (
     "usage: require-contract.py [--commit | --pre-push | --ci <branch> <sha> [--base <ref>]] "
@@ -178,6 +182,21 @@ def slug_of_progress_path(path):
     return path[len(TASKS_PREFIX):].split("/")[0]
 
 
+def review_section_changed(commit, slug):
+    parents = (git(["rev-list", "--parents", "-n", "1", commit]) or "").split()[1:]
+    parent = parents[0] if parents else None
+    for path in (f"{TASKS_PREFIX}{slug}/handoff.md", f"{CLOSED_PREFIX}{slug}.md"):
+        after = git_show(commit, path)
+        now = section(after, REVIEW_HEADING) if after is not None else None
+        if now is None:
+            continue
+        before = git_show(parent, path) if parent else None
+        was = section(before, REVIEW_HEADING) if before is not None else None
+        if now != was:
+            return True
+    return False
+
+
 def step_commit(step, evidence, tip, slug):
     tip_commit = resolve_commit(tip)
     resolved = [c for c in (resolve_commit(t) for t in HEX_TOKEN.findall(evidence)) if c]
@@ -194,13 +213,13 @@ def step_commit(step, evidence, tip, slug):
         )
     if step != "review":
         return ancestors[0], None
-    recorded = {f"{TASKS_PREFIX}{slug}/handoff.md", f"{CLOSED_PREFIX}{slug}.md"}
     for commit in ancestors:
-        if recorded & set(commit_paths(commit)):
+        if review_section_changed(commit, slug):
             return commit, None
     return None, (
-        "the cited commit sha must be the commit that recorded the review result: one that changed "
-        f"{TASKS_PREFIX}{slug}/handoff.md or {CLOSED_PREFIX}{slug}.md"
+        "the cited commit sha must be the commit that recorded the review result: one that changed the "
+        f"`## Review` section of {TASKS_PREFIX}{slug}/handoff.md or {CLOSED_PREFIX}{slug}.md (a commit that "
+        "only ticks progress or edits other sections does not count)"
     )
 
 
@@ -212,7 +231,78 @@ def evidence_problem(step, evidence, tip, slug):
     return None
 
 
-def stale_review_problem(content, tip, slug):
+def is_code_path(path):
+    return (
+        not path.startswith(CLAUDE_PREFIX)
+        or path.startswith(GATE_CODE_PREFIXES)
+        or path in GATE_CODE_FILES
+    )
+
+
+def base_ref(explicit):
+    for candidate in ([explicit] if explicit else ["origin/main", "main"]):
+        if resolve_commit(candidate):
+            return candidate
+    return None
+
+
+def branch_diff_paths(base, rev):
+    out = git(["diff", "--name-only", "--no-renames", "-z", f"{base}...{rev}"])
+    if out is None:
+        return None
+    return [p for p in out.split("\0") if p and is_code_path(p)]
+
+
+def branch_diff(base, rev, paths):
+    out = git(
+        ["--literal-pathspecs", "diff", "--binary", "-U0", "--no-renames", "--no-color",
+         f"{base}...{rev}", "--"] + paths
+    )
+    if out is None:
+        return None
+    return [
+        "@@" if line.startswith("@@") else line
+        for line in out.splitlines()
+        if not line.startswith("index ")
+    ]
+
+
+def changed_branch_code(base, review_commit, tip_commit):
+    at_review = branch_diff_paths(base, review_commit)
+    at_tip = branch_diff_paths(base, tip_commit)
+    if at_review is None or at_tip is None:
+        return None
+    paths = sorted(set(at_review) | set(at_tip))
+    if not paths:
+        return []
+    if branch_diff(base, review_commit, paths) == branch_diff(base, tip_commit, paths):
+        return []
+    differing = [
+        p for p in paths
+        if branch_diff(base, review_commit, [p]) != branch_diff(base, tip_commit, [p])
+    ]
+    return differing or paths
+
+
+def reachable_code_changes(review_commit, tip_commit):
+    later = (git(["rev-list", "--reverse", f"{review_commit}..{tip_commit}"]) or "").split()
+    for commit in later:
+        outside = [p for p in commit_paths(commit) if is_code_path(p)]
+        if outside:
+            return commit, outside[0]
+    return None
+
+
+def first_change_after(review_commit, tip_commit, paths):
+    later = (git(["rev-list", "--reverse", f"{review_commit}..{tip_commit}"]) or "").split()
+    for commit in later:
+        hit = [p for p in commit_paths(commit) if p in paths]
+        if hit:
+            return commit, hit[0]
+    return None, paths[0]
+
+
+def stale_review_problem(content, tip, slug, base=None):
     for step, ticked, evidence in progress_entries(content) or []:
         if step != "review" or not ticked:
             continue
@@ -220,18 +310,27 @@ def stale_review_problem(content, tip, slug):
         tip_commit = resolve_commit(tip)
         if not review_commit or not tip_commit:
             return None
-        later = (git(["rev-list", "--reverse", f"{review_commit}..{tip_commit}"]) or "").split()
-        for commit in later:
-            outside = [p for p in commit_paths(commit) if not p.startswith(CLAUDE_PREFIX)]
-            if outside:
-                return (
-                    f"the review is stale: `review` evidence cites {review_commit[:10]}, but commit "
-                    f"{commit[:10]} (after it) changes {outside[0]} outside .claude/, so the review did not "
-                    "see the final code. Run `/code-review high` on the final diff, record its result in the "
-                    "## Review section, and re-record the `review` evidence with the sha of the commit that "
-                    "records it."
-                )
-        return None
+        compared = base_ref(base)
+        changed = changed_branch_code(compared, review_commit, tip_commit) if compared else None
+        if changed is None:
+            found = reachable_code_changes(review_commit, tip_commit)
+            if not found:
+                return None
+            commit, path = found
+            scope = "commits after it, no base branch to compare with"
+        else:
+            if not changed:
+                return None
+            commit, path = first_change_after(review_commit, tip_commit, changed)
+            scope = f"the branch's own diff against {compared}"
+        where = f"commit {commit[:10]} (after it) changes {path}" if commit else f"{path} differs"
+        return (
+            f"the review is stale: `review` evidence cites {review_commit[:10]}, but {where} "
+            f"({scope}; code outside .claude/, .claude/hooks/ and .claude/workflow-steps.json), so the "
+            "review did not see the final code. Run `/code-review high` on the final diff, record its "
+            "result in the ## Review section, and re-record the `review` evidence with the sha of the "
+            "commit that records it."
+        )
     return None
 
 
@@ -421,7 +520,7 @@ def push_gate(branch, sha, steps_ref=None):
         problem = progress_problem(handoff_path, handoff, sha, slug, steps_ref)
         if problem:
             problems.append(problem)
-        stale = stale_review_problem(handoff, sha, slug)
+        stale = stale_review_problem(handoff, sha, slug, steps_ref)
         if stale:
             problems.append(f"{handoff_path}: {stale}")
     else:
@@ -447,7 +546,7 @@ def push_gate(branch, sha, steps_ref=None):
         problem = progress_problem(archive_path, archive, sha, slug, steps_ref)
         if problem:
             problems.append(problem)
-        stale = stale_review_problem(archive, sha, slug)
+        stale = stale_review_problem(archive, sha, slug, steps_ref)
         if stale:
             problems.append(f"{archive_path}: {stale}")
 
@@ -549,13 +648,19 @@ def claude_hook():
     data = json.load(sys.stdin)
     cmd = data.get("tool_input", {}).get("command", "")
 
-    hits = GIT_CALL.findall(cmd)
-    if not hits:
+    calls = GIT_CALL.findall(cmd)
+    if not calls:
         return
+    hits = [(sub, rest) for _opts, sub, rest in calls]
 
-    for _sub, rest in hits:
+    for opts, _sub, rest in calls:
         if re.search(r"--no-verify|(?:^|\s)-n\b", rest):
             fail("Rule 09: --no-verify / -n is not allowed. Pass the gate (pnpm gate).")
+        if HOOKS_PATH_OVERRIDE.search(opts):
+            fail(
+                "Rule 09: overriding core.hooksPath (-c core.hooksPath=..., --config-env) switches the git "
+                "hooks off exactly like --no-verify, which is not allowed. Pass the gate (pnpm gate)."
+            )
 
     run_commit_hook(hits)
 

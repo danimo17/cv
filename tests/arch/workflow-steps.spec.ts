@@ -1,7 +1,17 @@
 // @vitest-environment node
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
 const CLAUDE = join(ROOT, '.claude')
@@ -20,6 +30,11 @@ const HARD_RULES = join(CLAUDE, 'hard-rules.md')
 const RULE_09 = join(CLAUDE, 'rules', '09-gates.md')
 const RULE_10 = join(CLAUDE, 'rules', '10-contract-first.md')
 const HARD_RULES_ROW_LIMIT = 700
+
+const cleanup: string[] = []
+afterEach(() => {
+  for (const dir of cleanup.splice(0)) rmSync(dir, { recursive: true, force: true })
+})
 
 const PROGRESS_LINE = /^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$/
 const ALLOWED_GATES = [
@@ -272,13 +287,83 @@ describe('close-workflow-redesign: the gate holds from any client', () => {
     expect(ci).toMatch(/grep -q -e '--ci'/)
     expect(ci).toContain('--ci "$HEAD_REF" "$HEAD_SHA" --base "origin/$BASE_REF"')
     expect(ci).toContain(
-      '::notice::base branch has no --ci gate yet (this PR introduces it), using the PR copy'
+      '::notice::base branch has no --ci/--base gate yet (this PR introduces it), using the PR copy'
     )
     const fallback = ci.indexOf('::notice::')
     expect(ci.indexOf('--base "origin/$BASE_REF"')).toBeLessThan(fallback)
     expect(
       ci.indexOf(`python3 .claude/hooks/${GATE_SCRIPT} --ci "$HEAD_REF" "$HEAD_SHA"`)
     ).toBeGreaterThan(fallback)
+  })
+
+  it('ci falls back unless the base copy supports --ci and --base', () => {
+    const ci = read(CI_WORKFLOW)
+    const probe = ci.slice(ci.indexOf('if git show'), ci.indexOf('::notice::'))
+    expect(probe).toMatch(/grep -q -e '--ci' "\$base_gate"/)
+    expect(probe).toMatch(/grep -q -e '--base' "\$base_gate"/)
+    const useBase = probe.indexOf('python3 "$base_gate"')
+    expect(useBase).toBeGreaterThan(probe.indexOf("grep -q -e '--ci'"))
+    expect(useBase).toBeGreaterThan(probe.indexOf("grep -q -e '--base'"))
+    expect(probe.match(/&&/g)?.length, 'git show, --ci and --base probes chained with &&').toBe(2)
+    expect(ci).not.toContain('::notice::base branch has no --ci gate yet')
+  })
+
+  it('ci probe: runs the base copy only when it mentions both --ci and --base', () => {
+    const ci = read(CI_WORKFLOW)
+    const start = ci.indexOf('        run: |\n', ci.indexOf('Workflow gate'))
+    const end = ci.indexOf('\n\n  gate:')
+    const script = ci
+      .slice(start + '        run: |\n'.length, end)
+      .split('\n')
+      .map((line) => line.slice(10))
+      .join('\n')
+    expect(script).toContain('base_gate=')
+
+    const run = (baseScript: string | null): string => {
+      const dir = mkdtempSync(join(tmpdir(), 'ci-probe-'))
+      cleanup.push(dir)
+      const git = (...args: string[]): void => {
+        const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' })
+        if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`)
+      }
+      const hook = (body: string): void => {
+        mkdirSync(join(dir, '.claude', 'hooks'), { recursive: true })
+        writeFileSync(join(dir, '.claude', 'hooks', GATE_SCRIPT), body)
+      }
+      git('init', '-q', '-b', 'main')
+      git('config', 'user.name', 'Test')
+      git('config', 'user.email', 'test@example.com')
+      git('config', 'commit.gpgsign', 'false')
+      hook(baseScript ?? '# a base with no gate\n')
+      git('add', '-A')
+      git('commit', '-q', '-m', 'base')
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD')
+      hook('import sys\nprint("PR-COPY", *sys.argv[1:])\n')
+      const r = spawnSync('sh', ['-c', script], {
+        cwd: dir,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          RUNNER_TEMP: dir,
+          HEAD_REF: 'feat/x',
+          HEAD_SHA: 'abc',
+          BASE_REF: 'main',
+        },
+      })
+      expect(r.status, r.stderr).toBe(0)
+      return `${r.stdout}${r.stderr}`
+    }
+    const py = (comment: string): string =>
+      `import sys\n# ${comment}\nprint("BASE-COPY", *sys.argv[1:])\n`
+
+    expect(run(py('supports --ci and --base'))).toContain(
+      'BASE-COPY --ci feat/x abc --base origin/main'
+    )
+    const onlyCi = run(py('supports --ci only'))
+    expect(onlyCi).toContain('PR-COPY --ci feat/x abc')
+    expect(onlyCi).toContain('::notice::base branch has no --ci/--base gate yet')
+    expect(run(py('nothing'))).toContain('PR-COPY --ci feat/x abc')
+    expect(run(null)).toContain('PR-COPY --ci feat/x abc')
   })
 
   it('arch specs have no test-only hook overrides', () => {
