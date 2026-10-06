@@ -40,12 +40,13 @@ second push needed to keep the gate alive.
 
 ## Subagent assignments (rule 12)
 
-| Subagent        | Scope                                                                                                                                                                                                                                   | Criteria           |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| hook-and-tests  | `require-contract.py` rewrite (closing by staged deletions, HEAD-based, ACTIVE-empty push via branch slug, progress verification) + `tests/arch/require-contract-hook.spec.ts` (spawns the hook in temp git repos)                      | 1, 2, 4, 5, 7, 8   |
-| workflow-docs   | `workflow-steps.json`, `workflow.md`, templates (`close-checklist.md`, `handoff.md`), rules 09/10, hard-rules, decision 057, catalog, `tests/arch/workflow-steps.spec.ts`                                                               | 3, 6, 9, 11        |
-| gate-everywhere | Findings of the 2026-10-05 high `/code-review`: criteria 12-16 (branch-slug, shared script from git hooks + CI, refspec-aware push gate, sha-verified evidence, remove HOOK_UNDER_TEST); update decision 057, docs and `ACTIVE` wording | 12, 13, 14, 15, 16 |
-| closer          | Close `spacing-tokens` then this task through the fixed hook, after the two above are merged into the branch and green                                                                                                                  | 10                 |
+| Subagent        | Scope                                                                                                                                                                                                                                                      | Criteria                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| hook-and-tests  | `require-contract.py` rewrite (closing by staged deletions, HEAD-based, ACTIVE-empty push via branch slug, progress verification) + `tests/arch/require-contract-hook.spec.ts` (spawns the hook in temp git repos)                                         | 1, 2, 4, 5, 7, 8               |
+| workflow-docs   | `workflow-steps.json`, `workflow.md`, templates (`close-checklist.md`, `handoff.md`), rules 09/10, hard-rules, decision 057, catalog, `tests/arch/workflow-steps.spec.ts`                                                                                  | 3, 6, 9, 11                    |
+| gate-everywhere | Findings of the 2026-10-05 high `/code-review`: criteria 12-16 (branch-slug, shared script from git hooks + CI, refspec-aware push gate, sha-verified evidence, remove HOOK_UNDER_TEST); update decision 057, docs and `ACTIVE` wording                    | 12, 13, 14, 15, 16             |
+| review-fixes    | Findings of the 2026-10-06 high `/code-review` of the whole branch: criteria 17-24 (stale-review gate, merge/rebase exemption, CI base copy, global git options, evidence tied to step, fenced unchecked scan, short hard-rules rows, close-out-last docs) | 17, 18, 19, 20, 21, 22, 23, 24 |
+| closer          | Close `spacing-tokens` then this task through the fixed hook, after the two above are merged into the branch and green                                                                                                                                     | 10                             |
 
 ## Standards to consult
 
