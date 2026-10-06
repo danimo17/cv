@@ -1,6 +1,6 @@
 # Handoff: close-workflow-redesign
 
-_Updated: 2026-10-05 (gate-everywhere slice). REAL state of the `feat/close-workflow-redesign` branch._
+_Updated: 2026-10-06 (progress evidence before close-out). REAL state of the `feat/close-workflow-redesign` branch._
 
 ## Workflow progress
 
@@ -10,15 +10,15 @@ done: `- [x] <id> — evidence: <commit sha / gate output line / date>`. Evidenc
 steps (`merge`, `deploy-check`) are not listed here.
 
 - [x] story — evidence: 203496b (story.md, ACTIVE, backlog `doing`)
-- [x] contract — evidence: 203496b (contract.md with 11 Given/When/Then criteria)
+- [x] contract — evidence: 203496b (contract.md with 11 Given/When/Then criteria at that commit; criteria 12-16 added in 0b2b180)
 - [x] build — evidence: 73871d8 (workflow docs slice) + b206a86 (hook rewrite + hook spec)
 - [x] consolidate — evidence: pnpm gate green on b206a86: Test Files 23 passed (23), Tests 350 passed (350), lint 0 errors
 - [x] validate — evidence: hook spec run against old hook 73871d8 (28 of 56 fail) and new hook (56 pass); see Validation
-- [ ] handoff — evidence:
-- [ ] commit — evidence:
-- [ ] review — evidence:
-- [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] handoff — evidence: 3ade528 (handoff.md with Done, Validation, Review and Pending sections, last updated there)
+- [x] commit — evidence: 3ade528 (latest commit on feat/close-workflow-redesign when this was written)
+- [x] review — evidence: 3ade528 (checklist + `code-review` high-effort 2026-10-05 recorded in ## Review)
+- [x] close-out — evidence: 35e6a39 (spacing-tokens close, the first close-out commit through the fixed hook; this task's own close commit cannot cite itself, so it is recorded in closed/close-workflow-redesign.md)
+- [x] gate-push — evidence: pnpm gate:push on 3ade528, 2026-10-06: Prettier ok, lint 0 errors (1 warning), Test Files 23 passed (23), Tests 415 passed (415), Build complete!, e2e 5 passed (11.5s), EXIT=0
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -61,6 +61,7 @@ steps (`merge`, `deploy-check`) are not listed here.
 ## Validation (actual output of the last gate)
 
 ```
+pnpm gate:push (on 3ade528, 2026-10-06, real log) → Prettier ok, lint 0 errors (1 warning), Test Files 23 passed (23), Tests 415 passed (415), Build complete!, e2e 5 passed (11.5s), EXIT=0
 pnpm gate (on 29cbbbd, gate-everywhere slice) → format:check ok, lint 0 errors (1 pre-existing warning), typecheck ok, Test Files 23 passed (23), Tests 415 passed (415)
 local smoke of .githooks/pre-push with the pushed HEAD sha of this branch → exit 2, 2 problems named (## Review unchecked items; progress steps handoff, commit, review, close-out, gate-push not ticked), expected until review/close-out are done
 pnpm gate (on b206a86) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning),
