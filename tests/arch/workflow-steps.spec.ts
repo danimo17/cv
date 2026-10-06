@@ -16,6 +16,10 @@ const PRE_COMMIT_HOOK = join(ROOT, '.githooks', 'pre-commit')
 const PRE_PUSH_HOOK = join(ROOT, '.githooks', 'pre-push')
 const CI_WORKFLOW = join(ROOT, '.github', 'workflows', 'ci.yml')
 const ARCH_DIR = join(ROOT, 'tests', 'arch')
+const HARD_RULES = join(CLAUDE, 'hard-rules.md')
+const RULE_09 = join(CLAUDE, 'rules', '09-gates.md')
+const RULE_10 = join(CLAUDE, 'rules', '10-contract-first.md')
+const HARD_RULES_ROW_LIMIT = 700
 
 const PROGRESS_LINE = /^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$/
 const ALLOWED_GATES = [
@@ -168,6 +172,65 @@ describe('close-workflow-redesign: workflow documents', () => {
     expect(closeOut).toMatch(/one PR/i)
   })
 
+  it('workflow.md puts close-out last and documents reopening', () => {
+    const workflow = read(WORKFLOW)
+    const entry = (title: string): string => {
+      const start = workflow.search(new RegExp(`^\\d+\\.\\s+\\*\\*${title}\\*\\*`, 'm'))
+      expect(start, `entry ${title}`).toBeGreaterThanOrEqual(0)
+      const rest = workflow.slice(start + 1)
+      const next = rest.search(/^\d+\.\s+\*\*/m)
+      return next === -1 ? rest : rest.slice(0, next)
+    }
+
+    const closeOut = entry('Close-out')
+    expect(closeOut).toMatch(/last commit before the push/i)
+    expect(closeOut).toMatch(/final review of the full diff/i)
+    expect(closeOut).toMatch(/user-run `\/code-review`/)
+    expect(closeOut).toMatch(/stale/i)
+    expect(closeOut).toContain('git revert <close-out sha>')
+    expect(closeOut).toMatch(/re-review/i)
+
+    const review = entry('Review')
+    expect(review).toMatch(/stale/i)
+    expect(review).toContain('/code-review high')
+
+    for (const [name, file] of [
+      ['rule 09', RULE_09],
+      ['rule 10', RULE_10],
+    ] as const) {
+      const doc = read(file)
+      expect(doc, `${name} last commit`).toMatch(/last commit before the push/i)
+      expect(doc, `${name} revert`).toContain('git revert <close-out sha>')
+      expect(doc, `${name} stale review`).toMatch(/stale/i)
+    }
+
+    const decision = read(join(DECISIONS_DIR, '057-close-out-before-single-push.md'))
+    expect(decision).toMatch(/^## Amendment 2026-10-06/m)
+    expect(decision).toContain('git revert <close-out sha>')
+    expect(read(HANDOFF_TEMPLATE)).toMatch(/last commit before the push/i)
+    expect(read(CLOSE_TEMPLATE)).toMatch(/last commit before the push/i)
+    expect(read(CATALOG)).toMatch(/stale review/i)
+  })
+
+  it('hard-rules rows stay short', () => {
+    const rows = read(HARD_RULES)
+      .split('\n')
+      .filter((line) => line.startsWith('|'))
+    expect(rows.length).toBeGreaterThanOrEqual(20)
+    const tooLong = rows
+      .filter((row) => row.length >= HARD_RULES_ROW_LIMIT)
+      .map((row) => row.slice(0, 40))
+    expect(
+      tooLong,
+      `table rows of ${HARD_RULES_ROW_LIMIT} characters or more (details belong in rules/NN-*.md)`
+    ).toEqual([])
+    for (const id of ['09', '10']) {
+      const row = rows.find((r) => r.startsWith(`| ${id} `)) as string
+      const rule = row.split('|')[2]!.trim()
+      expect(rule.length, `rule ${id} summary`).toBeLessThanOrEqual(330)
+    }
+  })
+
   it('decision 057 and ai-workflow catalog exist', () => {
     const file = readdirSync(DECISIONS_DIR).find((f) => f.startsWith('057-'))
     expect(file, 'decision 057 file').toBe('057-close-out-before-single-push.md')
@@ -200,6 +263,22 @@ describe('close-workflow-redesign: the gate holds from any client', () => {
     expect(ci).toContain('github.event.pull_request.head.sha')
     expect(ci).toMatch(/fetch-depth:\s*0/)
     expect(existsSync(join(CLAUDE, 'hooks', GATE_SCRIPT))).toBe(true)
+  })
+
+  it('ci runs the base branch copy of the workflow gate', () => {
+    const ci = read(CI_WORKFLOW)
+    expect(ci).toContain('BASE_REF: ${{ github.base_ref }}')
+    expect(ci).toContain(`git show "origin/$BASE_REF:.claude/hooks/${GATE_SCRIPT}"`)
+    expect(ci).toMatch(/grep -q -e '--ci'/)
+    expect(ci).toContain('--ci "$HEAD_REF" "$HEAD_SHA" --base "origin/$BASE_REF"')
+    expect(ci).toContain(
+      '::notice::base branch has no --ci gate yet (this PR introduces it), using the PR copy'
+    )
+    const fallback = ci.indexOf('::notice::')
+    expect(ci.indexOf('--base "origin/$BASE_REF"')).toBeLessThan(fallback)
+    expect(
+      ci.indexOf(`python3 .claude/hooks/${GATE_SCRIPT} --ci "$HEAD_REF" "$HEAD_SHA"`)
+    ).toBeGreaterThan(fallback)
   })
 
   it('arch specs have no test-only hook overrides', () => {

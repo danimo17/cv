@@ -22,6 +22,13 @@ promoted, no open rule-11 conflict, backlog row set to `done`) plus the pasted `
 archived (the post-merge deploy check is reported in chat). That file is never deleted afterward — a permanent,
 append-only record of how the task actually closed.
 
+The close-out is the **last commit before the push**: it is made only after the final review of the full diff
+(a user-run `/code-review` included) and the fixes that review asked for, and the archive's `review` evidence
+must not be stale (no later commit touching a path outside `.claude/`, rule 09). If a later review finds
+something after the close-out, reopen it with `git revert <close-out sha>` (the task folder returns, the
+archive is removed), fix, re-review, and close again. Merge, rebase, cherry-pick and revert commits on a closed
+branch or detached HEAD are exempt from the "docs-only" rule; every other check still applies to them.
+
 **Why.** Without a contract there's no definition of "done" and validation is just an opinion. Without a
 gated close, "I promoted everything before deleting the task" is just as unverifiable a claim as "I tested it"
 was before rule 09 existed — same fix, same reasoning. Requiring merge/deploy facts in the archive forced a

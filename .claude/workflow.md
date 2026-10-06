@@ -38,7 +38,12 @@ same id order and title as that file, the handoff's `## Workflow progress` block
    opened and confirmed before acting. If there are corrections, they are committed again. The result is
    written into the handoff's `## Review` section (checklist fully checked, `/code-review` outcome noted with
    its effort level and date) — `push-review-gate` mechanically requires it, so it can't be silently skipped
-   under time pressure.
+   under time pressure. The `review` progress evidence is the sha of the commit that recorded the review
+   (it must be an ancestor of the tip and have changed `handoff.md` or `closed/<slug>.md`). A review is only
+   valid for the code it saw: if any later commit changes a path outside `.claude/`, the review is stale
+   and the gates (`push-review-gate`, `task-close-gate`) block, naming the sha, the first later code commit
+   and the command `/code-review high` to run again; the result is recorded in a new commit and the `review`
+   evidence re-pointed at it (decision 057 amendment 2026-10-06).
 9. **Close-out** (decision 057) — still on the same branch, before the push, so the one PR the user merges
    carries the feature **and** its own closing. Fill `.claude/templates/close-checklist.md`'s copy at
    `.claude/tasks/<slug>/close-checklist.md` with items provable before merge only (contract criteria, real
@@ -47,8 +52,14 @@ same id order and title as that file, the handoff's `## Workflow progress` block
    one commit: stage it as `.claude/tasks/closed/<slug>.md` (new file, never deleted — the permanent
    record), delete `.claude/tasks/<slug>/`, mark `done` in the backlog. `require-contract.py`
    (`task-close-gate`) detects the close from the commit's own staged deletions of any task folder (never
-   from `ACTIVE`) and blocks it if the archive is missing or has an unchecked box. PR merge and deploy are not archived: they cannot exist yet
-   and are covered by steps 12-13.
+   from `ACTIVE`) and blocks it if the archive is missing, has an unchecked box, or cites a stale review. PR
+   merge and deploy are not archived: they cannot exist yet and are covered by steps 12-13.
+   **The close-out is the last commit before the push**, taken only after the final review of the full diff
+   (a user-run `/code-review` included) and every fix that review asked for: code changed after a review makes
+   it stale (step 8), so closing earlier only produces a close that the gates reject. If a later review
+   finds something after the close-out, reopen: `git revert <close-out sha>` restores the task folder and
+   removes the archive, fix the finding (tests first), commit, re-review, record the new review evidence, and
+   close again (a fresh close-out commit, once more the last one before the push).
 10. **Gate push** — full `pnpm gate:push` (gate + build + e2e) green before push (rule 09). Its real log tail
     is the evidence for this step and for the close checklist; because close-out only touches `.claude/`, that
     run stays valid for the close commit, and `.githooks/pre-push` re-runs it on the actual push.
@@ -80,7 +91,7 @@ same id order and title as that file, the handoff's `## Workflow progress` block
 | `pre-commit` (git hook)           | `require-contract.py --commit`, then `pnpm gate`                                                                                                                             | the commit (any client)                     |
 | `pre-push` (git hook)             | `require-contract.py --pre-push` (gates the pushed SHA), then `pnpm gate:push`                                                                                               | the push (any client)                       |
 | `require-contract` (Claude hook)  | active story + contract, `--no-verify`, progress ticks need evidence                                                                                                         | commits from the AI                         |
-| `task-close-gate` (Claude hook)   | commit that deletes any `.claude/tasks/<slug>/` folder must stage a fully-checked `closed/<slug>.md`                                                                         | the closing commit                          |
+| `task-close-gate` (Claude hook)   | commit that deletes any `.claude/tasks/<slug>/` folder must stage a fully-checked `closed/<slug>.md` citing a fresh review                                                   | the closing commit                          |
 | `push-review-gate` (Claude hook)  | push to `feat/<slug>`: review evidence + every pre-push progress step ticked with valid evidence (handoff, else closed archive; slug from the branch, tip of the pushed ref) | the push from the AI (also git hook and CI) |
 | `git-safety` (global Claude hook) | commit/push to `main`                                                                                                                                                        | the command                                 |
 | `ci` (CI `ci.yml`)                | gate + build + e2e; job `workflow-gate`: `require-contract.py --ci` on `feat/*` PRs                                                                                          | the PR merge                                |

@@ -7,7 +7,9 @@ _Updated: YYYY-MM-DD HH:MM. REAL state of the `feat/<slug>` branch._
 One line per `pre-push` step of `.claude/workflow-steps.json`, in order. Tick a step only when it is really
 done: `- [x] <id> — evidence: <commit sha / gate output line / date>`. Evidence is mandatory once ticked
 (blocked at commit time otherwise), and for `commit`, `review` and `close-out` it must contain a real commit
-sha (7-40 hex characters that exist in the repository). `push-pr` is ticked last, after the push and the PR exist; the post-merge
+sha (7-40 hex characters that exist in the repository and are ancestors of the branch tip); the `review` sha is
+the commit that recorded the review in this file. A code commit after that sha makes the review stale: re-run
+`/code-review high`, record it, and re-point the evidence. `push-pr` is ticked last, after the push and the PR exist; the post-merge
 steps (`merge`, `deploy-check`) are not listed here.
 
 - [ ] story — evidence:
@@ -64,5 +66,7 @@ backlog with a reason>.
 
 - → `.claude/docs/decisions/NNN-….md`
 
-At close-out, `## Review` and `## Workflow progress` are copied into `.claude/tasks/closed/<slug>.md`; the
-deploy check after merge is reported in chat, not tracked here.
+At close-out, `## Review` and `## Workflow progress` are copied into `.claude/tasks/closed/<slug>.md`. The
+close-out is the last commit before the push, taken only after the final review of the full diff (a user-run
+`/code-review` included) and its fixes; to reopen after a later finding: `git revert <close-out sha>`, fix,
+re-review, close again. The deploy check after merge is reported in chat, not tracked here.

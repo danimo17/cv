@@ -103,3 +103,44 @@ be able to run in parallel. The decision above stays as written; this section ch
 from its task folder is blocked by the hook until it is renamed. Closing a task no longer clears `ACTIVE` on feat
 branches. The `commit` / `close-out` evidence of a commit can only cite an earlier commit (a commit cannot name
 its own sha), which is the intended reading: the evidence points at the work that was gated.
+
+## Amendment 2026-10-06 — the close-out is last; reviews go stale; the gate cannot be weakened by its own PR
+
+Prompted by the user's high-effort `/code-review` of the whole `feat/close-workflow-redesign` branch (six findings)
+and by the premature close of that task (reverted in `c1d0785`): a close-out taken before the final review makes
+every later fix either bypass the review or force a messy reopening. The decision above and the 2026-10-05
+amendment stay as written; this section adds the following.
+
+1. **The close-out is the LAST commit before the push**, taken only after the final review of the full diff (a
+   user-run `/code-review` included) and every fix that review asked for. Code changed after a review makes the
+   review stale. To reopen after a later finding: `git revert <close-out sha>` restores the task folder and
+   removes the archive, fix (tests first), re-review, record the new review evidence, close again.
+2. **Stale-review gate (supersedes "Review freshness remains in `workflow-integrity-hardening`" for the
+   mechanical part).** The `review` progress evidence is the sha of the commit that recorded the review (an
+   ancestor of the tip that changed the task's `handoff.md` or `closed/<slug>.md`). In `push_gate` (Claude hook,
+   `--pre-push`, `--ci`) and in the closing commit (`HEAD` as the tip), any commit in `<review sha>..<tip>` whose
+   diff touches a path outside `.claude/` blocks, naming the review sha, the first such commit and the command
+   `/code-review high`. Merge commits are judged by their first-parent diff, so a merge of `main` counts for what
+   it brings. A review at or after the last code commit passes. Still in `workflow-integrity-hardening` item 6:
+   the proactive "always prompt `/code-review`" wording and a minimum effort level (the gate does not read the
+   effort).
+3. **Evidence is tied to its step.** `commit` and `close-out` evidence must be an ancestor of the tip being
+   checked (`HEAD` at commit time, the pushed sha at push time); `review` evidence additionally must be a commit
+   that touched `.claude/tasks/<slug>/handoff.md` or `.claude/tasks/closed/<slug>.md`. `close-out` cannot cite
+   its own commit (a commit cannot name its sha): it cites the earlier work that was gated, as before.
+4. **CI runs the base branch's copy of the gate.** The `workflow-gate` job runs
+   `git show origin/$BASE_REF:.claude/hooks/require-contract.py` with `--base origin/$BASE_REF` (the step list
+   comes from the base ref too) when that copy supports `--ci`, so a PR cannot weaken its own gate. The PR that
+   introduces the mode falls back to its own copy and prints a notice. `--ci <branch> <sha> [--base <ref>]`.
+5. **Smaller gate fixes.** Merge, rebase, cherry-pick and revert commits (`MERGE_HEAD`, `rebase-merge/`,
+   `rebase-apply/`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`) skip the "docs-only because closed/no active task" rule
+   (other checks stay); the Claude hook sees `git -C <dir>`, `git -c k=v`, `git --git-dir=...`, `git --no-pager`
+   before `commit`/`push`; the unchecked scan counts only real list items (`^\s*- \[ \]`) outside fenced code
+   blocks; the `hard-rules.md` table rows stay short (rows 09/10 are summaries, details live in
+   `rules/09-gates.md` and `rules/10-contract-first.md`, tested by `hard-rules rows stay short`).
+
+**Consequences.** After a review the only commits that do not stale it are `.claude/`-only ones (docs, handoff,
+archive, backlog). A `.claude/` change after the review (even to the hook script) does not stale it (stated limit: the gate
+protects the product code; process files are covered by the review's own diff scan). The first CI run of
+`workflow-gate` on this branch uses the PR copy (the base has no `--ci` yet); from the next PR on, the base
+copy gates. The user adds `workflow-gate` to the `main` ruleset's required checks after the first CI run.
