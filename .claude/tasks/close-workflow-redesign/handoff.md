@@ -168,7 +168,7 @@ deliberate-evasion finding).
 - finding r0-3 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › evidence must be a real commit sha for commit/review/close-out — searched: real commit sha, evidence — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
 - finding r0-4 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › push gate follows the pushed refspec, not the checked-out branch — searched: refspec, checked-out — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
 - finding r0-5 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › uppercase [X] ticks are parsed — searched: uppercase, ticks — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
-- finding r0-6 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › arch specs have no test-only hook overrides — searched: HOOK_UNDER_TEST, test-only
+- finding r0-6 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › arch specs have no test-only hook overrides — searched: HOOK_UNDER_TEST, hook overrides
 
 ### Round 1 — user full-branch `/code-review` at high effort, 2026-10-06 (criteria 17-24)
 
@@ -177,7 +177,7 @@ deliberate-evasion finding).
 - finding r1-3 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › ci runs the base branch copy of the workflow gate — searched: base branch copy, workflow gate — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
 - finding r1-4 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › global git options do not hide commit or push from the hook — searched: global git options — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
 - finding r1-5 — outcome: fixed — proof: new tests/arch/require-contract-hook.spec.ts › unchecked scan ignores fenced code and prose — searched: fenced, prose, unchecked scan — differs: the spec file does not exist at the base (created on this branch), so no earlier test can be strengthened; the matches are siblings of the same gate
-- finding r1-6 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › hard-rules rows stay short — searched: hard-rules, short
+- finding r1-6 — outcome: fixed — proof: new tests/arch/workflow-steps.spec.ts › hard-rules rows stay short — searched: hard-rules
 
 ### Round 2 — user second `/code-review` at high effort, 2026-10-06 (criteria 25-30)
 
