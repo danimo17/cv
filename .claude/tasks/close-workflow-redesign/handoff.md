@@ -1,6 +1,6 @@
 # Handoff: close-workflow-redesign
 
-_Updated: 2026-10-06 (closing sequence: gate:push green on f4bd579, progress ticked with evidence, close-out next). REAL state of the `feat/close-workflow-redesign` branch._
+_Updated: 2026-10-13 (closing sequence: gate:push re-run green on cbde39a, every step before `push-pr` ticked with evidence, close-out is the last commit). REAL state of the `feat/close-workflow-redesign` branch._
 
 ## Workflow progress
 
@@ -15,10 +15,10 @@ steps (`merge`, `deploy-check`) are not listed here.
 - [x] consolidate — evidence: pnpm gate green on d196717: Test Files 23 passed (23), Tests 533 passed (533), lint 0 errors (1 warning), typecheck ok
 - [x] validate — evidence: red first on review-fixes-2 (hook spec 32 failed, workflow-steps spec 3 failed), then 232 and 12 passed; earlier slices and the old-hook comparison are in Validation
 - [x] handoff — evidence: this file, reopened and rewritten after the user's review (the Review section below is pending on purpose)
-- [ ] commit — evidence:
-- [ ] review — evidence:
-- [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] commit — evidence: cbde39a (last commit of the branch before this progress update; the last code commit is 562b5cb, everything after it is `.claude/` docs)
+- [x] review — evidence: cbde39a (the commit that last changed the `## Review` section: round 3, the user-run `/code-review` at high effort of 2026-10-06, six findings each with outcome and proof; no code change after it)
+- [x] close-out — evidence: 35e6a39 (spacing-tokens, the first close made through the fixed hook, 2026-10-05); this task's own close commit is the last commit of the branch and cannot cite itself, its archive is `.claude/tasks/closed/close-workflow-redesign.md`
+- [x] gate-push — evidence: pnpm gate:push on cbde39a (2026-10-13, real log read, EXIT=0): Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (14.6s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -98,7 +98,7 @@ review stale`) instead of new describes (search first), and contract criterion 3
   `spacing-tokens` stays closed (`35e6a39`, criterion 10 for that half).
 - Round 3 (the user's third `/code-review`, applied in the review-fixes-3 slice) is the last full review under the
   new policy and is recorded in `## Review`. Done in the closing sequence: `pnpm gate:push` green on `f4bd579`
-  (see Validation), progress ticked with evidence up to `gate-push`. Next: the close-out commit (archive + folder
+  and re-run green on `cbde39a` (see Validation), progress ticked with evidence up to `gate-push`. Next: the close-out commit (archive + folder
   deletion + backlog `done`) LAST, then the push with the user's permission (`push-pr` stays unticked until the
   push and the PR exist). Any code change after the recorded review must carry a test (commit-time gate) or the
   review goes stale.
@@ -129,7 +129,9 @@ pnpm gate (on 6c2bd7f, review-fixes slice, 2026-10-06) → Test Files 23 passed 
 review-fixes specs written first: tests/arch/require-contract-hook.spec.ts 57 failed | 132 passed (189) against the hook of 7f0ceea, 189 passed after; tests/arch/workflow-steps.spec.ts 3 failed | 7 passed (10) before ci.yml/docs, 10 passed after
 local smoke of `.claude/hooks/require-contract.py --pre-push` with the pushed tip of this branch (d196717) → exit 2, one problem: `## Workflow progress` has step(s) not ticked with valid evidence: commit, review, close-out, gate-push (not ticked); expected until the review is redone and the close-out is made
 pnpm gate:push (on f4bd579, the final code tree, 2026-10-06, real log read, EXIT=0) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (13.3s)
-pnpm gate:push (on 3ade528, 2026-10-06) → superseded by the run on f4bd579 above
+pnpm gate:push (on cbde39a, the final code tree, 2026-10-13, real log read, EXIT=0) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (14.6s)
+pnpm test:arch (on cbde39a, 2026-10-13) → Test Files 8 passed (8), Tests 459 passed (459)
+pnpm gate:push (on 3ade528, 2026-10-06) → superseded by the runs on f4bd579 and cbde39a above
 ```
 
 Earlier runs, kept as history: pnpm gate on 29cbbbd and b206a86 (415 and 350 tests green); the hook spec against
