@@ -1,6 +1,6 @@
 # Handoff: close-workflow-redesign
 
-_Updated: 2026-10-13 (scope addition: audit job, criteria 35-36, see its section; earlier closing sequence: gate:push re-run green on cbde39a, every step before `push-pr` ticked with evidence, close-out is the last commit). REAL state of the `feat/close-workflow-redesign` branch._
+_Updated: 2026-10-13 (reopened by 8c03345 for the audit fix, criteria 35-36, see its section; gate:push re-run green on c2e4615, every step before `push-pr` ticked with evidence, close-out is the last commit). REAL state of the `feat/close-workflow-redesign` branch._
 
 ## Workflow progress
 
@@ -11,14 +11,14 @@ steps (`merge`, `deploy-check`) are not listed here.
 
 - [x] story — evidence: 203496b (story.md, ACTIVE, backlog `doing`)
 - [x] contract — evidence: 203496b (contract.md with 11 Given/When/Then criteria at that commit; criteria 12-16 added in 0b2b180, 17-24 in 7f0ceea)
-- [x] build — evidence: 73871d8 (workflow docs slice) + b206a86 (hook rewrite + hook spec) + 15908bf (gate-everywhere) + 959bb0c and 6c2bd7f (review-fixes: criteria 17-24) + 49ba305 and d196717 (review-fixes-2: criteria 25-30)
-- [x] consolidate — evidence: pnpm gate green on d196717: Test Files 23 passed (23), Tests 533 passed (533), lint 0 errors (1 warning), typecheck ok
-- [x] validate — evidence: red first on review-fixes-2 (hook spec 32 failed, workflow-steps spec 3 failed), then 232 and 12 passed; earlier slices and the old-hook comparison are in Validation
-- [x] handoff — evidence: this file, reopened and rewritten after the user's review (the Review section below is pending on purpose)
-- [x] commit — evidence: cbde39a (last commit of the branch before this progress update; the last code commit is 562b5cb, everything after it is `.claude/` docs)
+- [x] build — evidence: 73871d8 (workflow docs slice) + b206a86 (hook rewrite + hook spec) + 15908bf (gate-everywhere) + 959bb0c and 6c2bd7f (review-fixes: criteria 17-24) + 49ba305 and d196717 (review-fixes-2: criteria 25-30) + 7fccc18 and 62fb72e (audit fix: criteria 35-36, decision 058)
+- [x] consolidate — evidence: pnpm gate (first stage of the gate:push run on c2e4615, 2026-10-13, real log read): format check ok, lint 0 errors (1 warning), typecheck ok, Test Files 25 passed (25), Tests 598 passed (598)
+- [x] validate — evidence: audit fix checked red first (tests/arch/audit-overrides.spec.ts failed before the lockfile, the decision and the patch existed, plus mutation checks), then green on c2e4615 with `pnpm audit --audit-level=high` exit 0 ("3 vulnerabilities found, Severity: 1 low | 2 high (2 ignored)") and `pnpm test:arch` Test Files 9 passed (9), Tests 464 passed (464); earlier slices (review-fixes-2: hook spec 32 failed then 232 passed) and the old-hook comparison are in Validation
+- [x] handoff — evidence: c2e4615 (the last commit before this progress update that touched this file: scope addition for the audit fix and the simple-git note; the Review section is unchanged since cbde39a)
+- [x] commit — evidence: c2e4615 (last commit of the branch before this progress update; the last code commits are 7fccc18 and 62fb72e, the audit fix, each carrying its test in tests/arch/audit-overrides.spec.ts)
 - [x] review — evidence: cbde39a (the commit that last changed the `## Review` section: round 3, the user-run `/code-review` at high effort of 2026-10-06, six findings each with outcome and proof; no code change after it)
-- [x] close-out — evidence: 35e6a39 (spacing-tokens, the first close made through the fixed hook, 2026-10-05); this task's own close commit is the last commit of the branch and cannot cite itself, its archive is `.claude/tasks/closed/close-workflow-redesign.md`
-- [x] gate-push — evidence: pnpm gate:push on cbde39a (2026-10-13, real log read, EXIT=0): Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (14.6s)
+- [x] close-out — evidence: 35e6a39 (spacing-tokens, the first close made through the fixed hook, 2026-10-05); this task's own close commit is the last commit of the branch and cannot cite itself, its archive is `.claude/tasks/closed/close-workflow-redesign.md`; a first close, aee06c5, was reverted by 8c03345 to add the audit fix
+- [x] gate-push — evidence: pnpm gate:push on c2e4615 (2026-10-13, real log read, EXIT=0): Test Files 25 passed (25), Tests 598 passed (598), nuxt build "Build complete!", e2e 5 passed (11.9s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -178,7 +178,10 @@ local smoke of `.claude/hooks/require-contract.py --pre-push` with the pushed ti
 pnpm gate:push (on f4bd579, the final code tree, 2026-10-06, real log read, EXIT=0) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (13.3s)
 pnpm gate:push (on cbde39a, the final code tree, 2026-10-13, real log read, EXIT=0) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (14.6s)
 pnpm test:arch (on cbde39a, 2026-10-13) → Test Files 8 passed (8), Tests 459 passed (459)
-pnpm gate:push (on 3ade528, 2026-10-06) → superseded by the runs on f4bd579 and cbde39a above
+pnpm gate:push (on c2e4615, the final code tree after the audit fix, 2026-10-13, real log read, EXIT=0) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 25 passed (25), Tests 598 passed (598), nuxt build "Build complete!", e2e 5 passed (11.9s)
+pnpm audit --audit-level=high (on c2e4615, 2026-10-13) → exit 0, "3 vulnerabilities found", "Severity: 1 low | 2 high (2 ignored)"
+pnpm test:arch (on c2e4615, 2026-10-13) → Test Files 9 passed (9), Tests 464 passed (464)
+pnpm gate:push (on 3ade528, 2026-10-06) → superseded by the runs on f4bd579, cbde39a and c2e4615 above
 ```
 
 Earlier runs, kept as history: pnpm gate on 29cbbbd and b206a86 (415 and 350 tests green); the hook spec against
