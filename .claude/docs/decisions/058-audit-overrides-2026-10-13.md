@@ -1,4 +1,4 @@
-# 058 · Audit job: four more dependency overrides (advisories of 2026-10-12/13), `simple-git` left open
+# 058 · Audit job: four more dependency overrides (advisories of 2026-10-12/13) and a `simple-git` 4.x patch
 
 **Context.** On 2026-10-12/13 new high and critical advisories were published for transitive dependencies already
 in the lockfile. The CI `audit` job (`pnpm audit --audit-level=high`, a required check on `main`) went red on
@@ -26,16 +26,35 @@ Each override is a pin on a transitive that Dependabot cannot bump directly. REM
 the parent dependency (`nuxt`/`@nuxt/devtools`, `vue`, `@nuxtjs/i18n`, `wrangler`) ships a release whose own
 lockfile resolution is already at or above the floor, then the override is deleted.
 
-**Not fixed: `simple-git`.** The remaining 3 findings are all `simple-git` via `nuxt > @nuxt/devtools`: critical
+**Fixed with a patch: `simple-git`.** The last 3 findings are all `simple-git` via `nuxt > @nuxt/devtools`: critical
 `GHSA-x6jw-m9v5-85vh` (`>=3.15.0 <4.0.1`, patched only in `4.0.1`) and high `GHSA-g4wm-2vf7-vfgr` and
 `GHSA-858h-whjf-mvg5` (`<=3.36.0`, advisory says patched `3.36.1`, but `3.36.1` does not exist on npm: the
-registry goes `3.36.0`, `4.0.0`, `4.0.1`, `4.0.2`). The only fix is the 4.x major, and `@nuxt/devtools@3.4.2`
-(the stable release, depended on by `nuxt@4.5.2` and `nuxt@4.6.1`) does `import Git from 'simple-git'`; 4.x has
-no default export, so with a `^4.0.1` override `nuxt prepare` (the `postinstall` script) fails with "does not
-provide an export named 'default'". No override was added for it and no ignore either: the user decides (rule
-11, security gate). Open options, none applied: ignore the three GHSA ids (dev-time only, `@nuxt/devtools` is not
-in the Worker bundle) with a REMOVE-WHEN, override `@nuxt/devtools` to `4.0.0-beta.5` (drops `simple-git`, but a
-beta major published 2026-10-13 with a large new dependency tree), or wait for a stable devtools.
+registry goes `3.36.0`, `4.0.0`, `4.0.1`, `4.0.2`). The only fix is the 4.x major. The user decided (rule 11) to fix
+it for real, with no ignore. Two changes, which only work together:
+
+- `simple-git@<4.0.1` to `^4.0.1` in `overrides` (resolves to `4.0.2`, which pins `@simple-git/argv-parser` `2.0.1`
+  and `@simple-git/args-pathspec` `1.0.4`).
+- `patchedDependencies`: `@nuxt/devtools@3.4.2` to `patches/@nuxt__devtools@3.4.2.patch`. `@nuxt/devtools@3.4.2`
+  (the stable release, depended on by `nuxt@4.5.2` and `nuxt@4.6.1`) does `import Git from 'simple-git'` in
+  `dist/chunks/module-main.mjs`; 4.x has no default export, so with the override alone `nuxt prepare` (the
+  `postinstall` script) fails with "does not provide an export named 'default'". The patch is one line:
+  `import { simpleGit as Git } from 'simple-git'`. Everything else devtools uses is the unchanged API of 4.x:
+  `Git(rootDir)`, `.branch()`, `.revparse(['--short', 'HEAD'])` and `.status()` then `.isClean()` (only in
+  `generateAnalyzeBuildName`, which falls back to a timestamp if git throws), plus a side-effect
+  `import 'simple-git'` in `dist/chunks/vscode.mjs` that needs no change.
+
+Why not a downgrade: every `@nuxt/devtools` from 1.7 to 3.4.2 depends on `simple-git@^3`, and every 3.x up to
+`3.36.0` is inside the advisory ranges, so no older devtools can help (verified on npm). Why not an ignore: the user
+chose a real fix; the three advisories are not in the Worker bundle (`@nuxt/devtools` is dev-time) but they stay
+visible in the audit instead of being silenced. Why not `@nuxt/devtools@4.0.0-beta.5` (drops `simple-git`): a beta
+major published 2026-10-13 with a large new dependency tree.
+
+REMOVE-WHEN for the patch `patches/@nuxt__devtools@3.4.2.patch` (target `@nuxt/devtools@3.4.2`), its
+`patchedDependencies` entry and the `simple-git@<4.0.1` override together: the
+resolved `@nuxt/devtools` (through `nuxt`) is a stable release that itself depends on `simple-git` at or above
+`4.0.1` (or no longer depends on it). Until then the arch test fails if the locked devtools version differs from
+the patched `3.4.2`, so a Dependabot bump of `nuxt` or `@nuxt/devtools` forces this cleanup instead of silently
+carrying a stale patch.
 
 **Consequences.**
 
@@ -43,6 +62,13 @@ beta major published 2026-10-13 with a large new dependency tree), or wait for a
   is at least the exclusive upper bound of its selector, a decision quotes both the selector and the value,
   `pnpm-lock.yaml` resolves nothing inside any vulnerable range, and every `ignoreGhsas` entry sits in a decision
   entry naming its package and a remove-when condition.
-- Until the `simple-git` item is decided, `pnpm audit --audit-level=high` still exits non-zero on exactly those
-  three advisories; everything else in the 2026-10-12/13 batch is fixed.
+- The arch test also checks that the lockfile resolves `simple-git` only at or above `4.0.1`, that every
+  `patchedDependencies` entry points at an existing file under `patches/` whose target version is the one locked
+  in `pnpm-lock.yaml` and which contains `simpleGit as Git`, that the patch and the `simple-git` override exist
+  together, and that a decision names each patch with a remove-when condition.
+- `pnpm audit --audit-level=high` exits 0: "3 vulnerabilities found, 1 low | 2 high (2 ignored)", only the two
+  ignores of decision 056 remain.
+- Risk: the git panel features of devtools (`generateAnalyzeBuildName`) were exercised from node, not from the
+  devtools UI in a browser. The `@simple-git/argv-parser` override is now redundant (4.0.2 pins `2.0.1`) but is
+  harmless and is removed with its parent per its own remove-when.
 - The two ignores of decision 056 are unchanged.

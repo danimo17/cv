@@ -12,9 +12,12 @@ overrides:
   'devalue@<5.9.3': '^5.9.3'
   'sharp@<0.35.5': '^0.35.5'
   'shell-quote@>=1.8.4 <1.11.0': '^1.11.0'
+  'simple-git@<4.0.1': '^4.0.1'
   'source-map-js@>=1.0.0 <1.2.2': '^1.2.2'
   'undici@>=7.0.0 <7.29.1': '^7.29.1'
 auditConfig:
   ignoreGhsas:
     - GHSA-86w9-cpqp-85rv
     - GHSA-vfj7-8cjw-p6xm
+patchedDependencies:
+  '@nuxt/devtools@3.4.2': patches/@nuxt__devtools@3.4.2.patch
