@@ -1,6 +1,6 @@
 # Handoff: close-workflow-redesign
 
-_Updated: 2026-10-13 (closing sequence: gate:push re-run green on cbde39a, every step before `push-pr` ticked with evidence, close-out is the last commit). REAL state of the `feat/close-workflow-redesign` branch._
+_Updated: 2026-10-13 (scope addition: audit job, criteria 35-36, see its section; earlier closing sequence: gate:push re-run green on cbde39a, every step before `push-pr` ticked with evidence, close-out is the last commit). REAL state of the `feat/close-workflow-redesign` branch._
 
 ## Workflow progress
 
@@ -106,6 +106,34 @@ review stale`) instead of new describes (search first), and contract criterion 3
   validity and by reading, its first real run is the first `feat/*` PR). If the ruleset should make it blocking,
   `workflow-gate` has to be added to the required checks (user action, see Pending).
 
+## Scope addition 2026-10-13: red `audit` job (criteria 35-36, decision 058)
+
+The CI `audit` job (`pnpm audit --audit-level=high`) went red on `main`-based code (and so on PR #19 and #20) after
+advisories published 2026-10-12/13. The user decided to fix it inside this PR (rule 11, not asked again).
+
+- Commit `7fccc18` (overrides, lockfile, arch test, decision 058, catalog, contract criteria 35-36); this section is the
+  second commit.
+- Files: `pnpm-workspace.yaml` (4 new `overrides`: `@simple-git/argv-parser@<2.0.1` to `^2.0.1`,
+  `shell-quote@>=1.8.4 <1.11.0` to `^1.11.0`, `source-map-js@>=1.0.0 <1.2.2` to `^1.2.2`, `sharp@<0.35.5` to
+  `^0.35.5`; the three of decision 056 and both ignores untouched), `pnpm-lock.yaml` (resolves argv-parser 2.0.1,
+  shell-quote 1.12.0, source-map-js 1.2.2, sharp 0.35.5 plus its `@img/sharp-*` binaries),
+  `.claude/docs/decisions/058-audit-overrides-2026-10-13.md`, `tests/arch/audit-overrides.spec.ts` (two tests, the
+  names of criteria 35 and 36; checked red first: the new overrides without the lockfile and decision failed it, and
+  two mutations of the workspace file, a floor below the patched version and an undocumented GHSA id, fail it),
+  `.claude/docs/catalog/ai-workflow.md` (the new arch test, rule 07), `contract.md` (criteria 35-36).
+- Audit result: `pnpm audit --audit-level=high` goes from 10 vulnerabilities (3 critical, 6 high with 2 ignored, 1
+  low) to 6 vulnerabilities, "1 low | 4 high (2 ignored) | 1 critical", and still exits 1. What is left is only
+  `simple-git` (critical `GHSA-x6jw-m9v5-85vh`, high `GHSA-g4wm-2vf7-vfgr` and `GHSA-858h-whjf-mvg5`) via
+  `nuxt > @nuxt/devtools`: the advisory's high fix `3.36.1` does not exist on npm, the only fix is `simple-git@4`,
+  and `@nuxt/devtools@3.4.2` imports its default export, which 4.x dropped (`nuxt prepare` fails in `postinstall`).
+  No override and no ignore was added for it: criterion 35 stays open until the user decides (see Pending on the
+  user, row 6). Criterion 36 is fully covered.
+- `pnpm gate:push` after the change (real log read, exit 0): Test Files 25 passed (25), Tests 595 passed (595), lint
+  0 errors (1 warning, pre-existing), typecheck ok, nuxt build complete, e2e 5 passed.
+- Review: this change is dependency and config only (plus one arch test and docs). It is covered by criteria 35 and 36
+  and by the `audit` job, not by a new review round (policy: at most two rounds); the `## Review` section below still
+  records the earlier review unchanged, and the change carries its test so the review does not go stale.
+
 ## Subagents (rule 12)
 
 | Subagent        | What it did                                                                                                                                                                                                                                                                                                                                                                                         | Result                                                                                                                                           |
@@ -116,6 +144,7 @@ review stale`) instead of new describes (search first), and contract criterion 3
 | review-fixes    | criteria 17-24: stale-review gate, merge/rebase exemption, `--base` CI copy, global git options, evidence tied to its step, fenced unchecked scan, short hard-rules rows, close-out-last docs, story item 6 (specs written red first: hook spec 57 failed, workflow-steps spec 3 failed, then green)                                                                                                | done in 959bb0c (hook, hook spec, ci.yml) and 6c2bd7f (docs, workflow-steps spec); see Validation                                                |
 | review-fixes-2  | criteria 25-30: Review-section review evidence, branch-diff freshness (merge of main stays fresh), gate files count as code, `core.hooksPath` refused, `--ci`/`--base` probe, every list marker; docs and decision 057 second amendment (specs written red first: hook spec 32 failed, workflow-steps spec 3 failed, then green)                                                                    | done in 49ba305 (hook, specs, ci.yml) and d196717 (contract, docs, decision); see Validation                                                     |
 | review-fixes-3  | criteria 31-34 (interrupted once; the partial work was reviewed, corrected and finished): post-review test requirement at commit time, tested-fix freshness exemption, finding proof with search first, `no-duplicate-test-titles` arch test, third-round fixes next to their sibling tests, review policy docs, handoff Review rewritten in the finding format (specs written red first: 27 failed | 274 passed of 301, then green)                                                                                                                   | done in the commits listed in Done; see Validation |
+| audit-overrides | criteria 35-36: four audit overrides, decision 058, `audit-overrides` arch test (red first), catalog, scope-addition handoff section; `simple-git` left open for the user                                                                                                                                                                                                                           |
 
 ## Validation (actual output of the last gate)
 
@@ -213,9 +242,11 @@ reviews as the "full-branch" and "second" ones; with today's they are rounds 0, 
 | 3   | After the PR's first CI run, add the `workflow-gate` job to the required checks of the `main` ruleset (a skipped job passes, so it is safe to add); until then the CI backstop for `git push --no-verify` is not blocking                                                                                                               | making the CI backstop hard        | pending |
 | 4   | Know that after the merge the new flow applies: `merge` is yours, `deploy-check` is post-merge and non-blocking (the AI reports `deploy.yml` in chat; a failed deploy is a new task, never a reopened one)                                                                                                                              | nothing, awareness of the new flow | info    |
 | 5   | `button-system`, `css-tailwind-first` and `workflow-integrity-hardening` stay `todo` in the backlog; the latter's item 6 now only owes the proactive `/code-review` nudge wording and an effort-level minimum                                                                                                                           | nothing                            | info    |
+| 6   | Decide the `simple-git` advisories (criterion 35): ignore the three GHSA ids as dev-time only (decision with REMOVE-WHEN), override `@nuxt/devtools` to `4.0.0-beta.5` (drops `simple-git`, but a beta major from 2026-10-13), or wait for a stable devtools; details in decision 058                                                   |
 
 ## Decisions made in this task
 
+- → `.claude/docs/decisions/058-audit-overrides-2026-10-13.md` (four audit overrides, `simple-git` left open for the user)
 - → `.claude/docs/decisions/057-close-out-before-single-push.md` (with its `Amendment 2026-10-05`,
   `Amendment 2026-10-06`, `Amendment 2026-10-06 (second review)` and
   `Amendment 2026-10-06 (third review: findings become tests, search first)`)
