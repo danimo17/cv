@@ -1,6 +1,6 @@
 # Handoff: close-workflow-redesign
 
-_Updated: 2026-10-06 (review-fixes-3 slice built: findings become tests, search first; the user's third review applied). REAL state of the `feat/close-workflow-redesign` branch._
+_Updated: 2026-10-06 (closing sequence: gate:push green on f4bd579, progress ticked with evidence, close-out next). REAL state of the `feat/close-workflow-redesign` branch._
 
 ## Workflow progress
 
@@ -97,11 +97,11 @@ review stale`) instead of new describes (search first), and contract criterion 3
   removed): the user's review found issues after the close, and a close-out must come after the final review.
   `spacing-tokens` stays closed (`35e6a39`, criterion 10 for that half).
 - Round 3 (the user's third `/code-review`, applied in the review-fixes-3 slice) is the last full review under the
-  new policy. Next: the review is recorded in `## Review` by a commit that changes this section, `commit` and
-  `review` are ticked with those shas (main thread), `pnpm gate:push` runs, then the close-out commit (archive +
-  folder deletion + backlog `done`) LAST, then the push with the user's permission. Any code change after the
-  recorded review must carry a test (commit-time gate) or the review goes stale. `review`, `commit`, `close-out`
-  and `gate-push` stay unticked until then, so the push gate blocks on purpose.
+  new policy and is recorded in `## Review`. Done in the closing sequence: `pnpm gate:push` green on `f4bd579`
+  (see Validation), progress ticked with evidence up to `gate-push`. Next: the close-out commit (archive + folder
+  deletion + backlog `done`) LAST, then the push with the user's permission (`push-pr` stays unticked until the
+  push and the PR exist). Any code change after the recorded review must carry a test (commit-time gate) or the
+  review goes stale.
 - Not run anywhere: the `workflow-gate` job of `ci.yml` (Actions can't be run locally; it was checked for YAML
   validity and by reading, its first real run is the first `feat/*` PR). If the ruleset should make it blocking,
   `workflow-gate` has to be added to the required checks (user action, see Pending).
@@ -128,7 +128,8 @@ review-fixes-2 specs written first: tests/arch/require-contract-hook.spec.ts 32 
 pnpm gate (on 6c2bd7f, review-fixes slice, 2026-10-06) → Test Files 23 passed (23), Tests 488 passed (488)
 review-fixes specs written first: tests/arch/require-contract-hook.spec.ts 57 failed | 132 passed (189) against the hook of 7f0ceea, 189 passed after; tests/arch/workflow-steps.spec.ts 3 failed | 7 passed (10) before ci.yml/docs, 10 passed after
 local smoke of `.claude/hooks/require-contract.py --pre-push` with the pushed tip of this branch (d196717) → exit 2, one problem: `## Workflow progress` has step(s) not ticked with valid evidence: commit, review, close-out, gate-push (not ticked); expected until the review is redone and the close-out is made
-pnpm gate:push (on 3ade528, 2026-10-06) → STALE: it predates the review-fixes and review-fixes-2 slices; it has to be re-run on the final tree before the close-out (gate-push is unticked)
+pnpm gate:push (on f4bd579, the final code tree, 2026-10-06, real log read, EXIT=0) → format:check ok, lint 0 errors (1 pre-existing vue/require-default-prop warning), typecheck ok, Test Files 24 passed (24), Tests 593 passed (593), nuxt build "Build complete!", e2e 5 passed (13.3s)
+pnpm gate:push (on 3ade528, 2026-10-06) → superseded by the run on f4bd579 above
 ```
 
 Earlier runs, kept as history: pnpm gate on 29cbbbd and b206a86 (415 and 350 tests green); the hook spec against
@@ -146,11 +147,12 @@ with a local base-copy probe) and on this very PR it will take the fallback bran
 
 ## Review (workflow step `review`, rule 09)
 
-Status: the review of the final diff is user-run (`/code-review high`) and recorded by a commit that changes this
-section (criterion 25); the `review`, `commit`, `close-out` and `gate-push` progress lines stay unticked until the
-main thread ticks them. Rounds 0-3 below are the reviews already run on this branch: round 3 is the last full
-review under the new policy (workflow.md `## Review policy`: a finding becomes a test, search first, at most two
-rounds per task, the second only the delta).
+Status: the final review of the diff is round 3 below, the user-run `/code-review` at high effort of 2026-10-06
+(six findings, every one with its outcome and proof line). It is recorded by the commit that last changed this
+section (criterion 25); no code change was made after it. Rounds 0-3 are the reviews run on this branch: round 3 is
+the last full review under the new policy (workflow.md `## Review policy`: a finding becomes a test, search first,
+at most two rounds per task, the second only the delta). The close-out follows it as the last commit before the
+push.
 
 - [x] review-checklist (`.claude/templates/review-checklist.md`) run over the full branch diff on 2026-10-05 (28 files); the changes since are the hook, its specs and `.claude/` docs
 - [x] `code-review` ran at high effort on 2026-10-05 and three times on 2026-10-06 (rounds 0 to 3 below); every finding has its outcome and proof, checked by the gate
@@ -202,13 +204,13 @@ reviews as the "full-branch" and "second" ones; with today's they are rounds 0, 
 
 ## Pending on the user
 
-| #   | What                                                                                                                                                                                                                                                                                                                                                            | Blocks                             | Status  |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
-| 1   | Decide whether the review-fixes-3 delta needs a second pass: round 3 is the last full review (policy: at most two rounds, the second only the delta, `/code-review` on `git diff <last-reviewed-sha>..HEAD`); the findings are recorded with their proofs in `## Review`, and the push and close gates block until `review` is ticked with the recording commit | `review`, `close-out`, `push-pr`   | pending |
-| 2   | Explicit permission for the single `git push` of `feat/close-workflow-redesign` (rule 06, decision 031); the AI then opens the PR                                                                                                                                                                                                                               | `push-pr`                          | pending |
-| 3   | After the PR's first CI run, add the `workflow-gate` job to the required checks of the `main` ruleset (a skipped job passes, so it is safe to add); until then the CI backstop for `git push --no-verify` is not blocking                                                                                                                                       | making the CI backstop hard        | pending |
-| 4   | Know that after the merge the new flow applies: `merge` is yours, `deploy-check` is post-merge and non-blocking (the AI reports `deploy.yml` in chat; a failed deploy is a new task, never a reopened one)                                                                                                                                                      | nothing, awareness of the new flow | info    |
-| 5   | `button-system`, `css-tailwind-first` and `workflow-integrity-hardening` stay `todo` in the backlog; the latter's item 6 now only owes the proactive `/code-review` nudge wording and an effort-level minimum                                                                                                                                                   | nothing                            | info    |
+| #   | What                                                                                                                                                                                                                                                                                                                                    | Blocks                             | Status  |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
+| 1   | Confirm round 3 is the final review (no second delta pass; policy: at most two rounds, the second only the delta, `/code-review` on `git diff <last-reviewed-sha>..HEAD`); the findings are recorded with their proofs in `## Review` and the close-out proceeds on it; if you want a second pass, `git revert <close-out sha>` reopens | `review`, `close-out`, `push-pr`   | pending |
+| 2   | Explicit permission for the single `git push` of `feat/close-workflow-redesign` (rule 06, decision 031); the AI then opens the PR                                                                                                                                                                                                       | `push-pr`                          | pending |
+| 3   | After the PR's first CI run, add the `workflow-gate` job to the required checks of the `main` ruleset (a skipped job passes, so it is safe to add); until then the CI backstop for `git push --no-verify` is not blocking                                                                                                               | making the CI backstop hard        | pending |
+| 4   | Know that after the merge the new flow applies: `merge` is yours, `deploy-check` is post-merge and non-blocking (the AI reports `deploy.yml` in chat; a failed deploy is a new task, never a reopened one)                                                                                                                              | nothing, awareness of the new flow | info    |
+| 5   | `button-system`, `css-tailwind-first` and `workflow-integrity-hardening` stay `todo` in the backlog; the latter's item 6 now only owes the proactive `/code-review` nudge wording and an effort-level minimum                                                                                                                           | nothing                            | info    |
 
 ## Decisions made in this task
 
