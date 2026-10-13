@@ -11,7 +11,8 @@ internal resources from any company; only public information.
 ## Context map (read when about to write in that territory)
 
 - Work workflow (story → contract → build → gate → review → validate → handoff → PR): `.claude/workflow.md`
-- Active task: `.claude/tasks/ACTIVE` holds the slug → `.claude/tasks/<slug>/{story,contract,handoff}.md`.
+- Active task: the slug is the `feat/<slug>` branch name → `.claude/tasks/<slug>/{story,contract,handoff}.md`
+  (`.claude/tasks/ACTIVE` is no longer required on feat branches, so parallel branches don't share it).
   `handoff.md` carries the branch's real state and the **User pendings** list (remember it and ask about it again when appropriate).
 - Decisions made (do NOT ask again about what's already there): `.claude/docs/decisions/`
 - Standards (how each kind of thing is written): `.claude/docs/standards/{components,styling,code-style,state,i18n,testing}.md`

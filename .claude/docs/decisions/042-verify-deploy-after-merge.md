@@ -1,5 +1,7 @@
 # 042 · Verify the deploy after every merge, before closing a task
 
+**Superseded in part by 057** (2026-10-05): verifying the deploy no longer blocks closing a task and the handoff no longer carries a "Post-merge deploy check" block; it is a non-blocking check the AI reports in chat after merge, and a failed deploy opens a new task. The rest stands.
+
 **Context.** PR #2 (post-launch, merged 2026-09-18) passed `ci` and `security` in full, and the AI's review
 process (checklist + `/code-review`) found nothing wrong — because nothing was wrong in the diff. The actual
 failure happened two steps later, in `deploy.yml`, which only runs after merge and which no part of the

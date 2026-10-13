@@ -1,5 +1,7 @@
 # 051 · task-close-gate checks "is this a closing commit" before the disk-based contract check
 
+**Superseded in part by 057** (2026-10-05): the archive no longer requires a merged PR or a verified deploy (close-out now happens before the single push), and a closing commit is detected from its staged deletions of any task folder, not from `ACTIVE`. The rest stands.
+
 **Context.** `task-close-gate` (rule 10 extension) needed to allow a commit that deletes
 `.claude/tasks/<slug>/` entirely, once a fully-checked `.claude/tasks/closed/<slug>.md` archive is staged
 alongside it. The original spec assumed this new check would run only after the existing disk-based

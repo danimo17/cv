@@ -1,0 +1,15 @@
+[
+  { "id": "story", "phase": "pre-push", "title": "Story", "gate": "require-contract" },
+  { "id": "contract", "phase": "pre-push", "title": "Contract", "gate": "require-contract" },
+  { "id": "build", "phase": "pre-push", "title": "Build / iterate", "gate": "pre-commit" },
+  { "id": "consolidate", "phase": "pre-push", "title": "Consolidate", "gate": "pre-commit" },
+  { "id": "validate", "phase": "pre-push", "title": "Validate", "gate": "human" },
+  { "id": "handoff", "phase": "pre-push", "title": "Handoff", "gate": "require-contract" },
+  { "id": "commit", "phase": "pre-push", "title": "Commit", "gate": "pre-commit" },
+  { "id": "review", "phase": "pre-push", "title": "Review", "gate": "push-review-gate" },
+  { "id": "close-out", "phase": "pre-push", "title": "Close-out", "gate": "task-close-gate" },
+  { "id": "gate-push", "phase": "pre-push", "title": "Gate push", "gate": "pre-push" },
+  { "id": "push-pr", "phase": "pre-push", "title": "Push and PR", "gate": "push-review-gate" },
+  { "id": "merge", "phase": "post-merge", "title": "Merge", "gate": "ci" },
+  { "id": "deploy-check", "phase": "post-merge", "title": "Deploy check", "gate": "human" }
+]

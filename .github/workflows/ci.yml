@@ -12,6 +12,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workflow-gate:
+    name: workflow-gate
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feat/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Workflow gate (review, close-out and progress evidence)
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          base_gate="$RUNNER_TEMP/base-require-contract.py"
+          if git show "origin/$BASE_REF:.claude/hooks/require-contract.py" > "$base_gate" 2>/dev/null \
+            && grep -q -e '--ci' "$base_gate" \
+            && grep -q -e '--base' "$base_gate"; then
+            python3 "$base_gate" --ci "$HEAD_REF" "$HEAD_SHA" --base "origin/$BASE_REF"
+          else
+            echo "::notice::base branch has no --ci/--base gate yet (this PR introduces it), using the PR copy"
+            python3 .claude/hooks/require-contract.py --ci "$HEAD_REF" "$HEAD_SHA"
+          fi
+
   gate:
     name: gate
     runs-on: ubuntu-latest

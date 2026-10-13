@@ -100,15 +100,19 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    built — don't leave stale rows claiming "human review" once a test exists.
 
 6. **Review-freshness gate and a mandatory code-review prompt** (found 2026-10-04, `feat/spacing-tokens`
-   PR #16). `push-review-gate` (decision 054) only substring-matches "code-review" in `handoff.md`'s `## Review`,
+   PR #16). `push-review-gate` (decision 054) only substring-matched "code-review" in `handoff.md`'s `## Review`,
    so it accepted a medium-effort review dated before a merge with `main`, and nothing made the AI tell the user
-   a fresh `/code-review` was due before opening the PR (the user had to ask for it). Fix mechanically:
-   - the `## Review` block records a fingerprint of the reviewed diff (e.g. sha256 of
-     `git diff main...HEAD -- . ':!.claude'`) and the effort level; the push gate recomputes the fingerprint and
-     blocks when it differs (review is stale: code changed after it) or when the effort is below the required
-     minimum (user's call, default `high`);
-   - the gate's block message names the exact command to run (`/code-review high`), so the AI surfaces it to
-     the user instead of working around it; a PR cannot be opened by the AI without a fresh matching block.
+   a fresh `/code-review` was due before opening the PR (the user had to ask for it).
+   - **BUILT in `close-workflow-redesign` (criterion 17, decision 057 amendment 2026-10-06):** the review-freshness
+     gate. The `review` progress evidence is the sha of the commit that recorded the review; any later commit
+     that touches a path outside `.claude/` makes the review stale and blocks the push (Claude hook,
+     `--pre-push`, `--ci`) and the closing commit, and the block message names the review sha, the first later
+     code commit and the exact command to run (`/code-review high`). It uses commits (`<review sha>..<tip>`),
+     not the sha256 fingerprint idea originally sketched here.
+   - **Still open here:** (a) the proactive wording: the AI should itself tell the user a fresh `/code-review`
+     is due before a PR (the gate's block message already names `/code-review high`, but nothing prompts
+     before the block); (b) the effort level: the gate does not read the effort a review ran at, so a
+     minimum (user's call, default `high`) is not enforced.
 
 7. **Every `workflow.md` step has a gate; the AI can prove it followed all of them** (user directive,
    2026-10-04: "everything in the workflow must be tested by gates, you must be able to assure me you followed
@@ -119,6 +123,18 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    02 and 16). The per-branch `## Workflow progress` status bar in the handoff is owned by
    `close-workflow-redesign` (Problem 3) — this item makes sure the step list it mirrors is itself complete and
    enforced.
+
+8. **Editing the `## Review` text after later code changes resets freshness** (queued 2026-10-06, third
+   `/code-review` of `close-workflow-redesign`; severity: low, a deliberate evasion of the gate, not normal use).
+   The `review` evidence must be a commit that changed the content of the `## Review` section; the freshness
+   check compares the code the branch has at that commit with the tip. Rewriting the Review text in a later
+   commit (after code changed) and re-pointing the evidence at it makes the review look fresh without a review
+   having seen that code. Option: a `reviewed: <sha>` marker inside the Review block, naming the code tip the
+   review saw, which the gate compares with the tip instead of trusting the commit that edited the text.
+   Mitigated by the review policy built in `close-workflow-redesign` (code after a recorded review needs its test
+   at commit time, and every finding needs proof, decision 057 third amendment); residual risk accepted (user
+   decision 2026-10-06). Same bucket by policy: other deliberate-evasion findings found by later reviews go here
+   with a severity and do not block a close.
 
 ## Out of scope
 

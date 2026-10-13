@@ -1,17 +1,61 @@
 # Close checklist: <slug>
 
 Every box must be checked (`- [x]`) before `.claude/tasks/closed/<slug>.md` can be staged with this content —
-the commit that closes the task is blocked by `require-contract.py` otherwise (task-close-gate).
+the commit that closes the task is blocked by `require-contract.py` otherwise (task-close-gate). The close-out
+happens on the feature branch, before the single push (decision 057), so every item here must be provable
+**before** the PR is merged. The merge and the post-merge deploy check are not archived: the deploy check is
+reported in chat after merge, and a failed deploy opens a new task.
+
+The only line allowed to stay unticked in this file is `push-pr` inside `## Workflow progress` (it is ticked
+after the push, which comes after this commit).
+
+This commit is the last commit before the push: take it only after the final review of the full diff (a
+user-run `/code-review` included) and its fixes. A code change of the branch after the review (outside
+`.claude/`, or in `.claude/hooks/` or `.claude/workflow-steps.json`; a merge of `main` does not count) makes the
+review stale and the gates block (`/code-review high`, then re-record). To reopen after a later finding: `git revert <close-out sha>`
+restores the task folder and removes this archive; fix, re-review, close again.
 
 - [ ] Every acceptance criterion in `contract.md` is verified done, one by one (list them if it helps)
 - [ ] `pnpm gate:push` real output confirmed green — the actual log tail, not a task-notification's reported
-      exit code (that wrapper misreported once this session; always check the real log)
-- [ ] PR merged into `main` (link + merge commit SHA)
-- [ ] Post-merge deploy verified green (decision 042): `gh run list --workflow deploy.yml` shows `success`
-      for this merge's commit
+      exit code (that wrapper misreported once; always check the real log)
+- [ ] `/code-review` ran over the whole branch diff: `code-review` effort level and date noted in `## Review`
+      below
 - [ ] Every decision made during this task is written to `.claude/docs/decisions/`
 - [ ] Every new/changed component, store, composable, token, or class is documented in
       `.claude/docs/catalog/`
 - [ ] Every relevant standard (`.claude/docs/standards/`) updated if a convention changed
 - [ ] No flagged/unresolved rule-11 conflict left open (check the handoff's "Pending on the user")
-- [ ] `.claude/backlog.md` row for this task set to `done` with a pointer to the PR/merge commit
+- [ ] `.claude/backlog.md` row for this task set to `done`
+
+## Review
+
+Paste the handoff's `## Review` section here (checklist fully checked, `/code-review` effort level, date and
+one line per finding). It must mention `code-review`: the push gate reads it from this archive. Findings use the
+same format as the handoff template (decision 057, third amendment, search first), checked at the closing commit
+and at push; the formats, in a fence so that they are not counted as findings:
+
+```
+- finding <id> — outcome: fixed — proof: strengthened <tests/file> › <test name>
+- finding <id> — outcome: fixed — proof: new <tests/file> › <test name> — searched: <term>[, <term>...] [— differs: <why a new test is needed>]
+- finding <id> — outcome: queued — proof: <backlog slug | tasks/<slug> folder | closed archive> and the reason
+- finding <id> — outcome: no_change_needed — proof: <reason>
+```
+
+- [ ] …
+
+## Workflow progress
+
+Paste the handoff's `## Workflow progress` block here, ticked with evidence for every step before `push-pr`
+(same line format as `.claude/templates/handoff.md`).
+
+- [ ] story — evidence:
+- [ ] contract — evidence:
+- [ ] build — evidence:
+- [ ] consolidate — evidence:
+- [ ] validate — evidence:
+- [ ] handoff — evidence:
+- [ ] commit — evidence:
+- [ ] review — evidence:
+- [ ] close-out — evidence:
+- [ ] gate-push — evidence:
+- [ ] push-pr — evidence:
