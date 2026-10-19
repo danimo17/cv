@@ -253,19 +253,29 @@ the grep), and the contract template's `## Shared component consumers` section (
 answer, only here or everywhere), which `workflow.md` steps 1-2 and rule 11 require before the contract of any
 component under `app/components/shared/` or used from more than one parent.
 
-**Arch test `tests/arch/no-orphan-testids.spec.ts`:** reads the tracked and new non-ignored files with `git ls-files`,
-collects every `data-testid` referenced in `e2e/**/*.spec.ts` and `tests/unit/**` (`getByTestId`, `findByTestId`,
-`queryByTestId` and their `All` forms, `[data-testid="x"]` selectors) and fails when one is not rendered by a
-`data-testid="x"` (or a literal `:data-testid="'x'"`) in `app/**/*.vue`. A dynamic id (a template literal or a
-concatenation in a component, or a `^=` selector in a test) passes only through the spec's `DYNAMIC_PREFIXES`
-allowlist, each entry with a reason and a matching component binding; the list is empty today. A non-literal
-argument (`getByTestId(variable)`) fails: use a literal. One test scans, one checks the allowlist, one drives the
-scanner against synthetic sources to prove it catches an orphan. Props, classes and i18n keys have no orphan check
-of their own (typecheck, `i18n-parity.spec.ts` and review cover them).
+**Arch test `tests/arch/no-orphan-testids.spec.ts`:** the only mechanical check of rule 20. It reads the tracked and
+new non-ignored files with `git ls-files` (a file listed but deleted from the working tree is skipped), strips
+comments, and collects every `data-testid` referenced in `e2e/**/*.ts` (specs, helpers, page objects and fixtures)
+and `tests/unit/**` through `getByTestId`, `findByTestId`, `queryByTestId` (and their `All` forms) and `[data-testid]`
+selectors (`=`, `~=`, `^=` and `|=` are resolved; `*=` and `$=` fail loudly). It fails when an id is not rendered
+by a `data-testid="x"` in `app/**/*.vue`, or supplied by the same test file (an `attrs: {'data-testid': 'x'}`, a
+stub or inline template, a `setAttribute`). Resolution: string literals, template literals and `'a-' + x`
+concatenations (prefixes), ternaries of those (in a component binding, every branch is rendered), and a same-file
+`const ID = 'x'` for a test argument. Everything else goes through the spec's `ALLOWLISTS`, each entry with a
+reason and checked to still be in use: `prefixes` (dynamic prefixes a component binds), `exact` (ids a component
+builds at run time) and `unresolved` (a regex argument, an unresolved prop binding, a `*=` or `$=` selector, named
+by its exact expression text). All three lists are empty today. The repository is scanned once per file; the spec
+has 15 tests (the scan and the binding and allowlist checks over the real tree, plus tests that drive the scanner
+on synthetic sources for each rule above). Limits: it checks the test to component direction only (an unused
+component id is not flagged) and only test ids; props, classes, i18n keys and the references to a renamed thing in
+the catalog and `.claude/docs/` have no orphan check of their own (typecheck, `i18n-parity.spec.ts` and review
+cover them in part); comment stripping is textual, so a `/*` inside a string can hide code after it.
 
 **Arch test `tests/arch/orphan-refs-docs.spec.ts`:** pins the text of rule 20 (file, the short `hard-rules.md` row
 naming its spec), the rule 12 brief line, the contract template's `## Shared component consumers` section, the
-workflow's Story/Contract wording, rule 11's reference to it, and this catalog entry.
+workflow's Story/Contract wording, rule 11's reference to it, this catalog entry, and that the entry states the real
+number of tests of `no-orphan-testids.spec.ts`. The `## Shared component consumers` section is enforced at commit
+time by the `hook-hardening` task's check in `require-contract.py` (not by these specs).
 
 **Arch test `tests/arch/workflow-steps.spec.ts`:** keeps `workflow-steps.json`, `workflow.md`, the handoff and
 close-checklist templates and the Gates table consistent (ids, order, titles, gates); checks the close

@@ -47,6 +47,21 @@ describe('rule 20 and the shared component scope question', () => {
     expect(rule).toMatch(/same change/i)
     expect(rule).toContain('tests/arch/no-orphan-testids.spec.ts')
 
+    const checked = rule.slice(rule.indexOf("**How it's checked.**"))
+    const [mechanical = '', unchecked = ''] = checked.split('Not mechanical')
+    expect(unchecked, 'rule 20 names what is not mechanical').not.toBe('')
+    expect(mechanical).toContain('tests/arch/orphan-refs-docs.spec.ts')
+    expect(mechanical).toMatch(/e2e\/\*\*\/\*\.ts/)
+    expect(mechanical).toMatch(/tests\/unit/)
+    expect(mechanical).toMatch(/helpers/)
+    expect(mechanical).toMatch(/test (?:→|to) component/i)
+    expect(mechanical).not.toMatch(/\bprops\b/)
+    for (const gap of ['props', 'classes', 'i18n keys', 'catalog']) {
+      expect(unchecked, `rule 20 admits ${gap} are not checked`).toContain(gap)
+    }
+    expect(unchecked).toContain('Shared component consumers')
+    expect(unchecked).toContain('hook-hardening')
+
     const row = read(HARD_RULES)
       .split('\n')
       .find((line) => /^\|\s*20\s*\|/.test(line))
@@ -56,7 +71,9 @@ describe('rule 20 and the shared component scope question', () => {
     expect(summary.length, 'row 20 summary stays short').toBeLessThanOrEqual(250)
     expect(summary).toMatch(/public surface/i)
     expect(summary).toMatch(/same change/i)
+    expect(summary).toMatch(/test ids only/i)
     expect(cells[3]).toContain('no-orphan-testids.spec.ts')
+    expect(cells[3]).toMatch(/human review/i)
   })
 
   it('rule 12 brief requires a repo-wide reference grep', () => {
@@ -104,5 +121,18 @@ describe('rule 20 and the shared component scope question', () => {
     expect(catalog).toContain('tests/arch/orphan-refs-docs.spec.ts')
     expect(catalog).toMatch(/rule 20/i)
     expect(catalog).toContain('Shared component consumers')
+    for (const term of ['ALLOWLISTS', 'helpers', 'comments', 'hook-hardening']) {
+      expect(catalog, `the catalog mentions ${term}`).toContain(term)
+    }
+  })
+
+  it('the catalog states the real number of tests of the orphan test id spec', () => {
+    const spec = readFileSync(join(ROOT, 'tests', 'arch', 'no-orphan-testids.spec.ts'), 'utf8')
+    const actual = (spec.match(/^\s*it\(/gm) ?? []).length
+    const entry = flat(read(CATALOG)).match(
+      /Arch test `tests\/arch\/no-orphan-testids\.spec\.ts`:\*\*[^]*?\bhas (\d+) tests\b/
+    )
+    expect(entry, 'the catalog entry says "has N tests"').not.toBeNull()
+    expect(Number(entry?.[1])).toBe(actual)
   })
 })

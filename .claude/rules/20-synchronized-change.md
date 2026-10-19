@@ -18,9 +18,18 @@ standards. For a component under `app/components/shared/` or used from more than
 contract's `## Shared component consumers` section first: the grep result, and the user's answer, only here or
 everywhere. A subagent brief that removes or renames something carries that grep as a mandatory line (rule 12).
 
-**How it's checked.** `tests/arch/no-orphan-testids.spec.ts` fails when a test references a `data-testid` that no
-component in `app/` renders (dynamic prefixes only through its documented allowlist);
-`tests/arch/orphan-refs-docs.spec.ts` pins this rule, the rule 12 brief line and the contract and workflow text;
-`tests/arch/docs-sync.spec.ts` covers the catalog (rule 07). Props, classes and i18n keys have no dedicated
-orphan check today: the compiler, the typecheck, `tests/unit/i18n-parity.spec.ts` and human review cover them,
-and that limit is stated rather than papered over (rule 19).
+**How it's checked.** `tests/arch/no-orphan-testids.spec.ts` is the only mechanical check of the synchronized
+change: every `data-testid` referenced by an e2e file (`e2e/**/*.ts`: specs, helpers, page objects and fixtures)
+or a unit test file (`tests/unit/**`) must be rendered by a component in `app/` (or be supplied by that same
+test file, as in an `attrs` object or a stub template); what the scan cannot resolve to a literal goes through
+an allowlist entry with a reason. It covers the test to component direction only, so a component id that no
+test uses is not flagged. `tests/arch/orphan-refs-docs.spec.ts` pins the text of this rule, of the rule 12
+brief line and of the contract and workflow wording; `tests/arch/docs-sync.spec.ts` checks that an artifact
+has a catalog block (rule 07), not that a rename updated the references to it.
+
+Not mechanical: props, CSS classes, i18n keys (apart from the key parity of `tests/unit/i18n-parity.spec.ts`),
+store, composable and route names, and every reference to a renamed or removed thing in the catalog and in
+`.claude/docs/`. The typecheck, the compiler and human review cover them in part, and that limit is stated
+rather than papered over (rule 19). The `## Shared component consumers` section of the contract is enforced
+at commit time by the check of the `hook-hardening` task in `require-contract.py`, not by anything in this
+task.
