@@ -269,6 +269,14 @@ switches devtools to the named `simpleGit` export of `simple-git` 4.x): `simple-
 `pnpm-lock.yaml` (a devtools bump fails with the instruction to remove the patch and the `simple-git` override), the
 patch and the override come together, and a decision names each patch with a remove-when condition.
 
+**Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
+git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
+absolute path. Specs that build throwaway repos (`cwd: tmpdir`) then wrote into the real repository: stray `seed`,
+`review` and `base` commits, `feat/demo`-style branches, and a `core.hooksPath` pointing at a temp dir (shared by all
+worktrees, so every hook silently stopped running). The setup file deletes those variables from `process.env` before
+any spec runs; the spec fails if any of them is still present (red proof: `GIT_DIR=/some/path vitest run
+tests/arch/test-env-isolation.spec.ts` without the setup file).
+
 ## Environments and deploy
 
 Decisions: 021 (environments), 022 (scans), 024 (GitHub environment, secrets, ruleset).
