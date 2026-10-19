@@ -14,4 +14,5 @@ The user explicitly asked for this.
 **How it's checked.** Human review; the handoff lists which subagents did what. The mechanical slice
 (decision 059): on a `feat/<slug>` branch `require-contract.py` blocks a commit staging more than 1 file or more
 than 15 changed lines under `app/`, `server/` or `shared/` unless the staged handoff's `## Subagents` table has a
-data row.
+data row. Stylesheets under `app/assets/css/`, the tables under `app/data/` and `i18n/locales/` do not count as
+code for this check, and a rename counts as one file.

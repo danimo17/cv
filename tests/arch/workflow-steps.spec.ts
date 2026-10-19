@@ -334,6 +334,55 @@ describe('hook-hardening: the process gaps are mechanical and documented', () =>
     ])
       expect(catalog, term).toContain(term)
   })
+
+  it('the code-review round of decision 059 is documented in the rules, catalog, standards and templates', () => {
+    const decision = read(join(DECISIONS_DIR, '059-hook-hardening.md'))
+    expect(decision).toContain('## Amendment 2026-10-19')
+    for (const term of [
+      'git common dir',
+      'mentions',
+      'app/assets/css/',
+      'Fail closed',
+      'workflow-integrity-hardening',
+    ])
+      expect(decision, term).toContain(term)
+
+    const rule = (name: string): string => read(join(CLAUDE, 'rules', name))
+    expect(rule('06-git-branches.md')).toMatch(/git common\s+dir/)
+    expect(rule('11-directives.md')).toMatch(/mentions the file name/)
+    expect(rule('12-orchestration.md')).toMatch(/app\/assets\/css\//)
+    expect(rule('12-orchestration.md')).toMatch(/rename counts as one file/)
+
+    const catalog = read(CATALOG)
+    const row = catalog
+      .split('\n')
+      .find((l) => l.startsWith('| `.claude/hooks/require-contract.sh`'))
+    expect(row, 'main require-contract catalog row').toBeDefined()
+    for (const term of ['rule 06/18', 'rule 11', 'rule 12', 'rule 16', 'git -C', 'failing closed'])
+      expect(row, term).toMatch(new RegExp(term.replace('-', '\\-'), 'i'))
+    expect(catalog).toContain('## Test isolation (`tests/setup/clean-git-env.ts`)')
+    expect(catalog).toContain('tests/arch/test-env-isolation.spec.ts')
+
+    const testing = read(join(CLAUDE, 'docs', 'standards', 'testing.md'))
+    expect(testing).toContain('tests/setup/clean-git-env.ts')
+    expect(testing).toContain('GIT_INDEX_FILE')
+    expect(testing).toContain('tests/arch/test-env-isolation.spec.ts')
+
+    expect(read(join(CLAUDE, 'templates', 'contract.md'))).toMatch(
+      /^## Shared component consumers$/m
+    )
+
+    const queued = read(join(CLAUDE, 'tasks', 'workflow-integrity-hardening', 'story.md'))
+    for (const term of [
+      'checkout --orphan',
+      'worktree add -b',
+      'branch -c',
+      'xargs',
+      'ALLOW_UNMERGED_FEAT=1',
+      'placeholder row',
+    ])
+      expect(queued, term).toContain(term)
+  })
 })
 
 describe('close-workflow-redesign: the gate holds from any client', () => {

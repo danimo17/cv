@@ -106,6 +106,10 @@ findings are applied here; each one has a test in `tests/arch/require-contract-h
    when the file cannot be read from `HEAD` or the index. Each message names the failure; `ALLOW_UNMERGED_FEAT=1`
    still skips the branch check.
 
+Documentation: the catalog row of the Claude hook covers rules 06/18, 10, 11, 12 and 16, the test isolation of
+`tests/setup/clean-git-env.ts` is documented in the catalog and `docs/standards/testing.md`, and the contract
+template carries a real `## Shared component consumers` section.
+
 Deliberate-evasion findings are queued, not built (`workflow-integrity-hardening` item 9): branch creation through
 `checkout --orphan`, `switch --orphan`, `worktree add -b`, `branch -c`, wrappers (`sh -c`, `xargs`), the unaudited
 `ALLOW_UNMERGED_FEAT=1` prefix, and the placeholder-row weakness of the rule 12 table (any non-empty first cell

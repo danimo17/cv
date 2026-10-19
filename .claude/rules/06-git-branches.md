@@ -15,5 +15,6 @@ and so it can be delegated punctually with express permission.
 (`git checkout -b`, `git switch -c`, `git branch`) from a Claude Bash command is blocked by `require-contract.py`
 while another local or remote `feat/*` branch is unmerged into `origin/main` and is not a `doing` row of
 `.claude/backlog.md` (decision 059, rule 18's mechanical net); the escape hatch is the command prefix
-`ALLOW_UNMERGED_FEAT=1`. The Claude hook resolves the repository from the payload `cwd`, so it judges the worktree
-the command runs in.
+`ALLOW_UNMERGED_FEAT=1`. The Claude hook judges the repository the command acts on: the `git -C`/`cd` directory of the
+call, else the payload `cwd`, else `CLAUDE_PROJECT_DIR`; a repository that is not the project (no shared git common
+dir) is not gated at all. It fails closed: no base branch or a failing `git for-each-ref` blocks the creation.
