@@ -15,15 +15,15 @@ re-run `/code-review high`, record it, and re-point the evidence. `push-pr` is t
 steps (`merge`, `deploy-check`) are not listed here.
 
 - [x] story — evidence: 4ee8e22 (story.md + backlog row `doing`)
-- [x] contract — evidence: 4ee8e22 (contract.md, criteria 1-6, each with its test)
-- [x] build — evidence: specs tests/arch/no-orphan-testids.spec.ts and tests/arch/orphan-refs-docs.spec.ts written red first (4 of 4 doc tests failing, orphan scan failing on two injected orphan ids), then rule 20, rule 12/11 text, template, workflow and catalog until green
-- [x] consolidate — evidence: pnpm gate green on 2026-10-19 (see Validation)
-- [x] validate — evidence: 2026-10-19, real pnpm gate output below, 27 files / 606 tests, 0 lint errors, 0 type errors
+- [x] contract — evidence: 4ee8e22 (contract.md, criteria 1-6, each with its test; Notes line added in 159a562)
+- [x] build — evidence: 3a55243 (specs, rule 20, docs, written red first: 4 of 4 doc tests failing, orphan scan failing on two injected orphan ids) and the review-fix commits 478e37e, 731271a, 9bc34b9 (each fix drove its new test red first, then green) and 59ff9b9 (rule 20 wording and catalog)
+- [x] consolidate — evidence: pnpm gate green on every commit, last full run in the gate:push on 458ede4, 2026-10-19: Test Files 28 passed (28), Tests 619 passed (619)
+- [x] validate — evidence: 2026-10-19, real output below: 28 files / 619 tests, 0 lint errors (1 pre-existing warning), 0 type errors, build ok, e2e 5 passed
 - [x] handoff — evidence: this file, 2026-10-19
-- [x] commit — evidence: 4ee8e22 (story and contract), 3a55243 (specs, rule 20, docs, handoff)
-- [ ] review — evidence:
+- [x] commit — evidence: 4ee8e22 (story and contract), 3a55243 (specs, rule 20, docs), 478e37e, 731271a, 9bc34b9 (scanner fixes with tests), 59ff9b9 (rule 20 wording, catalog), 159a562 (contract and handoff notes)
+- [x] review — evidence: 458ede4 (the commit that recorded the `## Review` section: `/code-review` high, 2026-10-19, round 1, 9 findings, each with outcome and proof; no code change after it)
 - [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] gate-push — evidence: pnpm gate:push on 458ede4 (2026-10-19, real log read, exit 0): Test Files 28 passed (28), Tests 619 passed (619), nuxt build "Build complete!", e2e 5 passed (13.0s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -50,10 +50,10 @@ steps (`merge`, `deploy-check`) are not listed here.
 
 ## In progress / not done
 
-- close-out, gate-push, push-pr: not ticked yet (see Pending).
+- close-out and push-pr: not ticked yet (see Pending); the close-out is the last commit before the push.
 - No dedicated orphan check for props, classes and i18n keys (stated in rule 20 and the catalog; typecheck,
   `i18n-parity.spec.ts` and review cover them).
-- `hard-rules.md` has no row 19 (rule 19's file exists, its row was never added); not touched here, row 20 follows row 18.
+- `hard-rules.md` has no row 19 (rule 19's file exists, its row was never added); queued to `workflow-integrity-hardening` (finding 9b), not touched here; row 20 follows row 18.
 - Found while committing from this linked worktree: the pre-commit hook inherits `GIT_DIR`/`GIT_INDEX_FILE` and a
   spec spawned `git` with `process.env`, so its throwaway-repo commands ran against the real repository (shared
   `.git/config` got `core.bare=true` and a test identity, branch ref moved, stray branches). Repaired locally.
@@ -72,16 +72,19 @@ steps (`merge`, `deploy-check`) are not listed here.
 ## Validation (actual output of the last gate)
 
 ```
-pnpm gate → format:check: All matched files use Prettier code style!
-            eslint .: 0 errors, 1 warning (pre-existing: CustomInput.vue vue/require-default-prop, decision 041)
-            nuxt typecheck: clean
-            vitest run: Test Files 27 passed (27), Tests 606 passed (606)
-pnpm gate:push (run once at the end, 2026-10-19) → gate as above + build ok + e2e: 5 passed (15.3s), exit 0
+gate:push on 458ede4 (2026-10-19, exit 0)
+  format:check: All matched files use Prettier code style!
+  eslint .: 0 errors, 1 warning (pre-existing: CustomInput.vue vue/require-default-prop, decision 041)
+  nuxt typecheck: clean
+  vitest run: Test Files 28 passed (28), Tests 619 passed (619)
+  nuxt build: Build complete!
+  playwright test: 5 passed (13.0s)
 ```
 
-Not covered: orphan props, classes and i18n keys; `data-testid` references written outside `getByTestId`/`findByTestId`
-/ `[data-testid=...]` forms; ids built at run time in a component; the commit-time hook check of the shared
-component section (sibling task `hook-hardening`).
+Not covered: orphan props, classes, i18n keys and catalog/docs references; the component to test direction (an unused
+component id is not flagged); `data-testid` references written outside `getByTestId`/`findByTestId` and
+`[data-testid=...]` forms; comment stripping is textual; the commit-time hook check of the shared component section
+(sibling task `hook-hardening`).
 
 ## Review (workflow step `review`, rule 09)
 
@@ -121,6 +124,7 @@ this branch, so their proofs are `new`).
 | --- | --------------------------------------------------------- | ----------------- | ------- |
 | 1   | Run `/code-review high` over the branch diff              | review, close-out | done    |
 | 2   | Permission for the single `git push` of the feat/* branch | push-pr           | pending |
+| 3   | Sync the three git isolation files from arch-rule-gates   | merge             | pending |
 
 ## Decisions made in this task
 
