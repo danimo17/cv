@@ -25,6 +25,7 @@ Commit-time state is read from the index and push-time state from the pushed com
 the verdict.
 """
 
+import functools
 import json
 import os
 import re
@@ -87,6 +88,11 @@ NEW_BRANCH_CALL = re.compile(
     r"(?:^|[;&|]\s*)(" + ENV_PREFIX + r")git" + GLOBAL_GIT_OPTIONS + r"\s+(checkout|switch|branch)\b([^\n;&|]*)",
     re.M,
 )
+RESIDUE = re.compile(r"[^\n;&|]*")
+HEREDOC_OPEN = re.compile(
+    r"(?<!<)<<(?!<)-?[ \t]*(?:'([^'\n]*)'|\"([^\"\n]*)\"|\\?([A-Za-z_][A-Za-z0-9_]*))"
+)
+CD_CALL = re.compile(r"(?:^|[;&|]\s*)cd\s+(?:--\s+)?(\"[^\"\n]*\"|'[^'\n]*'|[^\s;&|]+)", re.M)
 ALLOW_UNMERGED = re.compile(r"(?<![\w])ALLOW_UNMERGED_FEAT=(?:1|\"1\"|'1')(?!\S)")
 CREATE_FLAGS = {
     "checkout": ("-b", "-B"),
@@ -1011,6 +1017,121 @@ def repo_containing(path):
     return top.stdout.strip() if top.returncode == 0 and top.stdout.strip() else None
 
 
+@functools.lru_cache(maxsize=None)
+def common_git_dir(path):
+    if not path or not os.path.isdir(path):
+        return None
+    try:
+        out = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--git-common-dir"], capture_output=True, text=True
+        )
+    except OSError:
+        return None
+    found = out.stdout.strip()
+    return os.path.realpath(os.path.join(path, found)) if out.returncode == 0 and found else None
+
+
+def project_common_dir():
+    for candidate in (os.environ.get("CLAUDE_PROJECT_DIR"), os.path.dirname(os.path.abspath(__file__))):
+        found = common_git_dir(candidate)
+        if found:
+            return found
+    return None
+
+
+def is_project_repo(top):
+    project = project_common_dir()
+    return project is None or common_git_dir(top) == project
+
+
+def mask_heredocs(cmd):
+    lines = cmd.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        out.append(line)
+        i += 1
+        for m in HEREDOC_OPEN.finditer(line):
+            delimiter = m.group(1) or m.group(2) or m.group(3)
+            end = next((j for j in range(i, len(lines)) if lines[j].strip() == delimiter), None)
+            if end is None:
+                break
+            out.extend("x" * len(body) for body in lines[i:end])
+            out.append(lines[end])
+            i = end + 1
+    return "\n".join(out)
+
+
+def mask_quotes(text):
+    out = list(text)
+    i = 0
+    while i < len(text):
+        quote = text[i]
+        if quote == "\\":
+            i += 2
+        elif quote == "#" and (i == 0 or text[i - 1] in " \t\n;&|("):
+            end = text.find("\n", i)
+            i = len(text) if end < 0 else end
+        elif quote in "'\"":
+            j = i + 1
+            while j < len(text) and text[j] != quote:
+                j += 2 if quote == '"' and text[j] == "\\" else 1
+            if j < len(text):
+                for k in range(i + 1, j):
+                    if out[k] != "\n":
+                        out[k] = "x"
+            i = j + 1
+        else:
+            i += 1
+    return "".join(out)
+
+
+def call_matches(pattern, cmd, masked):
+    for m in pattern.finditer(masked):
+        groups = [cmd[m.start(i):m.end(i)] for i in range(1, pattern.groups + 1)]
+        groups[-1] = RESIDUE.match(cmd, m.start(pattern.groups)).group(0)
+        yield m.start(), groups
+
+
+def existing_dir(base, target):
+    if not target or "$" in target or "`" in target:
+        return None
+    path = os.path.expanduser(target)
+    if not os.path.isabs(path):
+        path = os.path.join(base, path)
+    return os.path.normpath(path) if os.path.isdir(path) else None
+
+
+def call_directory(base, cmd, masked, position, opts):
+    current = base
+    for m in CD_CALL.finditer(masked):
+        if m.end() > position:
+            break
+        current = existing_dir(current, unquote(cmd[m.start(1):m.end(1)])) or current
+    try:
+        tokens = shlex.split(opts)
+    except ValueError:
+        tokens = opts.split()
+    for i, token in enumerate(tokens[:-1]):
+        if token == "-C":
+            current = existing_dir(current, tokens[i + 1]) or current
+    return current
+
+
+def call_root(cmd, masked, position, opts, cwd):
+    given = cwd if cwd and os.path.isdir(cwd) else None
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    base = given or project_dir or "."
+    directory = call_directory(base, cmd, masked, position, opts)
+    top = repo_containing(directory)
+    if top is None:
+        return (repo_containing(project_dir) or project_dir or ".") if directory == base else None
+    if directory == base and given is None:
+        return top
+    return top if is_project_repo(top) else None
+
+
 def doing_slugs(backlog):
     found = set()
     for line in (backlog or "").splitlines():
@@ -1079,11 +1200,16 @@ def orphaned_feat_branches(new_slug):
     return orphans
 
 
-def new_branch_check(cmd):
-    for env, _opts, sub, rest in NEW_BRANCH_CALL.findall(cmd):
+def new_branch_check(cmd, masked, cwd):
+    global root
+    for position, (env, opts, sub, rest) in call_matches(NEW_BRANCH_CALL, cmd, masked):
         name = created_branch(sub, rest)
         if not name or not name.startswith(FEAT_PREFIX) or ALLOW_UNMERGED.search(env):
             continue
+        target = call_root(cmd, masked, position, opts, cwd)
+        if target is None:
+            continue
+        root = target
         orphans = orphaned_feat_branches(name[len(FEAT_PREFIX):])
         if not orphans:
             continue
@@ -1101,28 +1227,29 @@ def new_branch_check(cmd):
 def claude_hook():
     global root
     data = json.load(sys.stdin)
-    root = (
-        repo_containing(data.get("cwd"))
-        or repo_containing(os.environ.get("CLAUDE_PROJECT_DIR"))
-        or os.environ.get("CLAUDE_PROJECT_DIR", ".")
-    )
     cmd = data.get("tool_input", {}).get("command", "")
+    cwd = data.get("cwd")
+    without_heredocs = mask_heredocs(cmd)
+    masked = mask_quotes(without_heredocs)
 
-    new_branch_check(cmd)
+    new_branch_check(cmd, masked, cwd)
 
-    calls = GIT_CALL.findall(cmd)
+    calls = []
+    for position, (opts, sub, rest) in call_matches(GIT_CALL, cmd, masked):
+        target = call_root(cmd, masked, position, opts, cwd)
+        if target is not None:
+            calls.append((target, opts, sub, rest))
     if not calls:
         return
-    hits = [(sub, rest) for _opts, sub, rest in calls]
 
-    if HOOKS_PATH_WRITE.search(cmd):
+    if HOOKS_PATH_WRITE.search(without_heredocs):
         fail(
             "Rule 09: setting core.hooksPath (git config, GIT_CONFIG_KEY_*) in a command that commits or "
             "pushes switches the git hooks off exactly like --no-verify, which is not allowed. Pass the "
             "gate (pnpm gate)."
         )
 
-    for opts, sub, rest in calls:
+    for _target, opts, sub, rest in calls:
         if skips_hooks(sub, rest):
             fail("Rule 09: --no-verify / -n is not allowed. Pass the gate (pnpm gate).")
         if HOOKS_PATH_OVERRIDE.search(opts):
@@ -1131,15 +1258,14 @@ def claude_hook():
                 "hooks off exactly like --no-verify, which is not allowed. Pass the gate (pnpm gate)."
             )
 
-    run_commit_hook(hits)
+    for target in dict.fromkeys(call[0] for call in calls):
+        root = target
+        run_commit_hook([(sub, rest) for t, _opts, sub, rest in calls if t == target])
 
 
 def use_cwd_repo():
     global root
-    top = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True
-    )
-    root = top.stdout.strip() if top.returncode == 0 and top.stdout.strip() else "."
+    root = repo_containing(".") or "."
 
 
 def pre_push_hook():

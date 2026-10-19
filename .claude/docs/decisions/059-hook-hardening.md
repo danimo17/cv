@@ -69,3 +69,21 @@ worktree add -b feat/x`, an editor or a terminal are not covered); a `doing` row
   from the story and is revisited here if it blocks legitimate small multi-file edits.
 - `ALLOW_UNMERGED_FEAT=1` is the only escape hatch added; the commit checks have none (rule 09: never
   `--no-verify`).
+
+## Amendment 2026-10-19 — high-effort `/code-review` round (9 findings)
+
+A read-only reviewer agent ran a `high` effort `/code-review` over the branch diff at the user's request. The normal-use
+findings are applied here; each one has a test in `tests/arch/require-contract-hook.spec.ts` (and
+`tests/arch/workflow-steps.spec.ts` for the docs). Changes to `require-contract.py`:
+
+1. **Target repository.** The Claude hook no longer reads the payload `cwd` only: each `git` call is judged in the
+   directory it acts on, resolved as the `cd <dir>` commands that precede it in the command, then its `-C <dir>`
+   options (relative paths resolve against the previous directory; a directory that does not exist is ignored), on
+   top of the payload `cwd`, else `CLAUDE_PROJECT_DIR`, else `.`. The new-branch check uses the same resolution.
+2. **Only this project.** A repository is gated only when it is the project (`CLAUDE_PROJECT_DIR`, else the repository
+   of the hook script) or a worktree sharing its git common dir (`git rev-parse --git-common-dir`, real paths). A call
+   in any other repository is ignored: the hook exits 0 and does not even refuse `--no-verify` there. A directory
+   that does not exist, or the fallbacks (`CLAUDE_PROJECT_DIR`, `.`), are trusted as the project.
+3. **Quoted and heredoc text is not a command.** Before matching, heredoc bodies (when the delimiter line exists) and
+   the contents of single and double quoted strings are masked; commit and push calls and the branch-creating
+   calls are matched on the masked text only, and their options and arguments are read from the real text.
