@@ -30,7 +30,7 @@ _Updated: 2026-10-19 13:10. REAL state of the `feat/arch-rule-gates` branch._
 ## In progress / not done
 
 - Review (`/code-review`) not run yet; close-out, gate-push and push-pr are intentionally unticked.
-- Stray state from the leak in the shared repository that this task did not delete: branches `feat/demo`, `chore/x`, `feat/other` (junk `seed`/`review`/`base` commits from the specs), junk commits on `feat/orphan-refs-and-scope` (tip `base`, 2026-10-19), and `core.hooksPath` in the shared config was repointed at a temp dir several times while sibling worktrees ran their gates (reset to `.githooks` by this task each time it was noticed).
+- Stray state from the leak in the shared repository was seen mid-task (branches `feat/demo`, `chore/x`, `feat/other`, junk commits on `feat/orphan-refs-and-scope`, and the shared `core.hooksPath` repointed at a temp dir several times while sibling worktrees ran their gates). At the last check the junk branches were gone and `core.hooksPath` was `.githooks`; this task only repaired its own branch and reset `core.hooksPath` when noticed. The siblings carry the leak until they take `tests/setup/clean-git-env.ts` from this branch.
 
 ## Subagents (rule 12)
 
@@ -53,10 +53,10 @@ Pending. The user runs `/code-review high` over the whole branch diff next; the 
 
 ## Pending on the user
 
-| #   | What                                                                                                          | Blocks  | Status  |
-| --- | ------------------------------------------------------------------------------------------------------------- | ------- | ------- |
-| 1   | Run `/code-review high` over the branch diff                                                                  | review  | pending |
-| 2   | Decide what to do with the stray `feat/demo`, `chore/x`, `feat/other` branches and the sibling's junk commits | cleanup | pending |
+| #   | What                                                                                                             | Blocks  | Status  |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| 1   | Run `/code-review high` over the branch diff                                                                     | review  | pending |
+| 2   | Merge order: the siblings need `tests/setup/clean-git-env.ts` (this branch) before their next gate in a worktree | cleanup | pending |
 
 ## Decisions made in this task
 
