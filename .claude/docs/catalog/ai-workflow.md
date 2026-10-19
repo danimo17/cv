@@ -273,9 +273,16 @@ patch and the override come together, and a decision names each patch with a rem
 git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
 absolute path. Specs that build throwaway repos (`cwd: tmpdir`) then wrote into the real repository: stray `seed`,
 `review` and `base` commits, `feat/demo`-style branches, and a `core.hooksPath` pointing at a temp dir (shared by all
-worktrees, so every hook silently stopped running). The setup file deletes those variables from `process.env` before
-any spec runs; the spec fails if any of them is still present (red proof: `GIT_DIR=/some/path vitest run
-tests/arch/test-env-isolation.spec.ts` without the setup file).
+worktrees, so every hook silently stopped running). The setup file exports `scrubGitEnv(env)` (returns the removed
+names) and calls it on `process.env` when imported, before any spec runs. It removes the repository-redirecting
+variables (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`,
+`GIT_NAMESPACE`, `GIT_PREFIX`, `GIT_COMMON_DIR`, `GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_<n>`,
+`GIT_CONFIG_VALUE_<n>`) and the identity/date overrides (`GIT_AUTHOR_*`, `GIT_COMMITTER_*`: they do not redirect the
+repository, but they beat the `git config user.*` the fixtures set, so a leaked value would make fixture commits
+depend on the caller). `PATH`, `HOME`, `GIT_EXEC_PATH` and `GIT_CONFIG_GLOBAL` are kept. The spec unit-tests
+`scrubGitEnv` with a fake environment holding every variable (and one with unrelated variables), checks that the real
+`process.env` is clean, and asserts that `vitest.config.ts` registers the file in `setupFiles`, so removing the
+registration fails the spec instead of silently turning the scrub off.
 
 **Arch tests for rules 02, 13, 14 and 15 (decision 060).** Shared helper `tests/arch/support/repo-files.ts` lists the
 tracked-plus-untracked-not-ignored files (`git ls-files --cached --others --exclude-standard`) and reads them as

@@ -41,8 +41,12 @@ there; rule 11 requires a decision for any change to that file, which is this en
 in a linked worktree `GIT_DIR` is absolute, so the specs that create throwaway repos (`cwd: tmpdir`) wrote into the real
 repository during the pre-commit gate: stray `seed`/`review`/`base` commits on the checked-out branch, `feat/demo`,
 `chore/x` and `feat/other` branches, and `core.hooksPath` repointed at a temp directory in the shared config (which
-silently turns every hook off for all worktrees). `tests/setup/clean-git-env.ts` (vitest `setupFiles`) deletes those variables and
-`tests/arch/test-env-isolation.spec.ts` fails if they reach a spec. In the main checkout the variable is relative
+silently turns every hook off for all worktrees). `tests/setup/clean-git-env.ts` (vitest `setupFiles`) exports `scrubGitEnv(env)` and deletes those variables (also
+`GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_NAMESPACE`, `GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`,
+`GIT_CONFIG_KEY_<n>`/`GIT_CONFIG_VALUE_<n>`, and `GIT_AUTHOR_*`/`GIT_COMMITTER_*`: the identity variables do not
+redirect the repository, but they override the `user.*` config the fixtures set, so they are removed too for
+reproducible fixtures). `tests/arch/test-env-isolation.spec.ts` unit-tests the function with a fake environment and
+asserts that `vitest.config.ts` registers the file in `setupFiles`. In the main checkout the variable is relative
 (`.git`) and happened to be harmless, which is why it went unnoticed.
 
 **Consequences.** A comment, a suppression, Catalan/Spanish text or an internal-system link now fails `pnpm gate` at
