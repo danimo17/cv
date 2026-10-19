@@ -136,6 +136,21 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    decision 2026-10-06). Same bucket by policy: other deliberate-evasion findings found by later reviews go here
    with a severity and do not block a close.
 
+9. **Comments inside Vue template expressions are not scanned by `tests/arch/no-code-comments.spec.ts`** (queued
+   2026-10-19, high-effort `/code-review` of `arch-rule-gates`; severity: low, a gap in coverage rather than a
+   gate bug). The spec scans `<script>` and `<style>` blocks and `<!-- -->` in templates, but a `//` or `/* */`
+   inside a template expression (`:prop="a /* why */"`, an inline event handler body) is not tokenized. Option:
+   parse the template expressions (`vue-eslint-parser` or a quote-aware scan of attribute values and
+   `{{ }}` interpolations) and run the script tokenizer over them. Documented as a known limit in decision 060 and
+   in the catalog.
+
+10. **The language check (rule 13) stays a heuristic** (queued 2026-10-19, same review; severity: low, accepted
+    limit). `tests/arch/language.spec.ts` flags a Catalan/Spanish letter or two distinct stopwords in one line, so
+    unaccented prose with fewer than two function words, and any other language, passes, and a foreign proper name
+    needs a per-token allowlist entry. A real language detector (a local n-gram model with no network, no new
+    runtime dependency in the app) would replace the word list; revisit only if the allowlist grows past the ten
+    groups that decision 060 sets as the limit.
+
 ## Out of scope
 
 - Actually building the CSS architecture change (`css-tailwind-first`, separate story/task).

@@ -315,6 +315,8 @@ text (binary files are skipped).
 - `tests/arch/rules-enforced-by-tests.spec.ts`: rules 02, 13, 14, 15 name their spec in "How it's checked", the spec
   exists, and the rule's own `hard-rules.md` row names it (a spec named only in another rule's row does not count).
   The backlog row status is deliberately not asserted: it is transient bookkeeping, not part of the rule.
+  A third test checks that every `decision NNN` cited in those four specs has a file under `.claude/docs/decisions/`
+  (a stale citation fails).
 
 ## Environments and deploy
 

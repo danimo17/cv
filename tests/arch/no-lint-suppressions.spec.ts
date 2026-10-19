@@ -63,7 +63,7 @@ describe('rule 15: zero suppressions', () => {
     }
   })
 
-  it('tests, e2e and non-markdown files under .claude are scanned; only .claude markdown prose is exempt', () => {
+  it('tests and e2e are scanned and only .claude markdown prose is exempt', () => {
     expect(FILES.some((file) => file.startsWith('tests/') && isScanned(file))).toBe(true)
     expect(FILES.some((file) => file.startsWith('e2e/') && isScanned(file))).toBe(true)
     expect(isScanned('tests/arch/require-contract-hook.spec.ts')).toBe(true)

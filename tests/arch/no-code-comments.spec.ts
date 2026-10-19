@@ -233,7 +233,7 @@ describe('rule 14: no comments in code', () => {
     expect(findScriptComments(clean)).toEqual([])
   })
 
-  it('a script tag whose attribute value holds a ">" is parsed from the real end of the tag', () => {
+  it('a script tag with a greater-than sign in an attribute value is parsed to the real end of the tag', () => {
     const vue = '<script setup lang="ts" generic="T extends Foo<Bar>">const a = 1 // note</script>'
     expect(findVueComments(vue).map((hit) => hit.line)).toEqual([1])
     const multiline = "<script setup generic='T extends Map<string, Foo>'>\n// note\n</script>"

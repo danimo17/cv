@@ -1,8 +1,8 @@
 // @vitest-environment node
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { ROOT } from './support/repo-files'
+import { ROOT, readText } from './support/repo-files'
 
 // Rule file -> the specs its "How it's checked" paragraph and its hard-rules.md row must name (rule 19: an
 // ensure is a gate).
@@ -43,7 +43,7 @@ describe('rules enforced by tests', () => {
     }
   })
 
-  it("each rule's own hard-rules.md row names the same spec", () => {
+  it('the hard-rules.md row of each rule names the same spec', () => {
     const table = readFileSync(join(ROOT, '.claude', 'hard-rules.md'), 'utf8')
     for (const [ruleFile, specs] of Object.entries(ENFORCED_BY)) {
       const row = hardRulesRow(table, ruleNumber(ruleFile))
@@ -60,5 +60,20 @@ describe('rules enforced by tests', () => {
     expect(hardRulesRow(table, '13')).toContain('tests/arch/language.spec.ts')
     expect(hardRulesRow(table, '14')).not.toContain('tests/arch/language.spec.ts')
     expect(hardRulesRow(table, '15')).toBeUndefined()
+  })
+
+  it('decisions cited by the rule specs exist', () => {
+    const decisions = readdirSync(join(ROOT, '.claude', 'docs', 'decisions'))
+    const specs = [...new Set(Object.values(ENFORCED_BY).flat())]
+    for (const spec of specs) {
+      const text = readText(spec) ?? ''
+      const cited = [...text.matchAll(/decisions? (\d{3})\b/g)].map((match) => match[1]!)
+      for (const number of cited) {
+        expect(
+          decisions.some((file) => file.startsWith(`${number}-`)),
+          `${spec} cites decision ${number}`
+        ).toBe(true)
+      }
+    }
   })
 })
