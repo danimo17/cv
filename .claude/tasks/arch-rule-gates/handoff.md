@@ -11,9 +11,9 @@ _Updated: 2026-10-19 15:00. REAL state of the `feat/arch-rule-gates` branch._
 - [x] validate — evidence: 2026-10-19 pnpm gate (format:check clean, eslint 0 errors / 1 pre-existing warning, nuxt typecheck clean, 626 tests) at 5aec19e, see Validation
 - [x] handoff — evidence: 89e26bd (first handoff), rewritten for the review round by the commit that records the review
 - [x] commit — evidence: 5aec19e
-- [ ] review — evidence:
+- [x] review — evidence: 8cf84c3 (the commit that recorded the high-effort `code-review` round of 2026-10-19 in `## Review`: findings r1-1 to r1-12, each with outcome and proof; no code change after it)
 - [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] gate-push — evidence: pnpm gate:push on 5aec19e (2026-10-19, real log read, EXIT=0; the code tree is identical at the tip, only `.claude/` changed since): Test Files 31 passed (31), Tests 626 passed (626), nuxt build "Build complete!", e2e 5 passed (12.4s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -30,7 +30,7 @@ _Updated: 2026-10-19 15:00. REAL state of the `feat/arch-rule-gates` branch._
 
 ## In progress / not done
 
-- Review round 1 is recorded below; close-out, gate-push and push-pr are intentionally unticked until their commits exist.
+- Review round 1 is recorded below (8cf84c3); gate:push ran green on the final code; the close-out commit follows as the last commit, push-pr stays unticked until the push and the PR exist.
 - Stray state from the earlier leak in the shared repository was seen mid-task (branches `feat/demo`, `chore/x`, `feat/other`, junk commits on `feat/orphan-refs-and-scope`, and the shared `core.hooksPath` repointed at a temp dir several times while sibling worktrees ran their gates). The authors of this branch's commits were fixed and its history rewritten earlier (the old evidence shas bb1e85e, f5a2bfd, 54d84e4, d2faffc and 0a6438a became 95a0f8c, d7aa791, 30abfca, 89e26bd and f430c1f); the shared config was verified at every gate run of this round (`core.bare=false`, `core.hooksPath=.githooks`, user `danimo17`). The siblings carry the leak until they take `tests/setup/clean-git-env.ts` from this branch.
 
 ## Subagents (rule 12)
