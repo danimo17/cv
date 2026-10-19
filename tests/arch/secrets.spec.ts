@@ -46,7 +46,7 @@ function basename(path: string): string {
   return path.split('/').pop() ?? path
 }
 
-describe('secrets never reach the repo (regla 01)', () => {
+describe('secrets never reach the repo (rule 01)', () => {
   const files = gitFiles()
 
   it('no dotenv file is tracked or untracked-unignored', () => {

@@ -13,7 +13,7 @@ below **for** a more consistent, less cluttered button system across the site.
 ### 1. Icon/text/loading redesign (original ask)
 
 - Every button always has an icon — mandatory, not optional.
-- Text becomes optional; the default pattern (proposed by the AI, user said "sí o no" — still open) is
+- Text becomes optional; the default pattern (proposed by the AI, user said "yes or no" — still open) is
   icon-only + the action's text shown as a tooltip on hover.
 - Buttons need an async-action API: pass an action; while it's pending, swap the icon for a rotating
   FontAwesome loading icon (new `LoadingIcon` component if needed) and apply the _hover_ visual style until

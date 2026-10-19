@@ -1,6 +1,6 @@
 name: deploy
-# Es dispara quan el workflow `ci` acaba sobre `main`; només desplega si ha acabat en verd.
-# Alternativa descartada: `push` a main repetint la gate aquí (dobla el temps i duplica la definició de la gate).
+# Triggered when the `ci` workflow finishes on `main`; it only deploys if it finished green.
+# Rejected alternative: `push` to main repeating the gate here (doubles the time and duplicates the gate definition).
 on:
   workflow_run:
     workflows: [ci]
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha }} # el commit exacte que ha passat la gate, no "l'últim de main"
+          ref: ${{ github.event.workflow_run.head_sha }} # the exact commit that passed the gate, not "the latest on main"
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:

@@ -9,7 +9,7 @@ dist
 test-results
 playwright-report
 coverage
-# secrets (regla 01): mai al repo
+# secrets (rule 01): never in the repo
 .env
 .env.*
 !.env.example

@@ -13,7 +13,7 @@ describe('CustomImage', () => {
     expect(wrapper.attributes('sizes')).toBeUndefined()
   })
 
-  it('reflects srcset/sizes when passed (decisió 037)', async () => {
+  it('reflects srcset/sizes when passed (decision 037)', async () => {
     const wrapper = await mountSuspended(CustomImage, {
       props: {
         src: '/img/daniel.jpg',

@@ -277,6 +277,29 @@ worktrees, so every hook silently stopped running). The setup file deletes those
 any spec runs; the spec fails if any of them is still present (red proof: `GIT_DIR=/some/path vitest run
 tests/arch/test-env-isolation.spec.ts` without the setup file).
 
+**Arch tests for rules 02, 13, 14 and 15 (decision 060).** Shared helper `tests/arch/support/repo-files.ts` lists the
+tracked-plus-untracked-not-ignored files (`git ls-files --cached --others --exclude-standard`) and reads them as
+text (binary files are skipped).
+
+- `tests/arch/no-code-comments.spec.ts` (rule 14): tokenizes `.ts`/`.mts`/`.js`/`.mjs`/`.cjs`/`.vue`/`.css` under
+  `app/`, `server/`, `shared/` and `nuxt.config.ts`, `eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`
+  (strings, template literals and regex literals are skipped, so `https://` is not a comment). Any `//`, `/* */`
+  or `<!-- -->` fails, except `// #region <Static variables|Reactive variables|Methods|Component data|Lifecycle|State|Getters>`
+  and `// #endregion` under `app/composables/` and `app/stores/`. Two more tests pin the scanner (false positives) and
+  the marker rule.
+- `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
+  `@ts-ignore`, `@ts-nocheck` in any tracked file outside `tests/`, `e2e/`, `.claude/` and the lockfile.
+- `tests/arch/language.spec.ts` (rule 13): per line, flags Catalan/Spanish letters, a list of non-English words, and
+  three or more shared function words, in every tracked text file outside `i18n/locales/`. The whole-file allowlist
+  lives inside the spec with a reason per entry (at most ten, asserted); a false positive is an entry, not a weaker
+  heuristic.
+- `tests/arch/no-internal-resources.spec.ts` (rule 02): Atlassian cloud hosts, Jira ticket / Confluence / Slack message
+  URLs, GitHub URLs of the company organization, company sub-domains other than `www`, company e-mail addresses and internal-looking
+  hostnames in any tracked file. Each marker has a sample the spec proves it matches; `https://www.pdpaola.com`
+  (public CV fact) must stay unmatched.
+- `tests/arch/rules-enforced-by-tests.spec.ts`: rules 02, 13, 14, 15 name their spec in "How it's checked", the spec
+  exists, `hard-rules.md` names it, and backlog row `arch-no-comments-no-suppressions` is `done`.
+
 ## Environments and deploy
 
 Decisions: 021 (environments), 022 (scans), 024 (GitHub environment, secrets, ruleset).
