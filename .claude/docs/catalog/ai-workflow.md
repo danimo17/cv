@@ -295,7 +295,9 @@ text (binary files are skipped).
   and `// #endregion` under `app/composables/` and `app/stores/`. Two more tests pin the scanner (false positives) and
   the marker rule.
 - `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
-  `@ts-ignore`, `@ts-nocheck` in any tracked file outside `tests/`, `e2e/`, `.claude/` and the lockfile.
+  `@ts-ignore`, `@ts-nocheck` in any tracked file, `tests/` and `e2e/` included. Only markdown files under `.claude/`
+  (documentation prose that quotes the directives) and the lockfile are skipped; the spec builds its samples from
+  fragments so it matches nothing itself and no test file is exempt.
 - `tests/arch/language.spec.ts` (rule 13): per line, flags a Catalan/Spanish letter, or at least two distinct words
   from a curated Catalan/Spanish stopword list (function words that are not English words nor locale codes), in every
   tracked text file outside `i18n/locales/`. An unaccented Catalan sentence is caught by its function words; one foreign

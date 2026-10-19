@@ -14,8 +14,11 @@ repository (see the last section).
   `app/composables/` and `app/stores/` (decision 052). One violation existed: `// @ts-check` at the top of
   `eslint.config.mjs` (a type-check pragma for the editor, no runtime effect), removed.
 - `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
-  `@ts-ignore`, `@ts-nocheck` fail in any tracked file outside `tests/`, `e2e/` and `.claude/` (the last quotes the
-  directives while describing the rule). No violation existed.
+  `@ts-ignore`, `@ts-nocheck` fail in any tracked file, `tests/` and `e2e/` included (rule 15 says "anywhere"; only
+  rule 14 grants tests a comment exception). The one exemption is markdown documentation under `.claude/` that quotes
+  the directives while describing the rule; hooks, JSON and every other file there are scanned. The spec builds its
+  own samples from fragments, so no test file is exempt. The first version skipped `tests/`, `e2e/` and all of
+  `.claude/` (high-effort review, 2026-10-19). No violation existed.
 - `tests/arch/language.spec.ts` (rule 13): no dictionary, two heuristics: a Catalan/Spanish letter in the line, or at
   least two distinct words from a curated Catalan/Spanish stopword list (function words only, none of them an English
   word or a locale code, none copied from the violations the first version found). The first version's word list
