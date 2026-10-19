@@ -13,8 +13,11 @@ second 2026-10-06 amendments).
 
 Decision 059 adds, to the commit checks: rule 12 delegation (a subagent row in the handoff for multi-file code
 commits), a wider rule 11 list of structural config, and rule 16 shared-component consumers; and, to the Claude
-hook only, the unmerged-feat-branch check on branch creation. The Claude hook resolves the repository from the
-payload cwd (then CLAUDE_PROJECT_DIR, then ".").
+hook only, the unmerged-feat-branch check on branch creation. The Claude hook judges each git call in the
+repository it acts on: the call's `cd <dir>` / `git -C <dir>` target, else the payload cwd, else
+CLAUDE_PROJECT_DIR, else "."; only the project repository (or a worktree sharing its git common dir) is gated, any
+other repository is ignored. Heredoc bodies and quoted strings are masked before commands are matched, and the
+checks that read git state block (fail closed) when git errors.
 
 Behavior is documented in .claude/docs/catalog/ai-workflow.md; tests in tests/arch/require-contract-hook.spec.ts.
 Exit 2 = blocked, the reason is printed on stderr. The task slug of a feat/<slug> branch is <slug>;
@@ -101,18 +104,18 @@ CREATE_FLAGS = {
 BRANCH_CREATE_FLAGS = ("-f", "--force", "-t", "--track", "--no-track", "-q", "--quiet", "--create-reflog")
 BACKLOG_PATH = ".claude/backlog.md"
 DELEGATED_PREFIXES = ("app/", "server/", "shared/")
+NON_CODE_PREFIXES = ("app/assets/css/", "app/data/", "i18n/locales/")
+SLUG_CELL = re.compile(r"[a-z0-9][a-z0-9-]*")
 DELEGATION_MAX_FILES = 1
 DELEGATION_MAX_LINES = 15
-STRUCTURAL_FILES = (
-    "nuxt.config.ts",
-    "eslint.config.mjs",
+LEGACY_STRUCTURAL_FILES = ("nuxt.config.ts", "eslint.config.mjs")
+STRUCTURAL_FILES = LEGACY_STRUCTURAL_FILES + (
     "playwright.config.ts",
     "vitest.config.ts",
     "wrangler.jsonc",
     "pnpm-workspace.yaml",
     ".claude/hard-rules.md",
 )
-LEGACY_STRUCTURAL_FILES = ("nuxt.config.ts", "eslint.config.mjs")
 STRUCTURAL_PREFIXES = (".github/workflows/", ".githooks/", ".claude/hooks/")
 RULES_PREFIX = ".claude/rules/"
 DECISIONS_PREFIX = ".claude/docs/decisions/"
@@ -415,9 +418,23 @@ def stale_review_problem(content, tip, slug, base_ref=None):
     return None
 
 
-def backlog_slugs(rev):
-    rows = (git_show(rev, ".claude/backlog.md") or "").splitlines()
-    return {m.group(1) for m in (re.match(r"^\|\s*([a-z0-9][a-z0-9-]*)\s*\|", r) for r in rows) if m}
+def backlog_rows(text):
+    rows = []
+    for line in (text or "").splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip().strip("`").strip() for c in line.strip().strip("|").split("|")]
+        if SLUG_CELL.fullmatch(cells[0]):
+            rows.append((cells[0], [c.lower() for c in cells[1:]]))
+    return rows
+
+
+def backlog_slugs(text):
+    return {slug for slug, _ in backlog_rows(text)}
+
+
+def doing_slugs(text):
+    return {slug for slug, cells in backlog_rows(text) if "doing" in cells}
 
 
 def test_titles(content):
@@ -514,7 +531,7 @@ def finding_proof_problem(outcome, proof, rev, base_ref, slugs):
 
 def review_findings_problems(path, review, rev, base_ref=None):
     found = []
-    slugs = backlog_slugs(rev)
+    slugs = backlog_slugs(git_show(rev, BACKLOG_PATH))
     compared = resolve_base(base_ref)
     count = 0
     for _, line in outside_fences(review):
@@ -627,16 +644,19 @@ def check_close(slug, status):
         fail(f"Rule 10 (task-close-gate): {archive}: {stale}")
 
 
-def working_tree_active():
+def read_working_file(relative_path):
     try:
-        with open(os.path.join(root, TASKS_PREFIX, "ACTIVE"), encoding="utf-8") as f:
-            return f.read().strip()
+        with open(os.path.join(root, relative_path), encoding="utf-8") as f:
+            return f.read()
     except OSError:
         return ""
 
 
-def task_slug_for_commit():
-    branch = current_branch()
+def working_tree_active():
+    return read_working_file(f"{TASKS_PREFIX}ACTIVE").strip()
+
+
+def task_slug_for_commit(branch):
     if not branch.startswith(FEAT_PREFIX):
         return working_tree_active()
     slug = branch[len(FEAT_PREFIX):]
@@ -674,33 +694,32 @@ def untested_code_problem(slug, staged):
     )
 
 
-def branch_is_feat():
-    return current_branch().startswith(FEAT_PREFIX)
-
-
 def package_json_keys(raw):
-    if raw is None:
-        return None
     try:
-        data = json.loads(raw)
+        data = json.loads(raw) if raw is not None else {}
     except ValueError:
-        return "invalid"
+        data = None
     if not isinstance(data, dict):
-        return "invalid"
+        return {"invalid": True}
     return {key: data.get(key) for key in PACKAGE_STRUCTURAL_KEYS}
 
 
-def package_json_structural():
-    before = package_json_keys(git_show("HEAD", PACKAGE_JSON))
-    after = package_json_keys(git_show("", PACKAGE_JSON))
-    if before == "invalid" or after == "invalid" or after is None:
+def package_json_structural(code):
+    if code == "D":
         return True
-    if before is None:
-        return any(value is not None for value in after.values())
-    return before != after
+    before_raw = git_show("HEAD", PACKAGE_JSON)
+    after_raw = git_show("", PACKAGE_JSON)
+    if after_raw is None or (before_raw is None and code != "A"):
+        fail(
+            f"Rule 11: could not read {PACKAGE_JSON} from the index or HEAD (git show failed), so whether "
+            "the commit changes dependencies cannot be checked. Retry the commit; if it persists, repair the "
+            "repository state."
+        )
+    before, after = package_json_keys(before_raw), package_json_keys(after_raw)
+    return "invalid" in before or "invalid" in after or before != after
 
 
-def is_structural(path, include_wider):
+def is_structural(path, code, include_wider):
     if path in LEGACY_STRUCTURAL_FILES:
         return True
     if not include_wider:
@@ -709,29 +728,71 @@ def is_structural(path, include_wider):
         return True
     if path.startswith(RULES_PREFIX) and path.endswith(".md"):
         return True
-    return path == PACKAGE_JSON and package_json_structural()
+    return path == PACKAGE_JSON and package_json_structural(code)
 
 
-def structural_problem(status):
-    include_wider = not special_commit_in_progress()
-    found = [p for p in sorted(status) if is_structural(p, include_wider)]
+def decision_texts(status):
+    texts = [
+        git_show("", path) or ""
+        for path, code in sorted(status.items())
+        if path.startswith(DECISIONS_PREFIX) and code != "D"
+    ]
+    base = resolve_base(None)
+    if base:
+        for path in git_nul(
+            ["diff", "--name-only", "--diff-filter=AM", "-z", f"{base}...HEAD", "--", DECISIONS_PREFIX]
+        ):
+            texts.append(git_show("HEAD", path) or "")
+    return texts
+
+
+def decision_mentions(texts, path):
+    needles = [os.path.basename(path)]
+    if os.path.dirname(path):
+        needles.append(os.path.dirname(path) + "/")
+    return any(needle in text for text in texts for needle in needles)
+
+
+def structural_problem(status, special):
+    found = [p for p in sorted(status) if is_structural(p, status[p], not special)]
     if not found:
         return
-    if any(p.startswith(DECISIONS_PREFIX) and code != "D" for p, code in status.items()):
+    texts = decision_texts(status)
+    uncovered = [p for p in found if not decision_mentions(texts, p)]
+    if not uncovered:
         return
     fail(
-        f"Rule 11: this commit changes structural config ({', '.join(found)}) but stages no file under "
-        f"{DECISIONS_PREFIX}. Architecture/config changes need a decision record in the same commit — write "
-        "one (see decision 041 for the pattern) and stage it."
+        f"Rule 11: this commit changes structural config ({', '.join(uncovered)}) but no decision record "
+        f"under {DECISIONS_PREFIX} that mentions it (the file name or its directory) is staged in this "
+        "commit or was added earlier on this branch. Architecture/config changes need a decision record — "
+        "write one (see decision 041 for the pattern) naming what changes and stage it."
     )
 
 
+def counts_as_code(path):
+    return path.startswith(DELEGATED_PREFIXES) and not path.startswith(NON_CODE_PREFIXES)
+
+
 def staged_code_size():
-    out = git(["diff", "--cached", "--numstat", "--no-renames", "-z"]) or ""
+    out = git(["diff", "--cached", "--numstat", "-M", "-z"])
+    if out is None:
+        fail(
+            "Rule 12: could not read the staged diff (git diff --cached --numstat failed), so the size of "
+            "the code change cannot be checked. Retry the commit; if it persists, repair the repository state."
+        )
+    tokens = out.split("\0")
     files = lines = 0
-    for entry in out.split("\0"):
-        parts = entry.split("\t", 2)
-        if len(parts) != 3 or not parts[2].startswith(DELEGATED_PREFIXES):
+    i = 0
+    while i < len(tokens):
+        parts = tokens[i].split("\t", 2)
+        i += 1
+        if len(parts) != 3:
+            continue
+        paths = [parts[2]]
+        if not parts[2]:
+            paths = tokens[i:i + 2]
+            i += 2
+        if not any(counts_as_code(p) for p in paths):
             continue
         files += 1
         lines += sum(int(n) for n in parts[:2] if n.isdigit())
@@ -790,14 +851,16 @@ def commit_checks():
     status = staged_changes()
     staged = list(status)
     closing = closing_slugs(status)
+    branch = current_branch()
+    special = special_commit_in_progress()
 
     for slug in closing:
         check_close(slug, status)
 
-    slug = task_slug_for_commit()
+    slug = task_slug_for_commit(branch)
 
     if closing or not slug:
-        docs_only_exempt = not closing and special_commit_in_progress()
+        docs_only_exempt = not closing and special
         if not docs_only_exempt and not all(f.startswith(CLAUDE_PREFIX) for f in staged):
             fail(
                 "Rule 10: no active task (a non-feat branch with .claude/tasks/ACTIVE empty, or a "
@@ -827,12 +890,12 @@ def commit_checks():
         if code in ("A", "M") and (HANDOFF_PATH.match(path) or ARCHIVE_PATH.match(path)):
             check_progress_evidence(path, git_show("", path) or "")
 
-    structural_problem(status)
+    structural_problem(status, special)
 
-    if slug and not closing and not special_commit_in_progress():
+    if slug and not closing and not special:
         untested_code_problem(slug, staged)
         shared_component_problem(slug, status)
-        if branch_is_feat():
+        if branch.startswith(FEAT_PREFIX):
             delegation_problem(slug)
 
 
@@ -1132,23 +1195,6 @@ def call_root(cmd, masked, position, opts, cwd):
     return top if is_project_repo(top) else None
 
 
-def doing_slugs(backlog):
-    found = set()
-    for line in (backlog or "").splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.startswith("|") else []
-        if len(cells) > 1 and any(c.lower() == "doing" for c in cells[1:]):
-            found.add(cells[0])
-    return found
-
-
-def working_tree_backlog():
-    try:
-        with open(os.path.join(root, BACKLOG_PATH), encoding="utf-8") as f:
-            return f.read()
-    except OSError:
-        return ""
-
-
 def created_branch(sub, rest):
     try:
         tokens = shlex.split(rest)
@@ -1175,12 +1221,22 @@ def created_branch(sub, rest):
 def orphaned_feat_branches(new_slug):
     base = resolve_base(None)
     if not base:
-        return []
+        fail(
+            "Rule 06/18 (decision 059): no base branch (origin/main or main) resolves in this repository, so "
+            "the unmerged feat branches cannot be found before creating a new one. Create or fetch the base "
+            "branch, or for this command only prefix it with `ALLOW_UNMERGED_FEAT=1 `."
+        )
     out = git(
         ["for-each-ref", f"--no-merged={base}", "--format=%(refname)%09%(subject)",
          f"refs/heads/{FEAT_PREFIX}", f"refs/remotes/origin/{FEAT_PREFIX}"]
-    ) or ""
-    parallel = doing_slugs(working_tree_backlog())
+    )
+    if out is None:
+        fail(
+            "Rule 06/18 (decision 059): could not list the feat branches (git for-each-ref failed), so the "
+            "unmerged ones cannot be found before creating a new one. Retry, or for this command only prefix "
+            "it with `ALLOW_UNMERGED_FEAT=1 `."
+        )
+    parallel = doing_slugs(read_working_file(BACKLOG_PATH))
     found = {}
     for line in out.splitlines():
         ref, _, subject = line.partition("\t")

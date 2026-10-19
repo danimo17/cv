@@ -84,6 +84,33 @@ findings are applied here; each one has a test in `tests/arch/require-contract-h
    of the hook script) or a worktree sharing its git common dir (`git rev-parse --git-common-dir`, real paths). A call
    in any other repository is ignored: the hook exits 0 and does not even refuse `--no-verify` there. A directory
    that does not exist, or the fallbacks (`CLAUDE_PROJECT_DIR`, `.`), are trusted as the project.
-3. **Quoted and heredoc text is not a command.** Before matching, heredoc bodies (when the delimiter line exists) and
+3. **Rule 11 needs a decision that mentions the file.** A structural change passes when a decision record under
+   `.claude/docs/decisions/` that contains the file name or its directory prefix (`.claude/hooks/`, `.github/workflows/`,
+   `.claude/rules/`, ...) is staged in the commit (not deleted) or was added or modified earlier on the branch (diff
+   `origin/main...HEAD`, else `main...HEAD`). An unrelated decision no longer satisfies it, and a follow-up commit no
+   longer needs a new decision when the branch already carries one that names the file. Every changed structural
+   file must be covered, and the message lists the uncovered ones.
+4. **Rule 12 counting.** Renames are detected (`git diff --cached -M`) and count as one file. Paths under
+   `app/assets/css/`, `app/data/` and `i18n/locales/` do not count as code (stylesheets and content tables are not the
+   logic that rule 12 asks to delegate); a real code file needs its `## Subagents` row as before.
+5. **Quoted and heredoc text is not a command.** Before matching, heredoc bodies (when the delimiter line exists) and
    the contents of single and double quoted strings are masked; commit and push calls and the branch-creating
    calls are matched on the masked text only, and their options and arguments are read from the real text.
+6. **One read per run.** `commit_checks` reads the current branch and the merge/rebase markers once and passes the
+   values down.
+7. **Helpers.** One backlog-table parser (slug cells may be written in backticks) serves the `doing` rows and the
+   `queued` proofs; one reader for the working-tree `ACTIVE` and backlog; `use_cwd_repo` reuses `repo_containing`;
+   the legacy structural files are the head of `STRUCTURAL_FILES`; `package_json_keys` always returns a dict.
+8. **Fail closed.** The orphaned-branch check blocks when no base branch resolves or `git for-each-ref` fails; the
+   rule 12 size check blocks when `git diff --cached --numstat` fails; the rule 11 `package.json` comparison blocks
+   when the file cannot be read from `HEAD` or the index. Each message names the failure; `ALLOW_UNMERGED_FEAT=1`
+   still skips the branch check.
+
+Deliberate-evasion findings are queued, not built (`workflow-integrity-hardening` item 9): branch creation through
+`checkout --orphan`, `switch --orphan`, `worktree add -b`, `branch -c`, wrappers (`sh -c`, `xargs`), the unaudited
+`ALLOW_UNMERGED_FEAT=1` prefix, and the placeholder-row weakness of the rule 12 table (any non-empty first cell
+passes).
+
+Limits: the cd/`-C` resolution ignores subshells, pipelines and shell variables (`cd $DIR`); the masking is a
+lexical scan (an unterminated heredoc is left unmasked, a nested quote inside `$(...)` inside a double quote can
+leave a stretch of text unmasked); a decision satisfies rule 11 by mentioning the file name anywhere in its text.
