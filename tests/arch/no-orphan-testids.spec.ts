@@ -1,8 +1,9 @@
 // @vitest-environment node
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 // Rule 20: a test must never reference a data-testid that no component renders. The scan reads the text of
 // every tracked or new (non-ignored) test file and component, so a renamed or removed id fails the gate
@@ -18,7 +19,7 @@ interface DynamicPrefix {
 
 const DYNAMIC_PREFIXES: DynamicPrefix[] = []
 
-const TEST_FILE = /^(e2e\/.+\.spec\.ts|tests\/unit\/.+\.(?:ts|js|vue))$/
+const TEST_FILE = /^(e2e\/.+\.(?:ts|js|mts|mjs)|tests\/unit\/.+\.(?:ts|js|vue))$/
 const COMPONENT_FILE = /^app\/.+\.vue$/
 
 const BY_TEST_ID = /\b(?:get|find|query)(?:All)?ByTestId\(\s*(?:(['"`])([^]*?)\1|([^\s)'"`][^)]*))/g
@@ -128,30 +129,62 @@ function orphans(
   return problems
 }
 
-function scan(): { references: Array<TestReference & { file: string }>; components: ComponentIds } {
+function isTestFile(file: string): boolean {
+  return TEST_FILE.test(file)
+}
+
+interface Source {
+  file: string
+  text: string
+}
+
+function readSources(root: string, paths: string[]): Source[] {
+  return paths
+    .filter((file) => existsSync(join(root, file)))
+    .map((file) => ({ file, text: readFileSync(join(root, file), 'utf8') }))
+}
+
+interface Scan {
+  references: Array<TestReference & { file: string }>
+  components: ComponentIds
+}
+
+let scanCount = 0
+
+function scan(): Scan {
+  scanCount++
   const files = trackedFiles()
-  const references = files
-    .filter((file) => TEST_FILE.test(file))
-    .flatMap((file) =>
-      testReferences(readFileSync(join(ROOT, file), 'utf8')).map((ref) => ({ ...ref, file }))
-    )
+  const references = readSources(ROOT, files.filter(isTestFile)).flatMap((source) =>
+    testReferences(source.text).map((ref) => ({ ...ref, file: source.file }))
+  )
   const components: ComponentIds = {
     literals: new Set(),
     boundPrefixes: new Set(),
     unresolvableBindings: [],
   }
-  for (const file of files.filter((f) => COMPONENT_FILE.test(f))) {
-    const ids = componentIds(readFileSync(join(ROOT, file), 'utf8'))
+  for (const source of readSources(
+    ROOT,
+    files.filter((f) => COMPONENT_FILE.test(f))
+  )) {
+    const ids = componentIds(source.text)
     ids.literals.forEach((id) => components.literals.add(id))
     ids.boundPrefixes.forEach((id) => components.boundPrefixes.add(id))
-    components.unresolvableBindings.push(...ids.unresolvableBindings.map((b) => `${file}: ${b}`))
+    components.unresolvableBindings.push(
+      ...ids.unresolvableBindings.map((b) => `${source.file}: ${b}`)
+    )
   }
   return { references, components }
 }
 
 describe('test ids referenced by tests exist in components (rule 20)', () => {
+  let scanned: Scan
+
+  beforeAll(() => {
+    scanned = scan()
+  })
+
   it('every test id used in tests exists in a component', () => {
-    const { references, components } = scan()
+    const { references, components } = scanned
     expect(
       references.length,
       'the scan found no test id references: the patterns broke'
@@ -164,7 +197,7 @@ describe('test ids referenced by tests exist in components (rule 20)', () => {
   })
 
   it('every dynamic data-testid binding in a component is a documented prefix', () => {
-    const { components } = scan()
+    const { components } = scanned
     const documented = DYNAMIC_PREFIXES.map((entry) => entry.prefix)
     expect([...components.boundPrefixes].filter((prefix) => !documented.includes(prefix))).toEqual(
       []
@@ -173,7 +206,7 @@ describe('test ids referenced by tests exist in components (rule 20)', () => {
   })
 
   it('every documented dynamic prefix has a reason and a matching component binding', () => {
-    const { components } = scan()
+    const { components } = scanned
     for (const entry of DYNAMIC_PREFIXES) {
       expect(entry.reason.trim().length, `reason for ${entry.prefix}`).toBeGreaterThan(10)
       expect(components.boundPrefixes.has(entry.prefix), `binding for ${entry.prefix}`).toBe(true)
@@ -202,5 +235,43 @@ describe('test ids referenced by tests exist in components (rule 20)', () => {
     const allowed = [{ prefix: 'row-', reason: 'rows are numbered by the data' }]
     const withAllowlist = orphans(references, components, allowed)
     expect(withAllowlist.some((p) => p.includes('row-'))).toBe(false)
+  })
+
+  it('a tracked file deleted from the working tree is skipped instead of crashing the scan', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'orphan-scan-'))
+    try {
+      mkdirSync(join(dir, 'e2e'))
+      writeFileSync(join(dir, 'e2e', 'kept.spec.ts'), "page.getByTestId('kept')")
+      const sources = readSources(dir, ['e2e/gone.spec.ts', 'e2e/kept.spec.ts'])
+      expect(sources.map((source) => source.file)).toEqual(['e2e/kept.spec.ts'])
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('e2e helpers, page objects and fixtures are scanned like the specs', () => {
+    for (const file of [
+      'e2e/meme-flow.spec.ts',
+      'e2e/helpers/open-menu.ts',
+      'e2e/pages/MemePage.ts',
+      'e2e/fixtures/seed.js',
+      'tests/unit/components/MemeCard.spec.ts',
+      'tests/unit/helpers/mount.ts',
+      'tests/unit/stubs/Stub.vue',
+    ]) {
+      expect(isTestFile(file), file).toBe(true)
+    }
+    for (const file of [
+      'tests/arch/no-orphan-testids.spec.ts',
+      'app/components/cv/Hero.vue',
+      'e2e/data.json',
+      'playwright.config.ts',
+    ]) {
+      expect(isTestFile(file), file).toBe(false)
+    }
+  })
+
+  it('the repository is scanned once for the whole file', () => {
+    expect(scanCount).toBe(1)
   })
 })
