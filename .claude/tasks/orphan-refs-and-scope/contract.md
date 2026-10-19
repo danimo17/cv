@@ -13,6 +13,11 @@
 | 5   | Given `.claude/templates/contract.md` and `.claude/workflow.md`'s Story/Contract steps, When read, Then the contract template has a `## Shared component consumers` section (grep result of consumers, and the user's answer: only here / everywhere) and the workflow says to ask that question before writing the contract for any component under `app/components/shared/` or used from more than one parent; rule 11's text references it | `tests/arch/orphan-refs-docs.spec.ts` › "contract template and workflow require the shared component consumers question"                                       |
 | 6   | Given the catalog, When read, Then `ai-workflow.md` documents the new spec and rule 20 (rule 07)                                                                                                                                                                                                                                                                                                                                              | `tests/arch/docs-sync.spec.ts` (existing) + criterion 3/5 specs + `tests/arch/orphan-refs-docs.spec.ts` › "the catalog documents rule 20 and the orphan specs" |
 
+**Notes:** `tests/setup/clean-git-env.ts`, its entry in `vitest.config.ts` and `tests/arch/test-env-isolation.spec.ts`
+are identical copies of the files of `feat/arch-rule-gates` (f5a2bfd), carried here only so that this branch's
+pre-commit gate cannot touch the shared repository. They are owned by `arch-rule-gates`, which also documents them
+in its catalog; they are not part of criteria 1-6 and are not changed here.
+
 ## Subagent assignments (rule 12)
 
 | Subagent              | Scope                                                                     | Criteria |

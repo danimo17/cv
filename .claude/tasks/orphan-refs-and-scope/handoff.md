@@ -52,14 +52,13 @@ steps (`merge`, `deploy-check`) are not listed here.
 - No dedicated orphan check for props, classes and i18n keys (stated in rule 20 and the catalog; typecheck,
   `i18n-parity.spec.ts` and review cover them).
 - `hard-rules.md` has no row 19 (rule 19's file exists, its row was never added); not touched here, row 20 follows row 18.
-- Found while committing from this linked worktree: the pre-commit hook inherits `GIT_DIR`/`GIT_INDEX_FILE`, and
-  `tests/arch/require-contract-hook.spec.ts` spawns `git` with `process.env`, so its throwaway-repo commands ran
-  against the real repository: the shared `.git/config` got `core.bare=true`, `user.name=Test`,
-  `user.email=test@example.com`, `commit.gpgsign=false`, the branch ref moved to throwaway commits, and stray
-  branches `feat/demo`, `feat/other`, `chore/x` appeared (created 2026-10-13 18:19, by an earlier hook run). Repaired
-  locally (config restored to the repo identity `danimo17`, branch re-based on `cbba912`, commits recreated).
-  The commits here were made with a scratch `pnpm` wrapper on `PATH` that unsets `GIT_*` before running the
-  unchanged gate. Root cause NOT fixed in this task (hooks and the hook spec belong to `hook-hardening`).
+- Found while committing from this linked worktree: the pre-commit hook inherits `GIT_DIR`/`GIT_INDEX_FILE` and a
+  spec spawned `git` with `process.env`, so its throwaway-repo commands ran against the real repository (shared
+  `.git/config` got `core.bare=true` and a test identity, branch ref moved, stray branches). Repaired locally.
+  The isolation files (`tests/setup/clean-git-env.ts`, the `setupFiles` line of `vitest.config.ts`,
+  `tests/arch/test-env-isolation.spec.ts`) are identical copies of `feat/arch-rule-gates` (f5a2bfd), carried here
+  only so this branch's gate is safe. They are owned by `arch-rule-gates`, which fixes and documents them in its
+  catalog; the main thread syncs them afterwards. They are not changed in this task.
 - `hook-hardening` (sibling) owns the commit-time hook check of the `## Shared component consumers` section.
 
 ## Subagents (rule 12)
