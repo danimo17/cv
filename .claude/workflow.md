@@ -14,11 +14,15 @@ same id order and title as that file, the handoff's `## Workflow progress` block
    <value>", out of scope, external dependencies. Added to `.claude/backlog.md` with status `doing` and
    Branch `feat/<slug>`: the slug is the branch name, so `.claude/tasks/ACTIVE` is neither required nor updated on
    feat branches (decision 057 amendment: several `feat/*` branches can run in parallel without sharing a
-   file; the hooks ignore `ACTIVE` there).
+   file; the hooks ignore `ACTIVE` there). If the story touches a shared component (see step 2), say so in
+   the story: the scope question comes right after it.
 2. **Contract** — `contract.md` (template `templates/contract.md`): Given/When/Then criteria, each with the
    test that will cover it (file + name), declared data sources (rule 02), standards to consult, open
    questions with a destination (`decided:` / `owner:` / `docs/decisions/NNN`). The `require-contract` hook blocks
-   commits if it doesn't exist. The contract is written by the main thread (rule 12).
+   commits if it doesn't exist. The contract is written by the main thread (rule 12). For any component under
+   `app/components/shared/` or used from more than one parent, grep its consumers and **ask** the user before
+   writing the contract whether the change applies only here or everywhere; the grep result and the answer go in
+   the contract's `## Shared component consumers` section (rules 11, 16, 20).
 3. **Build / iterate** — the main thread breaks the contract into assignments for subagents (rule 12), by
    layer (config → server → state → components → pages), each artifact with its own CSS (rule 08), its own
    block in the catalog (rule 07) and its own test if it has logic. During human corrections the full gate is

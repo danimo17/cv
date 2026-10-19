@@ -7,6 +7,9 @@ code, tests, catalog docs) is delegated to subagents (`Agent` tool), in parallel
 independent.
 Each subagent receives a self-contained assignment: paths, applicable rules (01, 05, 07, 08), standards to
 read, contract criteria it covers, and what it must return (files written, pendings, questions).
+Mandatory line in every brief that removes or renames something (a `data-testid`, prop, class, key, file): grep
+the whole repo (`app/`, `tests/`, `e2e/`, `.claude/docs/`) for the old name and update every reference in the
+same change (rule 20); the report lists the grep and what it touched.
 Exceptions: trivial changes (one file, few lines), replicating content already drafted in the main thread, and
 quick fixes during the iterate loop with the user.
 **Why.** The main thread's context is the scarce resource: spent on exploration, the session ends sooner.

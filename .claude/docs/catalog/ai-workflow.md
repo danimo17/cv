@@ -245,6 +245,28 @@ state and has no test-only override of the hook under test (criterion 16, enforc
 indentation, the specs are prettier-formatted; `.each` tables count by their title template). It is the arch half of
 "search first, strengthen an existing test": a duplicate is merged into the existing test, not kept.
 
+**Rule 20, synchronized change (`.claude/rules/20-synchronized-change.md`):** a change to a public surface
+(`data-testid`, prop, class, i18n key) updates the catalog, the unit and e2e tests and the docs in the same change,
+and a removal or rename starts with a repo-wide grep for the old name. Its companions: the rule 12 brief line
+(every assignment that removes or renames something greps `app/`, `tests/`, `e2e/` and `.claude/docs/` and reports
+the grep), and the contract template's `## Shared component consumers` section (grep of consumers plus the user's
+answer, only here or everywhere), which `workflow.md` steps 1-2 and rule 11 require before the contract of any
+component under `app/components/shared/` or used from more than one parent.
+
+**Arch test `tests/arch/no-orphan-testids.spec.ts`:** reads the tracked and new non-ignored files with `git ls-files`,
+collects every `data-testid` referenced in `e2e/**/*.spec.ts` and `tests/unit/**` (`getByTestId`, `findByTestId`,
+`queryByTestId` and their `All` forms, `[data-testid="x"]` selectors) and fails when one is not rendered by a
+`data-testid="x"` (or a literal `:data-testid="'x'"`) in `app/**/*.vue`. A dynamic id (a template literal or a
+concatenation in a component, or a `^=` selector in a test) passes only through the spec's `DYNAMIC_PREFIXES`
+allowlist, each entry with a reason and a matching component binding; the list is empty today. A non-literal
+argument (`getByTestId(variable)`) fails: use a literal. One test scans, one checks the allowlist, one drives the
+scanner against synthetic sources to prove it catches an orphan. Props, classes and i18n keys have no orphan check
+of their own (typecheck, `i18n-parity.spec.ts` and review cover them).
+
+**Arch test `tests/arch/orphan-refs-docs.spec.ts`:** pins the text of rule 20 (file, the short `hard-rules.md` row
+naming its spec), the rule 12 brief line, the contract template's `## Shared component consumers` section, the
+workflow's Story/Contract wording, rule 11's reference to it, and this catalog entry.
+
 **Arch test `tests/arch/workflow-steps.spec.ts`:** keeps `workflow-steps.json`, `workflow.md`, the handoff and
 close-checklist templates and the Gates table consistent (ids, order, titles, gates); checks the close
 checklist has only pre-merge-provable items and the `## Review` / `## Workflow progress` sections; checks
