@@ -8,12 +8,12 @@ _Updated: 2026-10-19. REAL state of the `feat/hook-hardening` branch (based on `
 - [x] contract — evidence: 535061c contract.md, criteria 1-6
 - [x] build — evidence: edb3b66 hook, specs, decision 059, docs, backlog, vitest GIT\_\* isolation; review-round fixes aee7c5e, afbba9e, f2e2e49
 - [x] consolidate — evidence: pre-commit pnpm gate of f2e2e49: 26 files, 636 tests passed, lint 0 errors
-- [x] validate — evidence: 2026-10-19 full tests/arch/require-contract-hook.spec.ts green inside the gate (17 new tests red against the old hook first, 16 more red first in the review round)
+- [x] validate — evidence: 2026-10-19 full tests/arch/require-contract-hook.spec.ts green inside the gate (17 new tests red against the old hook first; review round: 15 tests observed red against the hook before the fix, in two batches of 5 and 10; the rename, comment and unterminated-quote cases were added after those red runs and were not run red on their own)
 - [x] handoff — evidence: 2026-10-19 this file
 - [x] commit — evidence: f2e2e49 last code and docs commit of the review round (535061c story and contract, edb3b66 build commit)
-- [ ] review — evidence:
-- [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] review — evidence: 0484507 (the commit that recorded the `## Review` section: high-effort `/code-review` of 2026-10-19 by a read-only reviewer agent, one line per finding with its proof; no code change after it)
+- [x] close-out — evidence: 60b1b9d (close-workflow-redesign, the previous close made through this gate); this task's own close commit is the last commit of the branch and cannot cite itself, its archive is `.claude/tasks/closed/hook-hardening.md`
+- [x] gate-push — evidence: pnpm gate:push on 0484507 (2026-10-19, real log read, EXIT=0): Test Files 26 passed (26), Tests 636 passed (636), nuxt build "Build complete!", e2e 5 passed (12.5s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -30,26 +30,27 @@ _Updated: 2026-10-19. REAL state of the `feat/hook-hardening` branch (based on `
 
 ## In progress / not done
 
-- Close-out, gate-push and push-pr are not done yet (see Workflow progress).
+- Close-out is the last commit of the branch (archive `.claude/tasks/closed/hook-hardening.md`, task folder removed); push-pr is not done (the push needs the user's explicit permission, decision 031).
 - Limits (decision 059): the branch check sees only branch creation typed in a Claude Bash command in a recognised form (`git worktree add -b`, `checkout --orphan`, `switch --orphan`, `branch -c`, wrappers such as `sh -c` or `xargs`, a terminal and an editor are not covered; queued as `workflow-integrity-hardening` item 9); a `doing` row left behind hides an abandoned branch; unmerged is by ancestry, so a squash-merged branch is reported until deleted; the cd/`-C` resolution ignores subshells, pipelines and shell variables; the quote/heredoc masking is a lexical scan.
 - The live Claude hook in a session started on another checkout still runs the old logic until the session restarts; the git hooks in `.githooks/` are the real gate.
 - Merge conflicts with sibling tasks are likely in `.claude/backlog.md`, the rules, `ai-workflow.md`, `workflow-integrity-hardening/story.md` and `tests/arch/workflow-steps.spec.ts`; the `vitest.config.ts` isolation change is identical to `f5a2bfd`.
 
 ## Subagents (rule 12)
 
-| Subagent                                 | What it did                                                                               | Result                                                                |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| hook-hardening (own worktree)            | hook changes, specs (red then green), decision 059, catalog, rules, backlog, handoff      | criteria 1-6 green in the gate                                        |
-| code-review reviewer (read-only agent)   | `/code-review` at high effort over the branch diff, at the user's request, 2026-10-19     | 9 findings plus an evasion appendix, recorded in `## Review`          |
-| hook-hardening review-fix (own worktree) | applied the findings tests first (red then green), docs, queue item, review and close-out | commits aee7c5e, afbba9e, f2e2e49; review recorded in the next commit |
+| Subagent                                 | What it did                                                                               | Result                                                        |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| hook-hardening (own worktree)            | hook changes, specs (red then green), decision 059, catalog, rules, backlog, handoff      | criteria 1-6 green in the gate                                |
+| code-review reviewer (read-only agent)   | `/code-review` at high effort over the branch diff, at the user's request, 2026-10-19     | 9 findings plus an evasion appendix, recorded in `## Review`  |
+| hook-hardening review-fix (own worktree) | applied the findings tests first (red then green), docs, queue item, review and close-out | commits aee7c5e, afbba9e, f2e2e49; review recorded in 0484507 |
 
 ## Validation (actual output of the last gate)
 
 ```
 pnpm gate (pre-commit of f2e2e49) → prettier ok, eslint 0 errors (1 pre-existing warning in CustomInput.vue), nuxt typecheck ok, Test Files 26 passed (26), Tests 636 passed (636)
+pnpm gate:push on 0484507 (EXIT=0) → same gate: Test Files 26 passed (26), Tests 636 passed (636); nuxt build "Build complete!"; playwright 5 passed (12.5s)
 ```
 
-Not covered: the end-to-end behavior of the live Claude PreToolUse hook (the specs run it as a subprocess with the same stdin payload); `pnpm gate:push` is recorded in the closing archive once run.
+Not covered: the end-to-end behavior of the live Claude PreToolUse hook (the specs run it as a subprocess with the same stdin payload); the e2e suite covers none of the hook.
 
 ## Review (workflow step `review`, rule 09)
 
