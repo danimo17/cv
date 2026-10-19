@@ -20,7 +20,7 @@ steps (`merge`, `deploy-check`) are not listed here.
 - [x] consolidate — evidence: pnpm gate green on 2026-10-19 (see Validation)
 - [x] validate — evidence: 2026-10-19, real pnpm gate output below, 27 files / 606 tests, 0 lint errors, 0 type errors
 - [x] handoff — evidence: this file, 2026-10-19
-- [ ] commit — evidence:
+- [x] commit — evidence: 4ee8e22 (story and contract), 3a55243 (specs, rule 20, docs, handoff)
 - [ ] review — evidence:
 - [ ] close-out — evidence:
 - [ ] gate-push — evidence:
@@ -47,7 +47,8 @@ steps (`merge`, `deploy-check`) are not listed here.
 
 ## In progress / not done
 
-- review, close-out, gate-push, push-pr: not started (see Pending).
+- review, close-out, gate-push, push-pr: not ticked (see Pending). `pnpm gate:push` was run once and passed
+  (see Validation); the gate-push step is ticked after the review and close-out commits.
 - No dedicated orphan check for props, classes and i18n keys (stated in rule 20 and the catalog; typecheck,
   `i18n-parity.spec.ts` and review cover them).
 - `hard-rules.md` has no row 19 (rule 19's file exists, its row was never added); not touched here, row 20 follows row 18.
@@ -74,6 +75,7 @@ pnpm gate → format:check: All matched files use Prettier code style!
             eslint .: 0 errors, 1 warning (pre-existing: CustomInput.vue vue/require-default-prop, decision 041)
             nuxt typecheck: clean
             vitest run: Test Files 27 passed (27), Tests 606 passed (606)
+pnpm gate:push (run once at the end, 2026-10-19) → gate as above + build ok + e2e: 5 passed (15.3s), exit 0
 ```
 
 Not covered: orphan props, classes and i18n keys; `data-testid` references written outside `getByTestId`/`findByTestId`
