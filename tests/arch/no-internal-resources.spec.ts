@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest'
 import { lineOf, readText, repoFiles } from './support/repo-files'
 
+const FILES = repoFiles()
+
 // Rule 02: nothing from a company's internal systems reaches this public repo. The checkable slice is
 // markers of those systems; what a diff copies from a private repository stays a human-review matter.
 const MARKERS: Record<string, RegExp> = {
@@ -23,7 +25,7 @@ const ALLOWED_FILES: Record<string, string> = {
     'contains the sample strings that prove each marker works',
 }
 
-export function findInternalMarkers(text: string): Array<{ line: number; marker: string }> {
+function findInternalMarkers(text: string): Array<{ line: number; marker: string }> {
   const hits: Array<{ line: number; marker: string }> = []
   for (const [marker, pattern] of Object.entries(MARKERS)) {
     for (const match of text.matchAll(pattern)) {
@@ -35,7 +37,7 @@ export function findInternalMarkers(text: string): Array<{ line: number; marker:
 
 describe('rule 02: no internal company resources', () => {
   it('no internal company resources are referenced', () => {
-    const files = repoFiles().filter((file) => !(file in ALLOWED_FILES))
+    const files = FILES.filter((file) => !(file in ALLOWED_FILES))
     expect(files.length).toBeGreaterThan(150)
     const violations: string[] = []
     for (const file of files) {

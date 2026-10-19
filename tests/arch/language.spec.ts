@@ -36,7 +36,7 @@ function isScanned(file: string): boolean {
   return !file.startsWith('i18n/locales/') && file !== 'pnpm-lock.yaml' && !(file in ALLOWED_FILES)
 }
 
-export function findNonEnglish(text: string): Array<{ line: number; reason: string }> {
+function findNonEnglish(text: string): Array<{ line: number; reason: string }> {
   const hits: Array<{ line: number; reason: string }> = []
   text.split('\n').forEach((content, index) => {
     const line = index + 1

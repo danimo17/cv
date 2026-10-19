@@ -2,15 +2,19 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { ROOT } from './support/repo-files'
 
-const ROOT = process.cwd()
-
-// Rule file -> the specs its "How it's checked" paragraph must name (rule 19: an ensure is a gate).
+// Rule file -> the specs its "How it's checked" paragraph and its hard-rules.md row must name (rule 19: an
+// ensure is a gate).
 const ENFORCED_BY: Record<string, string[]> = {
   '02-no-company-code.md': ['tests/arch/no-internal-resources.spec.ts'],
   '13-language-english.md': ['tests/arch/language.spec.ts'],
   '14-no-code-comments.md': ['tests/arch/no-code-comments.spec.ts'],
   '15-zero-lint-suppressions.md': ['tests/arch/no-lint-suppressions.spec.ts'],
+}
+
+function ruleNumber(ruleFile: string): string {
+  return ruleFile.slice(0, 2)
 }
 
 function howItsChecked(ruleFile: string): string {
@@ -21,11 +25,8 @@ function howItsChecked(ruleFile: string): string {
   return text.slice(start, end === -1 ? undefined : end)
 }
 
-function backlogStatus(slug: string): string | undefined {
-  const row = readFileSync(join(ROOT, '.claude', 'backlog.md'), 'utf8')
-    .split('\n')
-    .find((line) => line.startsWith(`| ${slug} `))
-  return row?.split('|')[3]?.trim()
+function hardRulesRow(table: string, number: string): string | undefined {
+  return table.split('\n').find((line) => line.startsWith(`| ${number} `))
 }
 
 describe('rules enforced by tests', () => {
@@ -42,11 +43,22 @@ describe('rules enforced by tests', () => {
     }
   })
 
-  it('the hard-rules table and the backlog agree that these rules are enforced by specs', () => {
+  it("each rule's own hard-rules.md row names the same spec", () => {
     const table = readFileSync(join(ROOT, '.claude', 'hard-rules.md'), 'utf8')
-    for (const specs of Object.values(ENFORCED_BY)) {
-      for (const spec of specs) expect(table, spec).toContain(spec)
+    for (const [ruleFile, specs] of Object.entries(ENFORCED_BY)) {
+      const row = hardRulesRow(table, ruleNumber(ruleFile))
+      expect(row, `${ruleFile} has a row in hard-rules.md`).toBeDefined()
+      for (const spec of specs) expect(row, `${ruleFile} row names ${spec}`).toContain(spec)
     }
-    expect(backlogStatus('arch-no-comments-no-suppressions')).toBe('done')
+  })
+
+  it('a spec named only in another rule row does not count for this rule', () => {
+    const table = [
+      '| 13  | English | `tests/arch/language.spec.ts` |',
+      '| 14  | No comments | human review |',
+    ].join('\n')
+    expect(hardRulesRow(table, '13')).toContain('tests/arch/language.spec.ts')
+    expect(hardRulesRow(table, '14')).not.toContain('tests/arch/language.spec.ts')
+    expect(hardRulesRow(table, '15')).toBeUndefined()
   })
 })

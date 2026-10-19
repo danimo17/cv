@@ -29,8 +29,8 @@ repository (see the last section).
   sub-domains other than `www`, company e-mail addresses, `.internal`/`.intranet`/`.corp`/`.lan` hosts). The public
   `https://www.pdpaola.com` in `app/data/cv/` is deliberately not a marker. This is the checkable slice only;
   copied code or designs stay human review (rule 02 says so).
-- `tests/arch/rules-enforced-by-tests.spec.ts`: the four rule files' "How it's checked" paragraph, the hard-rules table
-  and the backlog row stay in sync with the specs above.
+- `tests/arch/rules-enforced-by-tests.spec.ts`: the four rule files' "How it's checked" paragraph and each rule's own
+  hard-rules.md row stay in sync with the specs above (the transient backlog row status is not asserted).
 - Rule 16 (UI consistency) stays human review as a permanent exception: no generic automated check of visual
   consistency is realistic (rule 16 states it).
 

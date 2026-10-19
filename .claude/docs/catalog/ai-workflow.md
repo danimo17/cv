@@ -305,7 +305,8 @@ text (binary files are skipped).
   hostnames in any tracked file. Each marker has a sample the spec proves it matches; `https://www.pdpaola.com`
   (public CV fact) must stay unmatched.
 - `tests/arch/rules-enforced-by-tests.spec.ts`: rules 02, 13, 14, 15 name their spec in "How it's checked", the spec
-  exists, `hard-rules.md` names it, and backlog row `arch-no-comments-no-suppressions` is `done`.
+  exists, and the rule's own `hard-rules.md` row names it (a spec named only in another rule's row does not count).
+  The backlog row status is deliberately not asserted: it is transient bookkeeping, not part of the rule.
 
 ## Environments and deploy
 

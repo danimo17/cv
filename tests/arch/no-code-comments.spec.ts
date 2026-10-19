@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest'
 import { lineOf, readText, repoFiles } from './support/repo-files'
 
+const FILES = repoFiles()
+
 // Rule 14 (decision 041, decision 052): no comments in code outside .claude/, tests/ and e2e/.
 const SCANNED_DIRS = ['app/', 'server/', 'shared/']
 const ROOT_CONFIG_FILES = [
@@ -56,7 +58,7 @@ function startsRegex(source: string, at: number): boolean {
   return word !== null && REGEX_KEYWORDS.has(word[0])
 }
 
-export function findScriptComments(source: string): Found[] {
+function findScriptComments(source: string): Found[] {
   const found: Found[] = []
   const frames: Array<{ template: boolean; depth: number }> = [{ template: false, depth: 0 }]
   let i = 0
@@ -102,7 +104,7 @@ export function findScriptComments(source: string): Found[] {
   return found
 }
 
-export function findStyleComments(source: string): Found[] {
+function findStyleComments(source: string): Found[] {
   const found: Found[] = []
   let i = 0
   while (i < source.length) {
@@ -118,7 +120,7 @@ export function findStyleComments(source: string): Found[] {
   return found
 }
 
-export function findVueComments(source: string): Found[] {
+function findVueComments(source: string): Found[] {
   const found: Found[] = []
   let template = source
   for (const block of source.matchAll(/<(script|style)\b[^>]*>([\s\S]*?)<\/\1>/g)) {
@@ -136,7 +138,7 @@ export function findVueComments(source: string): Found[] {
 }
 
 function scannedFiles(): string[] {
-  return repoFiles().filter(
+  return FILES.filter(
     (file) =>
       ROOT_CONFIG_FILES.includes(file) ||
       (SCANNED_DIRS.some((dir) => file.startsWith(dir)) &&
