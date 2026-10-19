@@ -16,6 +16,10 @@
 
 ## Standards to consult
 
+If the task changes a file under `app/components/shared/` (rule 16, enforced at commit time), add a
+`## Shared component consumers` section above: the result of `grep -rn "ComponentName" app/` and the decision
+(only here / everywhere). The hook blocks the commit while that section is missing or empty.
+
 - `.claude/docs/standards/….md`
 
 ## Open questions (each with a destination)

@@ -11,4 +11,7 @@ Exceptions: trivial changes (one file, few lines), replicating content already d
 quick fixes during the iterate loop with the user.
 **Why.** The main thread's context is the scarce resource: spent on exploration, the session ends sooner.
 The user explicitly asked for this.
-**How it's checked.** Human review; the handoff lists which subagents did what.
+**How it's checked.** Human review; the handoff lists which subagents did what. The mechanical slice
+(decision 059): on a `feat/<slug>` branch `require-contract.py` blocks a commit staging more than 1 file or more
+than 15 changed lines under `app/`, `server/` or `shared/` unless the staged handoff's `## Subagents` table has a
+data row.

@@ -300,6 +300,42 @@ describe('close-workflow-redesign: workflow documents', () => {
   })
 })
 
+describe('hook-hardening: the process gaps are mechanical and documented', () => {
+  it('decision 059 and the hardening rules are documented', () => {
+    const file = readdirSync(DECISIONS_DIR).find((f) => f.startsWith('059-'))
+    expect(file, 'decision 059 file').toBe('059-hook-hardening.md')
+    const decision = read(join(DECISIONS_DIR, file as string))
+    expect(decision).toContain('ALLOW_UNMERGED_FEAT=1')
+    expect(decision).toMatch(/`doing` row/)
+    expect(decision).toMatch(/Deviation from the original story text/)
+    expect(decision).toContain('payload `cwd`')
+    expect(decision).toContain('## Shared component consumers')
+
+    const rules: Array<[string, RegExp[]]> = [
+      ['06-git-branches.md', [/ALLOW_UNMERGED_FEAT=1/, /doing/, /059/]],
+      ['11-directives.md', [/playwright\.config\.ts/, /\.claude\/hooks\/\*/, /059/]],
+      ['12-orchestration.md', [/## Subagents/, /15 changed\s+lines/, /059/]],
+      ['16-ui-pattern-consistency.md', [/## Shared component consumers/, /059/]],
+    ]
+    for (const [name, patterns] of rules) {
+      const doc = read(join(CLAUDE, 'rules', name))
+      const checked = doc.slice(doc.indexOf("**How it's checked.**"))
+      for (const pattern of patterns) expect(checked, `${name} ${pattern}`).toMatch(pattern)
+    }
+
+    const catalog = read(CATALOG)
+    expect(catalog).toContain('## Hook hardening (decision 059)')
+    for (const term of [
+      'ALLOW_UNMERGED_FEAT=1',
+      '## Subagents',
+      '## Shared component consumers',
+      'payload `cwd`',
+      'wrangler.jsonc',
+    ])
+      expect(catalog, term).toContain(term)
+  })
+})
+
 describe('close-workflow-redesign: the gate holds from any client', () => {
   it('git hooks and CI call the workflow gate script', () => {
     const call = (mode: string): RegExp =>

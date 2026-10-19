@@ -11,6 +11,11 @@ second 2026-10-06 amendments).
                                            CI: the push checks for one branch + commit; with --base the step
                                            list (workflow-steps.json) is read from that ref, not the PR's copy
 
+Decision 059 adds, to the commit checks: rule 12 delegation (a subagent row in the handoff for multi-file code
+commits), a wider rule 11 list of structural config, and rule 16 shared-component consumers; and, to the Claude
+hook only, the unmerged-feat-branch check on branch creation. The Claude hook resolves the repository from the
+payload cwd (then CLAUDE_PROJECT_DIR, then ".").
+
 Behavior is documented in .claude/docs/catalog/ai-workflow.md; tests in tests/arch/require-contract-hook.spec.ts.
 Exit 2 = blocked, the reason is printed on stderr. The task slug of a feat/<slug> branch is <slug>;
 .claude/tasks/ACTIVE is only consulted on other branches.
@@ -78,6 +83,46 @@ FIXED_FORMS = (
     "`new <tests/file.spec.ts> › <test name> — searched: <term>[, <term>...]` (a spec under tests/ or e2e/)"
 )
 PUSH_VALUE_FLAGS = ("-o", "--push-option", "--receive-pack", "--exec", "--repo")
+NEW_BRANCH_CALL = re.compile(
+    r"(?:^|[;&|]\s*)(" + ENV_PREFIX + r")git" + GLOBAL_GIT_OPTIONS + r"\s+(checkout|switch|branch)\b([^\n;&|]*)",
+    re.M,
+)
+ALLOW_UNMERGED = re.compile(r"(?<![\w])ALLOW_UNMERGED_FEAT=(?:1|\"1\"|'1')(?!\S)")
+CREATE_FLAGS = {
+    "checkout": ("-b", "-B"),
+    "switch": ("-c", "-C", "--create", "--force-create"),
+}
+BRANCH_CREATE_FLAGS = ("-f", "--force", "-t", "--track", "--no-track", "-q", "--quiet", "--create-reflog")
+BACKLOG_PATH = ".claude/backlog.md"
+DELEGATED_PREFIXES = ("app/", "server/", "shared/")
+DELEGATION_MAX_FILES = 1
+DELEGATION_MAX_LINES = 15
+STRUCTURAL_FILES = (
+    "nuxt.config.ts",
+    "eslint.config.mjs",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "wrangler.jsonc",
+    "pnpm-workspace.yaml",
+    ".claude/hard-rules.md",
+)
+LEGACY_STRUCTURAL_FILES = ("nuxt.config.ts", "eslint.config.mjs")
+STRUCTURAL_PREFIXES = (".github/workflows/", ".githooks/", ".claude/hooks/")
+RULES_PREFIX = ".claude/rules/"
+DECISIONS_PREFIX = ".claude/docs/decisions/"
+PACKAGE_JSON = "package.json"
+PACKAGE_STRUCTURAL_KEYS = (
+    "dependencies",
+    "devDependencies",
+    "peerDependencies",
+    "optionalDependencies",
+    "pnpm",
+    "overrides",
+    "packageManager",
+    "engines",
+)
+SHARED_COMPONENTS_PREFIX = "app/components/shared/"
+SHARED_CONSUMERS_HEADING = r"^## Shared component consumers\b"
 USAGE = (
     "usage: require-contract.py [--commit | --pre-push | --ci <branch> <sha> [--base <ref>]] "
     "(no argument: Claude PreToolUse hook, JSON on stdin)"
@@ -623,6 +668,118 @@ def untested_code_problem(slug, staged):
     )
 
 
+def branch_is_feat():
+    return current_branch().startswith(FEAT_PREFIX)
+
+
+def package_json_keys(raw):
+    if raw is None:
+        return None
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return "invalid"
+    if not isinstance(data, dict):
+        return "invalid"
+    return {key: data.get(key) for key in PACKAGE_STRUCTURAL_KEYS}
+
+
+def package_json_structural():
+    before = package_json_keys(git_show("HEAD", PACKAGE_JSON))
+    after = package_json_keys(git_show("", PACKAGE_JSON))
+    if before == "invalid" or after == "invalid" or after is None:
+        return True
+    if before is None:
+        return any(value is not None for value in after.values())
+    return before != after
+
+
+def is_structural(path, include_wider):
+    if path in LEGACY_STRUCTURAL_FILES:
+        return True
+    if not include_wider:
+        return False
+    if path in STRUCTURAL_FILES or path.startswith(STRUCTURAL_PREFIXES):
+        return True
+    if path.startswith(RULES_PREFIX) and path.endswith(".md"):
+        return True
+    return path == PACKAGE_JSON and package_json_structural()
+
+
+def structural_problem(status):
+    include_wider = not special_commit_in_progress()
+    found = [p for p in sorted(status) if is_structural(p, include_wider)]
+    if not found:
+        return
+    if any(p.startswith(DECISIONS_PREFIX) and code != "D" for p, code in status.items()):
+        return
+    fail(
+        f"Rule 11: this commit changes structural config ({', '.join(found)}) but stages no file under "
+        f"{DECISIONS_PREFIX}. Architecture/config changes need a decision record in the same commit — write "
+        "one (see decision 041 for the pattern) and stage it."
+    )
+
+
+def staged_code_size():
+    out = git(["diff", "--cached", "--numstat", "--no-renames", "-z"]) or ""
+    files = lines = 0
+    for entry in out.split("\0"):
+        parts = entry.split("\t", 2)
+        if len(parts) != 3 or not parts[2].startswith(DELEGATED_PREFIXES):
+            continue
+        files += 1
+        lines += sum(int(n) for n in parts[:2] if n.isdigit())
+    return files, lines
+
+
+def has_subagent_row(handoff):
+    section_lines = section(handoff, r"^## Subagents\b") if handoff is not None else None
+    rows = [
+        line.strip()
+        for _, line in outside_fences(section_lines or [])
+        if line.strip().startswith("|")
+    ]
+    if len(rows) < 3 or not re.fullmatch(r"[|\s:-]+", rows[1]):
+        return False
+    for row in rows[2:]:
+        first = row.strip("|").split("|")[0].strip()
+        if first:
+            return True
+    return False
+
+
+def delegation_problem(slug):
+    files, lines = staged_code_size()
+    if files <= DELEGATION_MAX_FILES and lines <= DELEGATION_MAX_LINES:
+        return
+    handoff_path = f"{TASKS_PREFIX}{slug}/handoff.md"
+    if has_subagent_row(git_show("", handoff_path)):
+        return
+    fail(
+        f"Rule 12 (the main thread orchestrates, subagents execute): this commit stages {files} file{'' if files == 1 else 's'} and "
+        f"{lines} changed line{'' if lines == 1 else 's'} under app/, server/ or shared/ (more than {DELEGATION_MAX_FILES} file or "
+        f"{DELEGATION_MAX_LINES} lines), but the `## Subagents` table of the staged {handoff_path} has no row. "
+        "Delegate the work to a subagent and record it there (| Subagent | What it did | Result |), "
+        "or keep the change within the threshold."
+    )
+
+
+def shared_component_problem(slug, status):
+    shared = sorted(p for p in status if p.startswith(SHARED_COMPONENTS_PREFIX))
+    if not shared:
+        return
+    contract = git_show("", f"{TASKS_PREFIX}{slug}/contract.md")
+    body = section(contract, SHARED_CONSUMERS_HEADING) if contract is not None else None
+    if body is not None and any(line.strip() for _, line in outside_fences(body)):
+        return
+    fail(
+        f"Rule 16 (UI pattern consistency): this commit changes a shared component ({', '.join(shared)}) but "
+        f"{TASKS_PREFIX}{slug}/contract.md has no filled `## Shared component consumers` section. Grep every "
+        "consumer (grep -rn \"ComponentName\" app/), list the result there and state whether the change is "
+        "applied only here or everywhere."
+    )
+
+
 def commit_checks():
     status = staged_changes()
     staged = list(status)
@@ -664,18 +821,13 @@ def commit_checks():
         if code in ("A", "M") and (HANDOFF_PATH.match(path) or ARCHIVE_PATH.match(path)):
             check_progress_evidence(path, git_show("", path) or "")
 
-    decision_worthy = ("nuxt.config.ts", "eslint.config.mjs")
-    touches_config = any(f in decision_worthy for f in staged)
-    touches_decision = any(f.startswith(".claude/docs/decisions/") for f in staged)
-    if touches_config and not touches_decision:
-        fail(
-            "Rule 11: this commit changes nuxt.config.ts or eslint.config.mjs but stages no file under "
-            ".claude/docs/decisions/. Architecture/config changes need a decision record in the same "
-            "commit — write one (see decision 041 for the pattern) and stage it."
-        )
+    structural_problem(status)
 
     if slug and not closing and not special_commit_in_progress():
         untested_code_problem(slug, staged)
+        shared_component_problem(slug, status)
+        if branch_is_feat():
+            delegation_problem(slug)
 
 
 def push_gate(branch, sha, base_ref=None):
@@ -847,11 +999,116 @@ def skips_hooks(sub, rest):
     return False
 
 
+def repo_containing(path):
+    if not path or not os.path.isdir(path):
+        return None
+    try:
+        top = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--show-toplevel"], capture_output=True, text=True
+        )
+    except OSError:
+        return None
+    return top.stdout.strip() if top.returncode == 0 and top.stdout.strip() else None
+
+
+def doing_slugs(backlog):
+    found = set()
+    for line in (backlog or "").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.startswith("|") else []
+        if len(cells) > 1 and any(c.lower() == "doing" for c in cells[1:]):
+            found.add(cells[0])
+    return found
+
+
+def working_tree_backlog():
+    try:
+        with open(os.path.join(root, BACKLOG_PATH), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+def created_branch(sub, rest):
+    try:
+        tokens = shlex.split(rest)
+    except ValueError:
+        tokens = rest.split()
+    if sub in CREATE_FLAGS:
+        for i, token in enumerate(tokens):
+            if token in CREATE_FLAGS[sub] and i + 1 < len(tokens):
+                return tokens[i + 1]
+            for prefix in ("--create=", "--force-create="):
+                if sub == "switch" and token.startswith(prefix):
+                    return token[len(prefix):]
+        return None
+    positional = []
+    for token in tokens:
+        if token.startswith("-"):
+            if token not in BRANCH_CREATE_FLAGS and not token.startswith("--track="):
+                return None
+        else:
+            positional.append(token)
+    return positional[0] if positional else None
+
+
+def orphaned_feat_branches(new_slug):
+    base = resolve_base(None)
+    if not base:
+        return []
+    out = git(
+        ["for-each-ref", f"--no-merged={base}", "--format=%(refname)%09%(subject)",
+         f"refs/heads/{FEAT_PREFIX}", f"refs/remotes/origin/{FEAT_PREFIX}"]
+    ) or ""
+    parallel = doing_slugs(working_tree_backlog())
+    found = {}
+    for line in out.splitlines():
+        ref, _, subject = line.partition("\t")
+        for prefix, where in ((f"refs/heads/{FEAT_PREFIX}", "local"), (f"refs/remotes/origin/{FEAT_PREFIX}", "remote")):
+            if ref.startswith(prefix):
+                slug = ref[len(prefix):]
+                entry = found.setdefault(slug, {"where": [], "subject": subject, "tips": []})
+                entry["where"].append(where)
+                entry["tips"].append(ref)
+    orphans = []
+    for slug, entry in sorted(found.items()):
+        if slug == new_slug or slug in parallel:
+            continue
+        if any(slug in doing_slugs(git_show(tip, BACKLOG_PATH)) for tip in entry["tips"]):
+            continue
+        orphans.append((slug, entry["where"], entry["subject"]))
+    return orphans
+
+
+def new_branch_check(cmd):
+    for env, _opts, sub, rest in NEW_BRANCH_CALL.findall(cmd):
+        name = created_branch(sub, rest)
+        if not name or not name.startswith(FEAT_PREFIX) or ALLOW_UNMERGED.search(env):
+            continue
+        orphans = orphaned_feat_branches(name[len(FEAT_PREFIX):])
+        if not orphans:
+            continue
+        listed = "\n".join(
+            f"  - {FEAT_PREFIX}{slug} ({', '.join(where)}): {subject}" for slug, where, subject in orphans
+        )
+        fail(
+            f"Rule 06/18 (decision 059): creating {name} while {len(orphans)} feat branch(es) are not merged "
+            f"into the base branch and are not a `doing` row of {BACKLOG_PATH} (an orphaned branch is lost "
+            f"work):\n{listed}\nFinish, merge or delete them, set a legitimately parallel task to `doing` in "
+            f"{BACKLOG_PATH}, or for this command only prefix it with `ALLOW_UNMERGED_FEAT=1 `."
+        )
+
+
 def claude_hook():
     global root
-    root = os.environ.get("CLAUDE_PROJECT_DIR", ".")
     data = json.load(sys.stdin)
+    root = (
+        repo_containing(data.get("cwd"))
+        or repo_containing(os.environ.get("CLAUDE_PROJECT_DIR"))
+        or os.environ.get("CLAUDE_PROJECT_DIR", ".")
+    )
     cmd = data.get("tool_input", {}).get("command", "")
+
+    new_branch_check(cmd)
 
     calls = GIT_CALL.findall(cmd)
     if not calls:
