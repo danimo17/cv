@@ -296,10 +296,12 @@ text (binary files are skipped).
   the marker rule.
 - `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
   `@ts-ignore`, `@ts-nocheck` in any tracked file outside `tests/`, `e2e/`, `.claude/` and the lockfile.
-- `tests/arch/language.spec.ts` (rule 13): per line, flags Catalan/Spanish letters, a list of non-English words, and
-  three or more shared function words, in every tracked text file outside `i18n/locales/`. The whole-file allowlist
-  lives inside the spec with a reason per entry (at most ten, asserted); a false positive is an entry, not a weaker
-  heuristic.
+- `tests/arch/language.spec.ts` (rule 13): per line, flags a Catalan/Spanish letter, or at least two distinct words
+  from a curated Catalan/Spanish stopword list (function words that are not English words nor locale codes), in every
+  tracked text file outside `i18n/locales/`. An unaccented Catalan sentence is caught by its function words; one foreign
+  word in an English line is not. The allowlist is per token (exact proper names or labels, masked only in the named
+  files, each group with a reason; at most ten groups, asserted, and each token must still exist in its file); the spec
+  itself is the one whole-file exception. A false positive is a token entry, not a weaker heuristic.
 - `tests/arch/no-internal-resources.spec.ts` (rule 02): Atlassian cloud hosts, Jira ticket / Confluence / Slack message
   URLs, GitHub URLs of the company organization, company sub-domains other than `www`, company e-mail addresses and internal-looking
   hostnames in any tracked file. Each marker has a sample the spec proves it matches; `https://www.pdpaola.com`

@@ -16,14 +16,19 @@ repository (see the last section).
 - `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
   `@ts-ignore`, `@ts-nocheck` fail in any tracked file outside `tests/`, `e2e/` and `.claude/` (the last quotes the
   directives while describing the rule). No violation existed.
-- `tests/arch/language.spec.ts` (rule 13): three heuristics, no dictionary: Catalan/Spanish letters, words that are not
-  English, and runs of three function words in one line. Found 51 hits in 19 files (workflow YAML comments, the
-  `.env.example` and `wrangler.jsonc` comments, `.gitignore`, a hook header, test titles using the Catalan words for "decision" and "rule",
-  quoted Catalan in two stories), all translated. Whole-file allowlist, six entries (below the ten that would
-  force rethinking the heuristics): the spec itself, decision 040 (quotes the accented-vowel grep), decision 043 and
-  `nuxt.config.ts` (the native language names of the locale switcher), and the CV data tables `education.ts` and
-  `experience.ts` (proper names of schools, organizations and places). The user's wording is unchanged where it was
-  a quote: only the language of the quote moved to English.
+- `tests/arch/language.spec.ts` (rule 13): no dictionary, two heuristics: a Catalan/Spanish letter in the line, or at
+  least two distinct words from a curated Catalan/Spanish stopword list (function words only, none of them an English
+  word or a locale code, none copied from the violations the first version found). The first version's word list
+  produced English false positives (`tens`, `hem`, `fins`, `para`, `que`) and let unaccented Catalan through; the
+  redesign (high-effort review, 2026-10-19) drops content words and keys on function-word pairs. It found 51 hits in 19
+  files (workflow YAML comments, the `.env.example` and `wrangler.jsonc` comments, `.gitignore`, a hook header, test
+  titles using the Catalan words for "decision" and "rule", quoted Catalan in two stories), all translated. The
+  allowlist is per token, not per file: exact proper names and labels are masked only in the named files (`Català` and
+  `Español` in `nuxt.config.ts` and decision 043, the grep character class in decision 040, the school and organization
+  names in `education.ts`, one place name in `experience.ts`), so new prose in those files is still checked. The spec
+  itself is the one whole-file exception (it holds the word list and the fixtures). Six allowlist groups, below the
+  ten that would force rethinking the heuristic. The user's wording is unchanged where it was a quote: only the language
+  of the quote moved to English.
 - `tests/arch/no-internal-resources.spec.ts` (rule 02): markers of internal systems fail in any tracked file
   (Atlassian cloud hosts, Jira ticket and Confluence URLs, Slack message URLs, GitHub URLs of the company organization, company
   sub-domains other than `www`, company e-mail addresses, `.internal`/`.intranet`/`.corp`/`.lan` hosts). The public
@@ -51,5 +56,5 @@ asserts that `vitest.config.ts` registers the file in `setupFiles`. In the main 
 
 **Consequences.** A comment, a suppression, Catalan/Spanish text or an internal-system link now fails `pnpm gate` at
 commit time. The language heuristic can produce a false positive on a legitimate foreign proper name: the answer is
-an allowlist entry with its reason (never a weaker heuristic), and more than ten entries means revisiting this
+a per-token allowlist entry with its reason (never a weaker heuristic), and more than ten entries means revisiting this
 decision.
