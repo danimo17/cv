@@ -290,10 +290,14 @@ text (binary files are skipped).
 
 - `tests/arch/no-code-comments.spec.ts` (rule 14): tokenizes `.ts`/`.mts`/`.js`/`.mjs`/`.cjs`/`.vue`/`.css` under
   `app/`, `server/`, `shared/` and `nuxt.config.ts`, `eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`
-  (strings, template literals and regex literals are skipped, so `https://` is not a comment). Any `//`, `/* */`
-  or `<!-- -->` fails, except `// #region <Static variables|Reactive variables|Methods|Component data|Lifecycle|State|Getters>`
-  and `// #endregion` under `app/composables/` and `app/stores/`. Two more tests pin the scanner (false positives) and
-  the marker rule.
+  (strings, template literals and regex literals are skipped, so `https://` is not a comment; a `/` after `)`, `]`,
+  `}` or an identifier, including `list_of` / `a$in` / `item2`, is division; the opening `<script>`/`<style>` tag is
+  parsed with quoted attribute values). Any `//`, `/* */` or `<!-- -->` fails, except
+  `// #region <Static variables|Reactive variables|Methods|Component data|Lifecycle|State|Getters>` and
+  `// #endregion` under `app/composables/` and `app/stores/`, and the exact first-line `// @ts-check` pragma of the
+  four root config files. Limit: comments inside Vue template expressions are not scanned (queued in
+  `workflow-integrity-hardening`). Further tests pin the scanner (false positives and misses), the marker rule and
+  the pragma exemption.
 - `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
   `@ts-ignore`, `@ts-nocheck` in any tracked file, `tests/` and `e2e/` included. Only markdown files under `.claude/`
   (documentation prose that quotes the directives) and the lockfile are skipped; the spec builds its samples from

@@ -10,9 +10,15 @@ repository (see the last section).
 
 - `tests/arch/no-code-comments.spec.ts` (rule 14): a small tokenizer (strings, template literals, regex literals) over
   `app/`, `server/`, `shared/` and the four root config files; `//`, `/* */` in scripts and styles and `<!-- -->` in Vue
-  templates fail. The only exception is the exact `// #region <fixed name>` / `// #endregion` marker in
-  `app/composables/` and `app/stores/` (decision 052). One violation existed: `// @ts-check` at the top of
-  `eslint.config.mjs` (a type-check pragma for the editor, no runtime effect), removed.
+  templates fail. Two exceptions: the exact `// #region <fixed name>` / `// #endregion` marker in `app/composables/`
+  and `app/stores/` (decision 052), and the exact `// @ts-check` pragma, only as the first line of a root config file
+  (it is functional, not prose: it switches on type checking of that `.mjs` file in the editor and in `tsc`). The first
+  version removed the pragma from `eslint.config.mjs` as a "violation"; the high-effort review (2026-10-19) restored it
+  and made the scanner exempt exactly that line. Scanner fixes from the same review: an identifier that merely ends in
+  a keyword or holds `_`, `$` or digits (`list_of / 2`) is no longer taken as a regex start, `)`, `]` and `}` count as
+  division preceders, and the opening `<script>`/`<style>` tag is parsed with quoted attribute values (a `>` inside
+  `generic="T extends Foo<Bar>"`). Known limit, queued in `workflow-integrity-hardening`: comments inside Vue template
+  expressions are not scanned.
 - `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
   `@ts-ignore`, `@ts-nocheck` fail in any tracked file, `tests/` and `e2e/` included (rule 15 says "anywhere"; only
   rule 14 grants tests a comment exception). The one exemption is markdown documentation under `.claude/` that quotes
@@ -43,7 +49,8 @@ repository (see the last section).
   consistency is realistic (rule 16 states it).
 
 **Why `eslint.config.mjs` is touched.** Rule 14 covers root config files and the spec found the `// @ts-check` pragma
-there; rule 11 requires a decision for any change to that file, which is this entry. No lint rule changed.
+there; the first version deleted it, the review restored it as the one functional exemption. Rule 11 requires a decision
+for any change to that file, which is this entry (amended 2026-10-19). No lint rule changed.
 
 **Test isolation fix (found while building this).** `git` sets `GIT_DIR`, `GIT_INDEX_FILE` and friends for hooks;
 in a linked worktree `GIT_DIR` is absolute, so the specs that create throwaway repos (`cwd: tmpdir`) wrote into the real

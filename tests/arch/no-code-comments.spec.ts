@@ -16,8 +16,12 @@ const SCRIPT_EXTENSIONS = ['.ts', '.mts', '.js', '.mjs', '.cjs']
 const MARKER_DIRS = ['app/composables/', 'app/stores/']
 const REGION_NAMES =
   'Static variables|Reactive variables|Methods|Component data|Lifecycle|State|Getters'
+const BLOCK = /(<(script|style)\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/\2>/g
+// The functional editor/type-check pragma of the root config files; exempt only as their first line.
+const TYPE_CHECK_PRAGMA = '// @ts-check'
 const MARKER = new RegExp(`^// #(region (${REGION_NAMES})|endregion)$`)
-const REGEX_PRECEDERS = new Set('(,=:[!&|?{};+-*%<>~^'.split(''))
+const REGEX_PRECEDERS = new Set('(,=:[!&|?{;+-*%<>~^'.split(''))
+const DIVISION_PRECEDERS = new Set(')]}'.split(''))
 const REGEX_KEYWORDS = new Set(['return', 'typeof', 'case', 'in', 'of', 'delete', 'void', 'throw'])
 
 interface Found {
@@ -53,9 +57,12 @@ function startsRegex(source: string, at: number): boolean {
   let j = at - 1
   while (j >= 0 && (source[j] === ' ' || source[j] === '\t' || source[j] === '\n')) j--
   if (j < 0) return true
-  if (REGEX_PRECEDERS.has(source[j]!)) return true
-  const word = /[A-Za-z]+$/.exec(source.slice(Math.max(0, j - 10), j + 1))
-  return word !== null && REGEX_KEYWORDS.has(word[0])
+  const previous = source[j]!
+  if (DIVISION_PRECEDERS.has(previous)) return false
+  if (REGEX_PRECEDERS.has(previous)) return true
+  let start = j
+  while (start >= 0 && /[\w$]/.test(source[start]!)) start--
+  return REGEX_KEYWORDS.has(source.slice(start + 1, j + 1))
 }
 
 function findScriptComments(source: string): Found[] {
@@ -123,11 +130,11 @@ function findStyleComments(source: string): Found[] {
 function findVueComments(source: string): Found[] {
   const found: Found[] = []
   let template = source
-  for (const block of source.matchAll(/<(script|style)\b[^>]*>([\s\S]*?)<\/\1>/g)) {
-    const content = block[2]!
-    const offset = block.index + block[0].indexOf(content)
+  for (const block of source.matchAll(BLOCK)) {
+    const content = block[3]!
+    const offset = block.index + block[1]!.length
     const firstLine = lineOf(source, offset)
-    const inner = block[1] === 'script' ? findScriptComments(content) : findStyleComments(content)
+    const inner = block[2] === 'script' ? findScriptComments(content) : findStyleComments(content)
     for (const hit of inner) found.push({ line: firstLine + hit.line - 1, text: hit.text })
     template = template.replace(block[0], block[0].replace(/[^\n]/g, ' '))
   }
@@ -155,7 +162,12 @@ function violationsIn(file: string, text: string): Found[] {
       ? findStyleComments(text)
       : findScriptComments(text)
   const markersAllowed = MARKER_DIRS.some((dir) => file.startsWith(dir))
-  return hits.filter((hit) => !(markersAllowed && MARKER.test(hit.text)))
+  const pragmaAllowed = ROOT_CONFIG_FILES.includes(file)
+  return hits.filter(
+    (hit) =>
+      !(markersAllowed && MARKER.test(hit.text)) &&
+      !(pragmaAllowed && hit.line === 1 && hit.text === TYPE_CHECK_PRAGMA)
+  )
 }
 
 describe('rule 14: no comments in code', () => {
@@ -197,5 +209,53 @@ describe('rule 14: no comments in code', () => {
     expect(violationsIn('app/services/x.ts', marker)).toHaveLength(3)
     expect(violationsIn('app/stores/x.ts', '// #region State because')).toHaveLength(1)
     expect(violationsIn('app/stores/x.ts', '// region State')).toHaveLength(1)
+  })
+
+  it('identifiers that end in a keyword or hold digits, underscores and dollars are not regex starts', () => {
+    const dirty = [
+      'const half = list_of / 2 // note',
+      'const a = value$in / 2 // note',
+      'const b = item2 / 3 // note',
+      'const c = typeof_ / 2 // note',
+      'const d = (x + y) / 2 // note',
+      'const e = function () {} / 2 // note',
+      'const f = [1][0] / 2 // note',
+    ].join('\n')
+    expect(findScriptComments(dirty).map((hit) => hit.line)).toEqual([1, 2, 3, 4, 5, 6, 7])
+  })
+
+  it('a real regex after a keyword or operator still hides its slashes', () => {
+    const clean = [
+      'const ok = () => { return /a\\/\\/b/.test(x) }',
+      'const yes = typeof /a\\/\\/b/',
+      'const re = cond ? /x\\/\\/y/ : /z/',
+    ].join('\n')
+    expect(findScriptComments(clean)).toEqual([])
+  })
+
+  it('a script tag whose attribute value holds a ">" is parsed from the real end of the tag', () => {
+    const vue = '<script setup lang="ts" generic="T extends Foo<Bar>">const a = 1 // note</script>'
+    expect(findVueComments(vue).map((hit) => hit.line)).toEqual([1])
+    const multiline = "<script setup generic='T extends Map<string, Foo>'>\n// note\n</script>"
+    expect(findVueComments(multiline).map((hit) => hit.line)).toEqual([2])
+    const style = '<style scoped data-x="a>b">\n.a { }\n/* note */\n</style>'
+    expect(findVueComments(style).map((hit) => hit.line)).toEqual([3])
+  })
+
+  it('only the exact type-check pragma on the first line of a root config file is exempt', () => {
+    const pragma = '// @ts-check\nconst a = 1'
+    expect(violationsIn('eslint.config.mjs', pragma)).toEqual([])
+    expect(violationsIn('nuxt.config.ts', pragma)).toEqual([])
+    expect(violationsIn('eslint.config.mjs', 'const a = 1\n// @ts-check')).toHaveLength(1)
+    expect(violationsIn('eslint.config.mjs', '// @ts-check because')).toHaveLength(1)
+    expect(violationsIn('eslint.config.mjs', '// @ts-' + 'nocheck')).toHaveLength(1)
+    expect(violationsIn('eslint.config.mjs', '/* @ts-check */')).toHaveLength(1)
+    expect(violationsIn('app/utils/x.ts', pragma)).toHaveLength(1)
+    expect(violationsIn('server/api/x.ts', pragma)).toHaveLength(1)
+  })
+
+  it('eslint.config.mjs keeps its type-check pragma on the first line', () => {
+    const config = readText('eslint.config.mjs') ?? ''
+    expect(config.split('\n')[0]).toBe('// @ts-check')
   })
 })
