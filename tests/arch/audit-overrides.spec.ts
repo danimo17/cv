@@ -182,6 +182,41 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     ).toEqual([])
   })
 
+  it('the lockfile resolves the advisory packages of decision 061 only at or above their patched versions', () => {
+    const advisories: Array<[string, Version, Version, string]> = [
+      [
+        '@modelcontextprotocol/server',
+        [2, 0, 0],
+        [2, 3, 0],
+        'GHSA-jm63-cq47-j5jp / GHSA-46jr-4wx8-v453',
+      ],
+      ['vite', [8, 3, 0], [8, 3, 3], 'GHSA-587h-7wmj-h5pm'],
+      ['launch-editor', [0, 0, 0], [2, 14, 2], 'GHSA-587h-7wmj-h5pm'],
+    ]
+    for (const [name, from, patched, advisory] of advisories) {
+      const versions = resolvedVersions(name)
+      expect(versions.length, `pnpm-lock.yaml no longer resolves ${name} at all`).toBeGreaterThan(0)
+      expect(
+        versions.filter((version) => compare(version, from) >= 0 && compare(version, patched) < 0),
+        `${name} in ${from.join('.')} to ${patched.join('.')} (exclusive) is inside ${advisory}`
+      ).toEqual([])
+    }
+  })
+
+  it('every decision that explains an audit override carries a remove-when condition', () => {
+    const { overrides } = workspace()
+    const docs = decisions()
+    for (const [selector, value] of overrides) {
+      const explaining = docs.filter(
+        ({ text }) => text.includes(`\`${selector}\``) && text.includes(`\`${value}\``)
+      )
+      expect(
+        explaining.some(({ text }) => /remove[- ]when/i.test(text)),
+        `${selector} → ${value}: its decision needs a remove-when condition`
+      ).toBe(true)
+    }
+  })
+
   it('every patched dependency has an existing patch file that still matches the locked version', () => {
     const { overrides, patched } = workspace()
     const hasSimpleGitOverride = overrides.some(([selector]) => selector === 'simple-git@<4.0.1')
