@@ -21,9 +21,9 @@ steps (`merge`, `deploy-check`) are not listed here.
 - [x] validate — evidence: f9811f7 (story.md, contract.md, handoff.md, overrides, decision 061 and tests committed; pnpm gate green)
 - [x] handoff — evidence: f9811f7 (story.md, contract.md, handoff.md, overrides, decision 061 and tests committed; pnpm gate green)
 - [x] commit — evidence: f9811f7 (story.md, contract.md, handoff.md, overrides, decision 061 and tests committed; pnpm gate green)
-- [ ] review — evidence:
+- [x] review — evidence: 654c7f9 (commit that recorded the Review section; code-review not run, dependency-only change, findings: none)
 - [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] gate-push — evidence: 2026-10-22 pnpm gate:push exit 0 on 654c7f9: 604 unit/arch tests passed (26 files), nuxt build complete, playwright 5 passed
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -37,7 +37,7 @@ steps (`merge`, `deploy-check`) are not listed here.
 
 ## In progress / not done
 
-- `gate:push`, close-out and push (the push needs the user's explicit permission).
+- Close-out and push (the push needs the user's explicit permission).
 
 ## Subagents (rule 12)
 
@@ -49,6 +49,7 @@ steps (`merge`, `deploy-check`) are not listed here.
 
 ```
 pnpm gate (commit f9811f7) -> format:check clean, eslint 0 errors (1 pre-existing warning, CustomInput.vue vue/require-default-prop), nuxt typecheck clean, vitest 26 files / 604 tests passed
+pnpm gate:push (654c7f9) -> gate as above, "Build complete!", playwright "5 passed (14.6s)", exit=0
 ```
 
 Not covered: the vite 8.3.0 to 8.3.5 / rolldown 1.2.14 bump is exercised by `pnpm gate:push` (build + e2e) only, not
