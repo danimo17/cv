@@ -238,3 +238,23 @@ branch can only be cited as `new` (with `— differs:` where a sibling title mat
 **Consequences.** Every finding of every later review on a task leaves a test, a strengthened test, a backlog slug
 or a written reason behind it, and the push and the close are blocked otherwise. The second-round review recorded
 before this amendment is not carried over: round 3 is the last full review under the new policy.
+
+## Amendment 2026-10-22 (merge-aware ancestry)
+
+**Context.** Absorbing `main` into a closed feature branch with a conflicted `git merge` was blocked at commit time:
+the closed archives that arrive from the other side (for example `.claude/tasks/closed/audit-overrides-2.md`) cite
+`commit`, `review` and `close-out` shas that are ancestors of `MERGE_HEAD` but not yet of `HEAD`, so
+`check_progress_evidence` answered "not an ancestor of the tip being checked". Merges that complete without
+conflicts never run the hook, which is why the earlier absorptions were not affected.
+
+**Decision.** While a merge is in progress (`MERGE_HEAD` resolves) and the tip being checked is `HEAD` (commit time
+only), the ancestry test accepts an ancestor of `HEAD` or of `MERGE_HEAD`. The freshness computation follows the same
+rule: a review commit that is not an ancestor of `HEAD` but is one of `MERGE_HEAD` is compared against `MERGE_HEAD`
+(the incoming side judged on its own history) instead of against `HEAD`, so the branch's own code does not produce a
+false stale for an archive that arrives from the other side. A sha that is an ancestor of neither side, and any sha
+outside a merge, is rejected exactly as before; the push gate and CI (explicit sha tips) are unchanged.
+
+**Consequences.** About a dozen lines of `require-contract.py` (`merge_head`, the ancestor test in `step_commit`, the tip choice
+in `stale_review_problem`); small on purpose so it can be ported into the rewritten hook of `hook-hardening`. Known
+limit, unchanged: a merge that also closes a task folder from the other side and brings code outside `.claude/` is
+still refused by the Rule 10 docs-only check (closing commits are not exempt).

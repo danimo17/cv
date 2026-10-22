@@ -120,7 +120,9 @@ the folder back and removes the archive, then fix, re-review, close again (enfor
   `## Review` section of `.claude/tasks/<slug>/handoff.md` or `.claude/tasks/closed/<slug>.md` versus its first
   parent (a root commit counts as changed if the section exists; a commit that only ticks progress, edits
   Pending or drops the section does not), i.e. the commit that recorded the review; if several shas are cited,
-  any qualifying one passes. `close-out` cannot cite its own commit (a commit cannot name its sha), only an earlier one. Any other
+  any qualifying one passes. While a merge is in progress (`MERGE_HEAD`) the commit-time ancestry test accepts an
+  ancestor of `HEAD` or of `MERGE_HEAD` (archives arriving from the other side of a conflicted merge; freshness then uses
+  `MERGE_HEAD` as the tip for such a review; decision 057 amendment 2026-10-22). `close-out` cannot cite its own commit (a commit cannot name its sha), only an earlier one. Any other
   step is free text. `[X]` counts as ticked like `[x]` everywhere (progress regex
   `^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$`). Messages name the step and why (`no evidence`, the sha
   requirement, the ancestry requirement or the review-commit requirement).
