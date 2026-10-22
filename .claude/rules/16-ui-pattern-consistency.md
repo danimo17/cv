@@ -22,3 +22,8 @@ titles, timeline items, card layouts), and repeated CSS treatments (`app/assets/
 **How it's checked.** Human review (like rules 02/11); `.claude/templates/review-checklist.md` carries a line
 for it. No generic automated check is realistic for visual consistency — the mechanically-checkable slices of
 this problem (e.g. dangling test references) are covered by rule 17 instead.
+
+The reusable-component slice is mechanical (decision 059): `require-contract.py` blocks a commit that stages a
+file under `app/components/shared/` unless the task's `contract.md` has a non-empty
+`## Shared component consumers` section (the `grep -rn "ComponentName" app/` result and the decision: only here /
+everywhere).

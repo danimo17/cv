@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 // Every test builds a throwaway git repo and runs the REAL hook against it, either as the Claude
@@ -100,10 +100,23 @@ function createRepo(base: Record<string, string>, branch = `feat/${SLUG}`): Repo
   return repo
 }
 
-function runHook(repo: Repo, command: string): { status: number | null; stderr: string } {
+function addWorktree(repo: Repo, branch: string): string {
+  const parent = mkdtempSync(join(tmpdir(), 'rc-hook-wt-'))
+  cleanup.push(parent)
+  const dir = join(parent, 'wt')
+  repo.git('worktree', 'add', '-q', '-b', branch, dir)
+  return dir
+}
+
+function runHook(
+  repo: Repo,
+  command: string,
+  cwd?: string,
+  projectDir: string = repo.dir
+): { status: number | null; stderr: string } {
   const r = spawnSync('python3', [HOOK], {
-    input: JSON.stringify({ tool_input: { command } }),
-    env: { ...process.env, CLAUDE_PROJECT_DIR: repo.dir },
+    input: JSON.stringify({ tool_input: { command }, ...(cwd ? { cwd } : {}) }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir },
     encoding: 'utf8',
   })
   return { status: r.status, stderr: r.stderr }
@@ -160,8 +173,13 @@ function progressBlock(ticks: Ticks = {}, omit: string[] = []): string {
 const REVIEW_OK =
   '## Review\n\n- [x] checklist\n- [x] code-review ran at high effort, 2026-10-05\n- findings: none\n'
 
-function handoffDoc(opts: { ticks?: Ticks; omit?: string[]; review?: string | null } = {}): string {
+const SUBAGENTS_HEADER = '| Subagent | What it did | Result |\n| -------- | ----------- | ------ |'
+
+function handoffDoc(
+  opts: { ticks?: Ticks; omit?: string[]; review?: string | null; subagents?: string | null } = {}
+): string {
   const review = opts.review === undefined ? REVIEW_OK : opts.review
+  const subagents = opts.subagents === undefined ? SUBAGENTS_HEADER : opts.subagents
   return [
     `# Handoff: ${SLUG}`,
     '',
@@ -173,6 +191,7 @@ function handoffDoc(opts: { ticks?: Ticks; omit?: string[]; review?: string | nu
     '',
     '- things',
     '',
+    ...(subagents === null ? [] : ['## Subagents (rule 12)', '', subagents, '']),
     ...(review === null ? [] : [review]),
     '## Pending on the user',
     '',
@@ -624,7 +643,10 @@ describe('commit rules that predate decision 057 still hold', () => {
       repo.write({ [file]: 'export default {}\n' })
       repo.git('add', '-A')
       expectBlocked(repo, COMMIT, 'Rule 11')
-      repo.write({ '.claude/docs/decisions/001-x.md': '# x\n' })
+      repo.write({ '.claude/docs/decisions/001-x.md': '# x\n\nAn unrelated decision.\n' })
+      repo.git('add', '-A')
+      expectBlocked(repo, COMMIT, 'Rule 11', file)
+      repo.write({ '.claude/docs/decisions/001-x.md': `# x\n\nWhy ${file} changes.\n` })
       repo.git('add', '-A')
       expectBlocked(repo, COMMIT, 'Rule 09', 'needs its test')
       repo.write({ 'tests/unit/config.spec.ts': "it('config', () => {})\n" })
@@ -1942,6 +1964,7 @@ describe('review findings must cite proof: a strengthened test, a new test after
     '| Slug | Story | Status |',
     '| --- | --- | --- |',
     '| later-task | something for later | todo |',
+    '| `ticked-task` | slug written in code ticks | todo |',
     '',
   ].join('\n')
   const BASE_FILES: Record<string, string> = {
@@ -2142,7 +2165,7 @@ describe('review findings must cite proof: a strengthened test, a new test after
   })
 
   it('queued: a backlog slug, an open task folder or a closed archive passes', () => {
-    for (const slug of ['later-task', 'open-task', 'old-task'])
+    for (const slug of ['later-task', 'ticked-task', 'open-task', 'old-task'])
       expectAllowed(handoffRepo(review(queued(`queued as ${slug}, reason: out of scope`))), PUSH)
   })
 
@@ -2271,6 +2294,12 @@ describe('after a recorded review a code commit without a test is blocked at com
   it('a change to the gate itself is code too', () => {
     const repo = activeRepo(handoffDoc())
     stage(repo, { '.claude/hooks/require-contract.py': '# changed\n' })
+    expectBlocked(repo, COMMIT, 'Rule 11', '.claude/hooks/require-contract.py')
+    stage(repo, { '.claude/docs/decisions/001-x.md': '# x\n\nSome other decision.\n' })
+    expectBlocked(repo, COMMIT, 'Rule 11', '.claude/hooks/require-contract.py')
+    stage(repo, {
+      '.claude/docs/decisions/001-x.md': '# x\n\nChanges `.claude/hooks/require-contract.py`.\n',
+    })
     expectBlocked(repo, COMMIT, 'needs its test', '.claude/hooks/require-contract.py')
     stage(repo, { 'tests/arch/gate.spec.ts': "it('gate', () => {})\n" })
     expectAllowed(repo, COMMIT)
@@ -2325,5 +2354,786 @@ describe('after a recorded review a code commit without a test is blocked at com
     const repo = activeRepo(handoffDoc({ ticks: { review: null } }))
     stage(repo, { ...CODE, [HANDOFF]: handoffDoc() })
     expectAllowed(repo, COMMIT)
+  })
+})
+
+describe('the hook evaluates the repository of the payload cwd (hook-hardening criterion 1)', () => {
+  const withoutContract = (): Repo => {
+    const repo = activeRepo(handoffDoc())
+    repo.remove(`${TASK}/contract.md`)
+    return repo
+  }
+
+  it('hook resolves the repo from the payload cwd', () => {
+    const good = activeRepo(handoffDoc())
+    const sibling = addWorktree(good, 'feat/other')
+    expectAllowed(good, COMMIT)
+    expect(runHook(good, COMMIT, good.dir, sibling).status).toBe(0)
+    const blocked = runHook(good, COMMIT, sibling)
+    expect(blocked.status, blocked.stderr).toBe(2)
+    expect(blocked.stderr).toContain('story')
+
+    const nested = join(good.dir, 'app', 'deep')
+    mkdirSync(nested, { recursive: true })
+    expect(runHook(good, COMMIT, nested, sibling).status).toBe(0)
+  })
+
+  it('a cwd inside an unrelated repository is not this project and the hook allows the command', () => {
+    const project = activeRepo(handoffDoc())
+    const unrelated = withoutContract()
+    expectBlocked(unrelated, COMMIT, 'contract')
+    expect(runHook(project, COMMIT, unrelated.dir).status).toBe(0)
+    expect(runHook(project, 'git commit --no-verify -m x', unrelated.dir).status).toBe(0)
+    expect(runHook(project, `git push origin feat/${SLUG}`, unrelated.dir).status).toBe(0)
+    expect(runHook(project, `git -C ${unrelated.dir} commit -m x`).status).toBe(0)
+    expect(runHook(project, `cd ${unrelated.dir} && ${COMMIT}`).status).toBe(0)
+    expect(runHook(project, 'git commit --no-verify -m x').status).toBe(2)
+  })
+
+  it('git -C and cd directories select the repository the command acts on', () => {
+    const project = activeRepo(handoffDoc())
+    const sibling = addWorktree(project, 'feat/other')
+    const relativeSibling = relative(project.dir, sibling)
+    for (const command of [
+      `git -C ${sibling} commit -m x`,
+      `git -C "${sibling}" commit -m x`,
+      `git -C ${relativeSibling} commit -m x`,
+      `cd ${sibling} && git commit -m x`,
+      `cd "${sibling}"; git commit -m x`,
+      `cd ${project.dir} && git -C ${sibling} commit -m x`,
+      `git -C ${project.dir} commit -m a && git -C ${sibling} commit -m b`,
+    ]) {
+      const r = runHook(project, command, project.dir)
+      expect(r.status, `${command}: ${r.stderr}`).toBe(2)
+      expect(r.stderr, command).toContain('.claude/tasks/other/story.md')
+    }
+    for (const command of [
+      `git -C ${project.dir} commit -m x`,
+      `cd ${project.dir} && git commit -m x`,
+      `git -C ${sibling} status && git -C ${project.dir} commit -m x`,
+    ])
+      expect(runHook(project, command, sibling).status, command).toBe(0)
+  })
+
+  it('heredoc bodies and quoted text are never taken for a git command', () => {
+    const repo = withoutContract()
+    for (const command of [
+      "cat <<'EOF' > notes.md\ngit commit -m x\nEOF",
+      'cat <<EOF\nuse git commit --no-verify here\ngit push origin feat/demo\nEOF',
+      'echo "first line\ngit commit -m x\nlast line"',
+      "echo 'git commit -n\ngit commit -m x'",
+      'cat <<-EOF\n\tgit commit -m x\n\tEOF',
+    ])
+      expectAllowed(repo, command)
+    expectBlocked(repo, "cat <<'EOF'\nbody\nEOF\ngit commit -m x", 'contract')
+    expectBlocked(repo, 'git commit -m "msg; git status | cat"', 'contract')
+    expectBlocked(repo, "git commit -F - <<'EOF'\nmessage\nEOF", 'contract')
+    expectBlocked(repo, 'git commit -m "$(cat <<\'EOF\'\nbody with "quotes"\nEOF\n)"', 'contract')
+    expectBlocked(repo, 'git commit --no-verify -m "don\'t"', 'Rule 09')
+    expectBlocked(repo, "# it's a comment\ngit commit -m x", 'contract')
+    expectBlocked(repo, 'echo "never closed\ngit commit -m x', 'contract')
+  })
+
+  it('a git worktree of the same repository is evaluated on its own branch, not on CLAUDE_PROJECT_DIR', () => {
+    const repo = activeRepo(handoffDoc())
+    const parent = mkdtempSync(join(tmpdir(), 'rc-hook-wt-'))
+    cleanup.push(parent)
+    const worktree = join(parent, 'wt')
+    repo.git('worktree', 'add', '-q', '-b', 'feat/other', worktree)
+    expectAllowed(repo, COMMIT)
+    const r = runHook(repo, COMMIT, worktree)
+    expect(r.status, r.stderr).toBe(2)
+    expect(r.stderr).toContain('Rule 10')
+    expect(r.stderr).toContain('.claude/tasks/other/story.md')
+  })
+
+  it('a cwd outside any git repository falls back to CLAUDE_PROJECT_DIR, then to the process cwd', () => {
+    const bad = withoutContract()
+    const outside = mkdtempSync(join(tmpdir(), 'rc-hook-outside-'))
+    cleanup.push(outside)
+    const viaEnv = runHook(bad, COMMIT, outside)
+    expect(viaEnv.status, viaEnv.stderr).toBe(2)
+    expect(viaEnv.stderr).toContain('contract')
+
+    const env = { ...process.env }
+    delete env.CLAUDE_PROJECT_DIR
+    const viaDot = spawnSync('python3', [HOOK], {
+      cwd: bad.dir,
+      env,
+      input: JSON.stringify({ tool_input: { command: COMMIT } }),
+      encoding: 'utf8',
+    })
+    expect(viaDot.status, viaDot.stderr).toBe(2)
+    expect(viaDot.stderr).toContain('contract')
+  })
+})
+
+describe('creating a feat branch while unmerged feat branches are orphaned (hook-hardening criterion 2)', () => {
+  const backlog = (...rows: Array<[string, string]>): string =>
+    [
+      '| Slug | Story | Status | Folder |',
+      '| ---- | ----- | ------ | ------ |',
+      ...rows.map(([slug, status]) => `| ${slug} | some story | ${status} | f |`),
+      '',
+    ].join('\n')
+
+  const BACKLOG = '.claude/backlog.md'
+
+  const withBranch = (
+    repo: Repo,
+    name: string,
+    subject: string,
+    files: Record<string, string> = {}
+  ): void => {
+    repo.git('switch', '-q', '-c', name, 'main')
+    repo.write({ [`app/${name.replaceAll('/', '-')}.ts`]: 'export {}\n', ...files })
+    repo.commitAll(subject)
+    repo.git('switch', '-q', `feat/${SLUG}`)
+  }
+
+  const NEW_BRANCH_COMMANDS = [
+    'git checkout -b feat/new',
+    'git switch -c feat/new',
+    'git branch feat/new',
+    'git switch --create feat/new origin/main',
+    'git checkout -B feat/new main',
+    'cd app && git checkout -b feat/new',
+  ]
+
+  it('new feat branch is blocked by orphaned unmerged branches, not by parallel doing tasks', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work in progress')
+    withBranch(repo, 'feat/parallel', 'parallel task work')
+    repo.write({ [BACKLOG]: backlog(['parallel', 'doing'], ['orphan', 'todo']) })
+
+    for (const command of NEW_BRANCH_COMMANDS) {
+      const { status, stderr } = runHook(repo, command)
+      expect(status, `${command}: ${stderr}`).toBe(2)
+      expect(stderr, command).toContain('feat/orphan')
+      expect(stderr, command).toContain('orphaned work in progress')
+      expect(stderr, command).toContain('ALLOW_UNMERGED_FEAT=1')
+      expect(stderr, command).not.toContain('feat/parallel')
+    }
+
+    repo.write({ [BACKLOG]: backlog(['parallel', 'doing'], ['orphan', 'doing']) })
+    for (const command of NEW_BRANCH_COMMANDS) expectAllowed(repo, command)
+  })
+
+  it('an unmerged branch whose own tip marks its slug doing is a parallel task, not an orphan', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/parallel', 'parallel task work', {
+      [BACKLOG]: backlog(['parallel', 'doing']),
+    })
+    expectAllowed(repo, 'git checkout -b feat/new')
+    withBranch(repo, 'feat/stale', 'abandoned', { [BACKLOG]: backlog(['stale', 'todo']) })
+    expectBlocked(repo, 'git checkout -b feat/new', 'feat/stale', 'abandoned')
+  })
+
+  it('remote-only unmerged feat branches count, and a local and a remote copy are listed once', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/both', 'both copies')
+    repo.git('update-ref', 'refs/remotes/origin/feat/both', 'feat/both')
+    repo.git('update-ref', 'refs/remotes/origin/feat/remote-only', 'feat/both')
+    const { status, stderr } = runHook(repo, 'git switch -c feat/new')
+    expect(status, stderr).toBe(2)
+    expect(stderr).toContain('feat/remote-only')
+    expect(stderr.match(/feat\/both/g)).toHaveLength(1)
+  })
+
+  it('merged branches, the branch being created and the prefix ALLOW_UNMERGED_FEAT=1 do not block', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work')
+    repo.git('branch', 'feat/merged', 'main')
+    expectBlocked(repo, 'git checkout -b feat/new', 'feat/orphan')
+    expect(runHook(repo, 'git checkout -b feat/merged').stderr).toContain('feat/orphan')
+    expectAllowed(repo, 'ALLOW_UNMERGED_FEAT=1 git checkout -b feat/new')
+    expectAllowed(repo, 'cd app && ALLOW_UNMERGED_FEAT=1 git switch -c feat/new')
+    expectBlocked(repo, 'ALLOW_UNMERGED_FEAT=0 git checkout -b feat/new', 'feat/orphan')
+    repo.git('merge', '-q', '--no-edit', 'feat/orphan')
+    repo.git('switch', '-q', 'main')
+    repo.git('merge', '-q', '--ff-only', 'feat/demo')
+    expectAllowed(repo, 'git checkout -b feat/new')
+  })
+
+  it('only creating a feat/* branch is checked: other names and non-creating commands pass', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work')
+    for (const command of [
+      'git checkout -b chore/x',
+      'git switch -c fix/x',
+      'git branch hotfix/x',
+      'git checkout feat/orphan',
+      'git switch feat/orphan',
+      'git branch -d feat/orphan',
+      'git branch -D feat/orphan',
+      'git branch --list feat/*',
+      'git branch -m feat/orphan feat/renamed',
+      'git branch',
+      'git checkout -- app',
+      'echo git checkout -b feat/new',
+    ])
+      expectAllowed(repo, command)
+  })
+
+  it('a doing row whose slug is written in backticks still marks a parallel task', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work in progress')
+    const row = (slug: string, status: string): string =>
+      [
+        '| Slug | Story | Status |',
+        '| --- | --- | --- |',
+        `| ${slug} | some story | ${status} |`,
+        '',
+      ].join('\n')
+    repo.write({ [BACKLOG]: row('`orphan`', 'todo') })
+    expectBlocked(repo, 'git checkout -b feat/new', 'feat/orphan')
+    repo.write({ [BACKLOG]: row('`orphan`', 'doing') })
+    expectAllowed(repo, 'git checkout -b feat/new')
+
+    const atTip = activeRepo(handoffDoc())
+    withBranch(atTip, 'feat/parallel', 'parallel task work', {
+      [BACKLOG]: row('`parallel`', 'doing'),
+    })
+    expectAllowed(atTip, 'git checkout -b feat/new')
+  })
+
+  it('every branch-creating form of checkout, switch and branch is recognised', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work')
+    for (const command of [
+      'git switch --create=feat/new',
+      'git switch -C feat/new',
+      'git switch --force-create feat/new main',
+      'git checkout -B feat/new',
+      'git branch -f feat/new main',
+      'git branch -t feat/new origin/main',
+      'git branch --track feat/new',
+      `git -C ${repo.dir} checkout -b feat/new`,
+      'git -c advice.detachedHead=false checkout -b feat/new',
+      'FOO=1 git switch -c feat/new',
+    ])
+      expectBlocked(repo, command, 'feat/orphan')
+  })
+
+  it('branch creation is checked in the repository selected by the payload cwd, -C and cd', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work')
+    const sibling = addWorktree(repo, 'feat/other')
+    repo.write({ [BACKLOG]: backlog(['orphan', 'doing']) })
+    expectAllowed(repo, 'git checkout -b feat/new')
+
+    const viaCwd = runHook(repo, 'git checkout -b feat/new', sibling)
+    expect(viaCwd.status, viaCwd.stderr).toBe(2)
+    expect(viaCwd.stderr).toContain('feat/orphan')
+    for (const command of [
+      `git -C ${sibling} checkout -b feat/new`,
+      `cd ${sibling} && git switch -c feat/new`,
+    ]) {
+      const r = runHook(repo, command, repo.dir)
+      expect(r.status, `${command}: ${r.stderr}`).toBe(2)
+      expect(r.stderr, command).toContain('feat/orphan')
+    }
+    expect(runHook(repo, `git -C ${repo.dir} checkout -b feat/new`, sibling).status).toBe(0)
+
+    const unrelated = activeRepo(handoffDoc())
+    withBranch(unrelated, 'feat/stray', 'stray work')
+    expectBlocked(unrelated, 'git checkout -b feat/new', 'feat/stray')
+    expect(runHook(repo, 'git checkout -b feat/new', unrelated.dir).status).toBe(0)
+  })
+
+  it('a heredoc or quoted text that mentions branch creation is not a branch creation', () => {
+    const repo = activeRepo(handoffDoc())
+    withBranch(repo, 'feat/orphan', 'orphaned work')
+    for (const command of [
+      "cat <<'EOF'\ngit checkout -b feat/new\nEOF",
+      'cat <<EOF > notes.md\nrun git switch -c feat/new now\nEOF',
+      'echo "line\ngit branch feat/new\nline"',
+      "git commit -F - <<'EOF'\nfix: explain git checkout -b feat/new\nEOF",
+    ])
+      expect(runHook(repo, command).stderr, command).not.toContain('feat/orphan')
+    expectBlocked(repo, "cat <<'EOF'\nbody\nEOF\ngit checkout -b feat/new", 'feat/orphan')
+  })
+})
+
+describe('code commits delegate to subagents (hook-hardening criterion 3)', () => {
+  const TABLE_ROW = '| hook-hardening | wrote the hook | done |'
+  const table = (...rows: string[]): string => [SUBAGENTS_HEADER, ...rows].join('\n')
+  const lines = (n: number): string => 'export {}\n'.repeat(n)
+  const repoWith = (subagents: string | null, branch = `feat/${SLUG}`): Repo =>
+    activeRepo(handoffDoc({ ticks: { review: null }, subagents }), branch)
+  const stage = (repo: Repo, files: Record<string, string>): void => {
+    repo.write(files)
+    repo.git('add', '-A')
+  }
+
+  it('multi-file code commits need a subagent row in the handoff', () => {
+    const repo = repoWith(table())
+    stage(repo, { 'app/a.ts': lines(1), 'server/b.ts': lines(1) })
+    expectBlocked(repo, COMMIT, 'Rule 12', 'Subagents', '2 files', 'handoff.md')
+    expectCliBlocked(runCli(repo, ['--commit']), 'Rule 12')
+
+    stage(repo, { [HANDOFF]: handoffDoc({ ticks: { review: null }, subagents: table(TABLE_ROW) }) })
+    expectAllowed(repo, COMMIT)
+    expectCliAllowed(runCli(repo, ['--commit']))
+  })
+
+  it('the threshold is more than 1 file or more than 15 changed lines under app/, server/ and shared/', () => {
+    const one = repoWith(table())
+    stage(one, { 'shared/types/a.ts': lines(15) })
+    expectAllowed(one, COMMIT)
+
+    const big = repoWith(table())
+    stage(big, { 'app/a.ts': lines(16) })
+    expectBlocked(big, COMMIT, 'Rule 12', '16 changed lines')
+
+    const modified = createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null } })),
+      'app/old.ts': lines(10),
+    })
+    stage(modified, { 'app/old.ts': 'const changed = 1\n'.repeat(8) + lines(2) })
+    expectBlocked(modified, COMMIT, 'Rule 12')
+
+    const three = repoWith(table())
+    stage(three, { 'app/a.ts': lines(1), 'server/b.ts': lines(1), 'shared/c.ts': lines(1) })
+    expectBlocked(three, COMMIT, '3 files')
+  })
+
+  it('only app/, server/ and shared/ count: tests, e2e and .claude files never need a row', () => {
+    const repo = repoWith(table())
+    stage(repo, {
+      'tests/unit/a.spec.ts': lines(40),
+      'tests/unit/b.spec.ts': lines(40),
+      'e2e/c.spec.ts': lines(40),
+      '.claude/notes.md': lines(40),
+      'app/one.ts': lines(1),
+    })
+    expectAllowed(repo, COMMIT)
+  })
+
+  it('a row needs a non-empty first cell: the header, an empty placeholder and a fenced example do not count', () => {
+    const fenced = ['```', TABLE_ROW, '```'].join('\n')
+    for (const subagents of [table(), table('| | | |'), `${table()}\n\n${fenced}`, null]) {
+      const repo = repoWith(subagents)
+      stage(repo, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+      expectBlocked(repo, COMMIT, 'Rule 12')
+    }
+    for (const subagents of [table(TABLE_ROW), table('| | | |', TABLE_ROW)]) {
+      const repo = repoWith(subagents)
+      stage(repo, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+      expectAllowed(repo, COMMIT)
+    }
+  })
+
+  it('the row is read from the index, and a missing handoff blocks', () => {
+    const repo = repoWith(table())
+    repo.write({ [HANDOFF]: handoffDoc({ ticks: { review: null }, subagents: table(TABLE_ROW) }) })
+    stage(repo, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+    repo.git('reset', '-q', '--', HANDOFF)
+    expectBlocked(repo, COMMIT, 'Rule 12')
+    repo.git('add', HANDOFF)
+    expectAllowed(repo, COMMIT)
+
+    const missing = repoWith(table())
+    missing.remove(HANDOFF)
+    stage(missing, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+    expectBlocked(missing, COMMIT, 'Rule 12', 'handoff.md')
+  })
+
+  it('a rename counts as one file, and css, i18n and data paths are not code', () => {
+    const base = {
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null }, subagents: table() })),
+      'app/old.ts': lines(10),
+      'app/other.ts': 'export const other = 1\n'.repeat(10),
+    }
+    const renamed = createRepo(base)
+    renamed.git('mv', 'app/old.ts', 'app/new.ts')
+    expectAllowed(renamed, COMMIT)
+    expectCliAllowed(runCli(renamed, ['--commit']))
+
+    const twoRenames = createRepo(base)
+    twoRenames.git('mv', 'app/old.ts', 'app/new.ts')
+    twoRenames.git('mv', 'app/other.ts', 'app/moved.ts')
+    expectBlocked(twoRenames, COMMIT, 'Rule 12', '2 files')
+
+    const styling = repoWith(table())
+    stage(styling, {
+      'app/assets/css/components/x.css': lines(40),
+      'app/assets/css/y.css': lines(40),
+      'app/data/cv/z.ts': lines(40),
+      'i18n/locales/en.json': lines(40),
+      'app/a.ts': lines(1),
+    })
+    expectAllowed(styling, COMMIT)
+
+    const mixed = repoWith(table())
+    stage(mixed, {
+      'app/assets/css/components/x.css': lines(40),
+      'app/a.ts': lines(1),
+      'app/b.ts': lines(1),
+    })
+    expectBlocked(mixed, COMMIT, 'Rule 12', '2 files')
+  })
+
+  it('only feat/<slug> branches, and not merge, rebase, cherry-pick or revert commits, are checked', () => {
+    const other = repoWith(table(), 'work')
+    stage(other, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+    expectAllowed(other, COMMIT)
+
+    for (const name of ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD']) {
+      const repo = repoWith(table())
+      stage(repo, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+      writeFileSync(join(repo.dir, '.git', name), `${head(repo)}\n`)
+      expectAllowed(repo, COMMIT)
+    }
+    const rebase = repoWith(table())
+    stage(rebase, { 'app/a.ts': lines(1), 'app/b.ts': lines(1) })
+    mkdirSync(join(rebase.dir, '.git', 'rebase-merge'))
+    expectAllowed(rebase, COMMIT)
+  })
+})
+
+describe('structural config needs a decision record (hook-hardening criterion 4)', () => {
+  const PKG = (extra: Record<string, unknown> = {}): string =>
+    `${JSON.stringify(
+      {
+        name: 'demo',
+        version: '1.0.0',
+        scripts: { dev: 'nuxt dev' },
+        dependencies: { vue: '^3.0.0' },
+        ...extra,
+      },
+      null,
+      2
+    )}\n`
+
+  const repoOnFeat = (): Repo =>
+    createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null } })),
+      'package.json': PKG(),
+    })
+  const stage = (repo: Repo, files: Record<string, string>): void => {
+    repo.write(files)
+    repo.git('add', '-A')
+  }
+  const decisionFor = (...names: string[]): Record<string, string> => ({
+    '.claude/docs/decisions/001-x.md': `# x\n\nTouches ${names.join(' and ')}.\n`,
+  })
+
+  it('structural config changes need a decision record', () => {
+    const files = [
+      'playwright.config.ts',
+      'vitest.config.ts',
+      'wrangler.jsonc',
+      'pnpm-workspace.yaml',
+      '.github/workflows/ci.yml',
+      '.githooks/pre-commit',
+      '.claude/hooks/require-contract.sh',
+      '.claude/hard-rules.md',
+      '.claude/rules/06-git-branches.md',
+    ]
+    for (const file of files) {
+      const repo = repoOnFeat()
+      stage(repo, { [file]: 'changed\n' })
+      expectBlocked(repo, COMMIT, 'Rule 11', file)
+      expectCliBlocked(runCli(repo, ['--commit']), 'Rule 11', file)
+      stage(repo, decisionFor(file))
+      expectAllowed(repo, COMMIT)
+      expectCliAllowed(runCli(repo, ['--commit']))
+    }
+  }, 60_000)
+
+  it('every structural file is named when several are staged, and a deleted decision does not count', () => {
+    const repo = repoOnFeat()
+    stage(repo, { 'vitest.config.ts': 'a\n', 'wrangler.jsonc': 'b\n', 'app/other.ts': 'c\n' })
+    expectBlocked(repo, COMMIT, 'vitest.config.ts', 'wrangler.jsonc')
+    expect(runHook(repo, COMMIT).stderr).not.toContain('app/other.ts')
+
+    const gone = createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null } })),
+      ...decisionFor('vitest.config.ts'),
+    })
+    gone.remove('.claude/docs/decisions/001-x.md')
+    stage(gone, { 'vitest.config.ts': 'a\n' })
+    expectBlocked(gone, COMMIT, 'Rule 11')
+  })
+
+  it('only a decision that mentions the changed file or its directory satisfies rule 11', () => {
+    const unrelated = repoOnFeat()
+    stage(unrelated, {
+      'vitest.config.ts': 'a\n',
+      '.claude/docs/decisions/001-x.md': '# x\n\nSomething else entirely.\n',
+    })
+    expectBlocked(unrelated, COMMIT, 'Rule 11', 'vitest.config.ts', 'mentions')
+    expectCliBlocked(runCli(unrelated, ['--commit']), 'Rule 11', 'mentions')
+
+    const byName = repoOnFeat()
+    stage(byName, { 'vitest.config.ts': 'a\n', ...decisionFor('vitest.config.ts') })
+    expectAllowed(byName, COMMIT)
+
+    const byDirectory = repoOnFeat()
+    stage(byDirectory, {
+      '.github/workflows/ci.yml': 'a\n',
+      '.githooks/pre-commit': 'b\n',
+      ...decisionFor('.github/workflows/', '.githooks/'),
+    })
+    expectAllowed(byDirectory, COMMIT)
+
+    const oneOfTwo = repoOnFeat()
+    stage(oneOfTwo, {
+      'vitest.config.ts': 'a\n',
+      'wrangler.jsonc': 'b\n',
+      ...decisionFor('vitest.config.ts'),
+    })
+    expectBlocked(oneOfTwo, COMMIT, 'Rule 11', 'wrangler.jsonc')
+  })
+
+  it('a decision added earlier on the branch satisfies rule 11 for later commits, one from the base does not', () => {
+    const earlier = repoOnFeat()
+    earlier.write(decisionFor('vitest.config.ts'))
+    earlier.commitAll('decide')
+    stage(earlier, { 'vitest.config.ts': 'a\n' })
+    expectAllowed(earlier, COMMIT)
+    expectCliAllowed(runCli(earlier, ['--commit']))
+    stage(earlier, { 'wrangler.jsonc': 'b\n' })
+    expectBlocked(earlier, COMMIT, 'Rule 11', 'wrangler.jsonc')
+
+    const inBase = createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null } })),
+      ...decisionFor('vitest.config.ts'),
+    })
+    stage(inBase, { 'vitest.config.ts': 'a\n' })
+    expectBlocked(inBase, COMMIT, 'Rule 11', 'vitest.config.ts')
+  })
+
+  it('a package.json change counts only in dependency keys, packageManager, engines and pnpm', () => {
+    const harmless = repoOnFeat()
+    stage(harmless, {
+      'package.json': PKG({ version: '2.0.0', scripts: { dev: 'nuxt dev --host', gate: 'x' } }),
+    })
+    expectAllowed(harmless, COMMIT)
+
+    const changes: Array<Record<string, unknown>> = [
+      { dependencies: { vue: '^3.1.0' } },
+      { dependencies: { vue: '^3.0.0', pinia: '^3.0.0' } },
+      { devDependencies: { vitest: '^4.0.0' } },
+      { peerDependencies: { nuxt: '^4.0.0' } },
+      { optionalDependencies: { fsevents: '^2.0.0' } },
+      { pnpm: { overrides: { x: '^1.0.0' } } },
+      { overrides: { x: '^1.0.0' } },
+      { packageManager: 'pnpm@11.17.0' },
+      { engines: { node: '>=22' } },
+    ]
+    for (const change of changes) {
+      const repo = repoOnFeat()
+      stage(repo, { 'package.json': PKG(change) })
+      expectBlocked(repo, COMMIT, 'Rule 11', 'package.json')
+      stage(repo, decisionFor('package.json'))
+      expectAllowed(repo, COMMIT)
+    }
+
+    const removed = repoOnFeat()
+    stage(removed, { 'package.json': '{ "name": "demo", "version": "1.0.0" }\n' })
+    expectBlocked(removed, COMMIT, 'Rule 11', 'package.json')
+
+    const broken = repoOnFeat()
+    stage(broken, { 'package.json': '{ not json' })
+    expectBlocked(broken, COMMIT, 'Rule 11', 'package.json')
+  }, 60_000)
+
+  it('merge, rebase, cherry-pick and revert commits skip the new files but keep the nuxt and eslint check', () => {
+    for (const name of ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD']) {
+      const repo = repoOnFeat()
+      stage(repo, {
+        'playwright.config.ts': 'a\n',
+        '.github/workflows/ci.yml': 'b\n',
+        'package.json': PKG({ dependencies: { vue: '^3.9.0' } }),
+      })
+      expectBlocked(repo, COMMIT, 'Rule 11')
+      writeFileSync(join(repo.dir, '.git', name), `${head(repo)}\n`)
+      expectAllowed(repo, COMMIT)
+      stage(repo, { 'nuxt.config.ts': 'export default {}\n' })
+      expectBlocked(repo, COMMIT, 'Rule 11', 'nuxt.config.ts')
+    }
+  })
+})
+
+describe('shared component changes need a consumers section (hook-hardening criterion 5)', () => {
+  const SHARED = 'app/components/shared/CustomText.vue'
+  const repoOnFeat = (contract = CONTRACT): Repo =>
+    createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null } })),
+      [`${TASK}/contract.md`]: contract,
+      [SHARED]: '<template><span /></template>\n',
+    })
+  const stage = (repo: Repo, files: Record<string, string>): void => {
+    repo.write(files)
+    repo.git('add', '-A')
+  }
+  const EDIT = { [SHARED]: '<template><span class="x" /></template>\n' }
+  const WITH_SECTION = `${CONTRACT}\n## Shared component consumers\n\n- grep: app/pages/index.vue, app/components/cv/Hero.vue\n- decision: everywhere\n`
+
+  it('shared component changes need a consumers section in the contract', () => {
+    const repo = repoOnFeat()
+    stage(repo, EDIT)
+    expectBlocked(repo, COMMIT, 'Rule 16', 'Shared component consumers', SHARED)
+    expectCliBlocked(runCli(repo, ['--commit']), 'Rule 16')
+
+    const empty = repoOnFeat(
+      `${CONTRACT}\n## Shared component consumers\n\n## Next section\n\n- x\n`
+    )
+    stage(empty, EDIT)
+    expectBlocked(empty, COMMIT, 'Rule 16')
+
+    const listed = repoOnFeat(WITH_SECTION)
+    stage(listed, EDIT)
+    expectAllowed(listed, COMMIT)
+    expectCliAllowed(runCli(listed, ['--commit']))
+
+    const staged = repoOnFeat()
+    stage(staged, { ...EDIT, [`${TASK}/contract.md`]: WITH_SECTION })
+    expectAllowed(staged, COMMIT)
+  })
+
+  it('additions and deletions under app/components/shared/ count, other component folders do not', () => {
+    const added = repoOnFeat()
+    stage(added, { 'app/components/shared/CustomNew.vue': '<template><i /></template>\n' })
+    expectBlocked(added, COMMIT, 'Rule 16')
+
+    const deleted = repoOnFeat()
+    deleted.remove(SHARED)
+    deleted.git('add', '-A')
+    expectBlocked(deleted, COMMIT, 'Rule 16')
+
+    const other = repoOnFeat()
+    stage(other, { 'app/components/cv/Hero.vue': '<template><i /></template>\n' })
+    expectAllowed(other, COMMIT)
+  })
+
+  it('the contract is read from the index, and merge-style commits are exempt', () => {
+    const repo = repoOnFeat()
+    repo.write({ [`${TASK}/contract.md`]: WITH_SECTION })
+    stage(repo, EDIT)
+    repo.git('reset', '-q', '--', `${TASK}/contract.md`)
+    expectBlocked(repo, COMMIT, 'Rule 16')
+
+    const merge = repoOnFeat()
+    stage(merge, EDIT)
+    writeFileSync(join(merge.dir, '.git', 'MERGE_HEAD'), `${head(merge)}\n`)
+    expectAllowed(merge, COMMIT)
+  })
+})
+
+describe('the hook fails closed on git errors and reads repo state once (hook-hardening review)', () => {
+  const GIT = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim()
+  const PKG = (extra: Record<string, unknown> = {}): string =>
+    `${JSON.stringify({ name: 'demo', version: '1.0.0', dependencies: { vue: '^3.0.0' }, ...extra }, null, 2)}\n`
+
+  function shimmed(
+    repo: Repo,
+    command: string,
+    failOn = ''
+  ): { status: number | null; stderr: string; calls: string[] } {
+    const bin = mkdtempSync(join(tmpdir(), 'rc-hook-shim-'))
+    cleanup.push(bin)
+    const log = join(bin, 'calls.log')
+    const guard = failOn
+      ? `case " $* " in *" ${failOn} "*) echo "injected failure" >&2; exit 1;; esac\n`
+      : ''
+    writeFileSync(
+      join(bin, 'git'),
+      `#!/bin/sh\necho "$*" >> "${log}"\n${guard}exec "${GIT}" "$@"\n`,
+      { mode: 0o755 }
+    )
+    const r = spawnSync('python3', [HOOK], {
+      input: JSON.stringify({ tool_input: { command } }),
+      env: { ...process.env, CLAUDE_PROJECT_DIR: repo.dir, PATH: `${bin}:${process.env.PATH}` },
+      encoding: 'utf8',
+    })
+    const logged = (): string[] => {
+      try {
+        return readFileSync(log, 'utf8').split('\n').filter(Boolean)
+      } catch {
+        return []
+      }
+    }
+    return { status: r.status, stderr: r.stderr, calls: logged() }
+  }
+
+  const stage = (repo: Repo, files: Record<string, string>): void => {
+    repo.write(files)
+    repo.git('add', '-A')
+  }
+  const featRepo = (extra: Record<string, string> = {}): Repo =>
+    createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc({ ticks: { review: null } })),
+      ...extra,
+    })
+
+  it('a commit check reads the branch and each merge marker once', () => {
+    const repo = featRepo()
+    stage(repo, { 'app/a.ts': 'export {}\n' })
+    const run = shimmed(repo, COMMIT)
+    expect(run.status, run.stderr).toBe(0)
+    expect(run.calls.filter((c) => c === 'rev-parse --abbrev-ref HEAD')).toHaveLength(1)
+    for (const marker of [
+      'MERGE_HEAD',
+      'rebase-merge',
+      'rebase-apply',
+      'CHERRY_PICK_HEAD',
+      'REVERT_HEAD',
+    ])
+      expect(
+        run.calls.filter((c) => c === `rev-parse --git-path ${marker}`),
+        marker
+      ).toHaveLength(1)
+  })
+
+  it('the branch scan blocks when git cannot list the feat branches or no base branch exists', () => {
+    const repo = featRepo()
+    const failed = shimmed(repo, 'git checkout -b feat/new', 'for-each-ref')
+    expect(failed.status, failed.stderr).toBe(2)
+    expect(failed.stderr).toContain('Rule 06/18')
+    expect(failed.stderr).toContain('could not list')
+    expect(
+      shimmed(repo, 'ALLOW_UNMERGED_FEAT=1 git checkout -b feat/new', 'for-each-ref').status
+    ).toBe(0)
+
+    const noBase = featRepo()
+    noBase.git('branch', '-m', 'main', 'trunk')
+    const missing = shimmed(noBase, 'git checkout -b feat/new')
+    expect(missing.status, missing.stderr).toBe(2)
+    expect(missing.stderr).toContain('base branch')
+    expect(shimmed(noBase, 'ALLOW_UNMERGED_FEAT=1 git checkout -b feat/new').status).toBe(0)
+  })
+
+  it('rule 12 blocks when the staged diff cannot be read', () => {
+    const repo = featRepo()
+    stage(repo, { 'app/a.ts': 'export {}\n' })
+    const failed = shimmed(repo, COMMIT, '--numstat')
+    expect(failed.status, failed.stderr).toBe(2)
+    expect(failed.stderr).toContain('Rule 12')
+    expect(failed.stderr).toContain('could not read')
+  })
+
+  it('rule 11 blocks when package.json cannot be read from the index or HEAD', () => {
+    const decision = {
+      '.claude/docs/decisions/001-x.md': '# x\n\nTouches package.json.\n',
+    }
+    for (const failOn of [':package.json', 'HEAD:package.json']) {
+      const repo = featRepo({ 'package.json': PKG() })
+      stage(repo, { 'package.json': PKG({ dependencies: { vue: '^3.1.0' } }), ...decision })
+      expect(shimmed(repo, COMMIT).status).toBe(0)
+      const failed = shimmed(repo, COMMIT, failOn)
+      expect(failed.status, `${failOn}: ${failed.stderr}`).toBe(2)
+      expect(failed.stderr, failOn).toContain('Rule 11')
+      expect(failed.stderr, failOn).toContain('could not read package.json')
+    }
   })
 })
