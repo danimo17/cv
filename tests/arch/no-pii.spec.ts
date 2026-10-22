@@ -57,7 +57,7 @@ async function pdfText(file: string): Promise<string> {
   }
 }
 
-describe('no personal contact data (regla 04)', () => {
+describe('no personal contact data (rule 04)', () => {
   it.each(textSources())('$label contains no phone number or postal code', ({ text }) => {
     const hits = findPii(text)
     expect(hits, hits.join('; ')).toEqual([])

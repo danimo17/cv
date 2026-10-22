@@ -272,6 +272,55 @@ checks: the lockfile resolves `@modelcontextprotocol/server`, `vite` and `launch
 versions (so a removed override or a regenerated lockfile cannot bring the vulnerable range back), and every decision
 that explains an override carries a remove-when condition.
 
+**Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
+git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
+absolute path. Specs that build throwaway repos (`cwd: tmpdir`) then wrote into the real repository: stray `seed`,
+`review` and `base` commits, `feat/demo`-style branches, and a `core.hooksPath` pointing at a temp dir (shared by all
+worktrees, so every hook silently stopped running). The setup file exports `scrubGitEnv(env)` (returns the removed
+names) and calls it on `process.env` when imported, before any spec runs. It removes the repository-redirecting
+variables (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`,
+`GIT_NAMESPACE`, `GIT_PREFIX`, `GIT_COMMON_DIR`, `GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_<n>`,
+`GIT_CONFIG_VALUE_<n>`) and the identity/date overrides (`GIT_AUTHOR_*`, `GIT_COMMITTER_*`: they do not redirect the
+repository, but they beat the `git config user.*` the fixtures set, so a leaked value would make fixture commits
+depend on the caller). `PATH`, `HOME`, `GIT_EXEC_PATH` and `GIT_CONFIG_GLOBAL` are kept. The spec unit-tests
+`scrubGitEnv` with a fake environment holding every variable (and one with unrelated variables), checks that the real
+`process.env` is clean, and asserts that `vitest.config.ts` registers the file in `setupFiles`, so removing the
+registration fails the spec instead of silently turning the scrub off.
+
+**Arch tests for rules 02, 13, 14 and 15 (decision 060).** Shared helper `tests/arch/support/repo-files.ts` lists the
+tracked-plus-untracked-not-ignored files (`git ls-files --cached --others --exclude-standard`) and reads them as
+text (binary files are skipped).
+
+- `tests/arch/no-code-comments.spec.ts` (rule 14): tokenizes `.ts`/`.mts`/`.js`/`.mjs`/`.cjs`/`.vue`/`.css` under
+  `app/`, `server/`, `shared/` and `nuxt.config.ts`, `eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`
+  (strings, template literals and regex literals are skipped, so `https://` is not a comment; a `/` after `)`, `]`,
+  `}` or an identifier, including `list_of` / `a$in` / `item2`, is division; the opening `<script>`/`<style>` tag is
+  parsed with quoted attribute values). Any `//`, `/* */` or `<!-- -->` fails, except
+  `// #region <Static variables|Reactive variables|Methods|Component data|Lifecycle|State|Getters>` and
+  `// #endregion` under `app/composables/` and `app/stores/`, and the exact first-line `// @ts-check` pragma of the
+  four root config files. Limit: comments inside Vue template expressions are not scanned (queued in
+  `workflow-integrity-hardening`). Further tests pin the scanner (false positives and misses), the marker rule and
+  the pragma exemption.
+- `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
+  `@ts-ignore`, `@ts-nocheck` in any tracked file, `tests/` and `e2e/` included. Only markdown files under `.claude/`
+  (documentation prose that quotes the directives) and the lockfile are skipped; the spec builds its samples from
+  fragments so it matches nothing itself and no test file is exempt.
+- `tests/arch/language.spec.ts` (rule 13): per line, flags a Catalan/Spanish letter, or at least two distinct words
+  from a curated Catalan/Spanish stopword list (function words that are not English words nor locale codes), in every
+  tracked text file outside `i18n/locales/`. An unaccented Catalan sentence is caught by its function words; one foreign
+  word in an English line is not. The allowlist is per token (exact proper names or labels, masked only in the named
+  files, each group with a reason; at most ten groups, asserted, and each token must still exist in its file); the spec
+  itself is the one whole-file exception. A false positive is a token entry, not a weaker heuristic.
+- `tests/arch/no-internal-resources.spec.ts` (rule 02): Atlassian cloud hosts, Jira ticket / Confluence / Slack message
+  URLs, GitHub URLs of the company organization, company sub-domains other than `www`, company e-mail addresses and internal-looking
+  hostnames in any tracked file. Each marker has a sample the spec proves it matches; `https://www.pdpaola.com`
+  (public CV fact) must stay unmatched.
+- `tests/arch/rules-enforced-by-tests.spec.ts`: rules 02, 13, 14, 15 name their spec in "How it's checked", the spec
+  exists, and the rule's own `hard-rules.md` row names it (a spec named only in another rule's row does not count).
+  The backlog row status is deliberately not asserted: it is transient bookkeeping, not part of the rule.
+  A third test checks that every `decision NNN` cited in those four specs has a file under `.claude/docs/decisions/`
+  (a stale citation fails).
+
 ## Environments and deploy
 
 Decisions: 021 (environments), 022 (scans), 024 (GitHub environment, secrets, ruleset).
