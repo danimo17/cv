@@ -14,6 +14,14 @@
 | -------- | ----- | -------- |
 | …        | …     | …        |
 
+## Shared component consumers
+
+Required when the task changes a component under `app/components/shared/` or one used from more than one
+parent; otherwise write `n/a` and why.
+
+- Consumers (result of `grep -rn "ComponentName" app/ tests/ e2e/`): …
+- Scope asked of the user before this contract: only here / everywhere → answer: …
+
 ## Standards to consult
 
 - `.claude/docs/standards/….md`
