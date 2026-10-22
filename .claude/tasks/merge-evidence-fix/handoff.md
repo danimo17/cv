@@ -16,9 +16,9 @@ sha.
 - [x] validate — evidence: 2026-10-22 the new tests failed before the hook change (3 of 5 red) and pass after it; the stale-tip hunk was reverted once to confirm two tests depend on it
 - [x] handoff — evidence: 2026-10-22 this file
 - [x] commit — evidence: d7db3cb
-- [ ] review — evidence:
+- [x] review — evidence: 596b31e (commit that recorded the Review section; code-review not run, small hook fix covered by the new tests and gate:push, findings: none)
 - [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] gate-push — evidence: 2026-10-22 pnpm gate:push exit 0 on 596b31e: eslint 0 errors, 26 test files / 609 tests passed, nuxt build complete, playwright 5 passed (14.4s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
