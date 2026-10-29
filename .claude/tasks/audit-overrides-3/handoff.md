@@ -9,11 +9,11 @@ _Updated: 2026-10-29. REAL state of the `feat/audit-overrides-3` branch._
 - [x] build — evidence: 99b499f (nine overrides, lockfile, decision 062, arch test, catalog)
 - [x] consolidate — evidence: 99b499f (pnpm gate green in the commit hook)
 - [x] validate — evidence: 2026-10-29 pnpm gate 26 files / 604 tests passed, 0 lint errors; pnpm audit --audit-level=high exit 0
-- [ ] handoff — evidence:
+- [x] handoff — evidence: 4d68da5 (handoff.md with Review committed)
 - [x] commit — evidence: 99b499f
-- [ ] review — evidence:
+- [x] review — evidence: 4d68da5 (commit that recorded the Review section; code-review not run, dependency-only change, findings: none)
 - [ ] close-out — evidence:
-- [ ] gate-push — evidence:
+- [x] gate-push — evidence: 2026-10-29 pnpm gate:push exit 0 on 99b499f: 604 unit/arch tests passed (26 files), nuxt build complete, playwright 5 passed
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -26,7 +26,7 @@ _Updated: 2026-10-29. REAL state of the `feat/audit-overrides-3` branch._
 
 ## In progress / not done
 
-- Nothing in the code. Review, close-out and gate-push are recorded in the progress block above.
+- Nothing in the code. Close-out is the last commit; the push is not done (needs the user's permission).
 
 ## Subagents (rule 12)
 
