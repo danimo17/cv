@@ -182,7 +182,7 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     ).toEqual([])
   })
 
-  it('the lockfile resolves the advisory packages of decision 061 only at or above their patched versions', () => {
+  it('the lockfile resolves the advisory packages of decisions 061 and 062 only at or above their patched versions', () => {
     const advisories: Array<[string, Version, Version, string]> = [
       [
         '@modelcontextprotocol/server',
@@ -192,6 +192,15 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
       ],
       ['vite', [8, 3, 0], [8, 3, 3], 'GHSA-587h-7wmj-h5pm'],
       ['launch-editor', [0, 0, 0], [2, 14, 2], 'GHSA-587h-7wmj-h5pm'],
+      ['zod', [0, 0, 0], [4, 6, 6], 'GHSA-mrhx-c7xc-m3w5'],
+      ['happy-dom', [0, 0, 0], [21, 0, 4], 'GHSA-834v-8h66-3h79 / GHSA-c8p4-j97h-3vg8'],
+      ['undici', [7, 0, 0], [7, 30, 1], 'GHSA-xjj6-f33q-929c / GHSA-4w7w-5xrc-9h26'],
+      ['undici', [8, 0, 0], [8, 12, 2], 'GHSA-xjj6-f33q-929c / GHSA-4w7w-5xrc-9h26'],
+      ['seroval', [0, 0, 0], [1, 6, 8], 'GHSA-97r2-qh9m-474h / GHSA-wp97-x4hv-qvhp'],
+      ['@intlify/shared', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
+      ['@intlify/core', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
+      ['@intlify/core-base', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
+      ['vue-i18n', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
     ]
     for (const [name, from, patched, advisory] of advisories) {
       const versions = resolvedVersions(name)
