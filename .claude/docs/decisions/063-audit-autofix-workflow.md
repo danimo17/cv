@@ -40,7 +40,8 @@ design working, not a defect.
    so the age wait still applies to every version the fix pulls in.
 4. `pnpm install --no-frozen-lockfile --ignore-scripts`, then `pnpm audit --audit-level=high` again.
 5. Only if all of that passed and `git status` shows changes: branch `chore/audit-fix-<YYYYMMDD>`, a generated
-   decision file `.claude/docs/decisions/audit-fix-<YYYYMMDD>.md` (each override in backticks plus a REMOVE-WHEN
+   decision file `.claude/docs/decisions/audit-fix-<YYYYMMDD>.md` (suffixed with the run number when the branch name is taken, so an
+   earlier merged file is never overwritten; each override in backticks plus a REMOVE-WHEN
    condition), commit `fix(deps): auto-fix audit advisories` as `danimo17`, push and `gh pr create` against the default
    branch. The body lists the overrides and tells the owner to review and merge.
 6. If the fix, the install or the second audit fails: open or update ONE issue titled

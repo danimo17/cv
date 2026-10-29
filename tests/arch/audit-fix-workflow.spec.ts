@@ -275,7 +275,8 @@ describe('audit-fix workflow', () => {
       ].join('\n')
     )
 
-    expect(text).toMatch(/\.claude\/docs\/decisions\/audit-fix-\$\{?day\}?\.md/)
+    expect(text).toMatch(/stamp="\$\{branch#chore\/audit-fix-\}"/)
+    expect(text).toMatch(/decision="\.claude\/docs\/decisions\/audit-fix-\$stamp\.md"/)
     expect(text).toContain('REMOVE-WHEN')
     expect(text).toContain('.claude/docs/decisions/063-audit-autofix-workflow.md')
   })
