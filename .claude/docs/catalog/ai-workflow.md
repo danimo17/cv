@@ -256,7 +256,7 @@ checks `workflow.md`, rules 09/10, decision 057, the templates and this catalog 
 document reopening via `git revert <close-out sha>`; checks `workflow.md`'s `## Review policy` (finding becomes a test, search first, test is the verification, two rounds, deliberate evasions queued, honest limit) and rule 09, decision 057 and both templates carry the finding formats; checks every `hard-rules.md` table row stays under 700
 characters (detail lives in `rules/NN-*.md`); checks no arch spec references a test-only hook override.
 
-**Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058, 061; the CI `audit` job runs `pnpm audit
+**Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058, 061, 062; the CI `audit` job runs `pnpm audit
 --audit-level=high`): parses `pnpm-workspace.yaml` and checks that every `overrides` entry has a selector with an
 exclusive upper bound (`pkg@<range <patched`) and a caret value whose floor is at least that patched version, that a
 decision quotes both the selector and the value, that `pnpm-lock.yaml` resolves nothing inside the vulnerable
@@ -270,7 +270,8 @@ switches devtools to the named `simpleGit` export of `simple-git` 4.x): `simple-
 patch and the override come together, and a decision names each patch with a remove-when condition. Decision 061 added two
 checks: the lockfile resolves `@modelcontextprotocol/server`, `vite` and `launch-editor` only at or above their patched
 versions (so a removed override or a regenerated lockfile cannot bring the vulnerable range back), and every decision
-that explains an override carries a remove-when condition.
+that explains an override carries a remove-when condition. Decision 062 extended the lockfile check to `zod`, `happy-dom`, both `undici`
+lines (7.x and 8.x), `seroval`, `@intlify/shared`, `@intlify/core`, `@intlify/core-base` and `vue-i18n`.
 
 **Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
 git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
