@@ -18,12 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # historial complet: gitleaks escaneja tots els commits
-      # GITLEAKS_LICENSE només cal en repos d'organització; danimo17/cv és d'un compte personal.
+          fetch-depth: 0 # full history: gitleaks scans every commit
+      # GITLEAKS_LICENSE is only needed in organization repos; danimo17/cv belongs to a personal account.
       - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_COMMENTS: 'false' # sense pull-requests:write; el resultat surt al job summary
+          GITLEAKS_ENABLE_COMMENTS: 'false' # without pull-requests:write; the result goes to the job summary
 
   audit:
     name: audit
