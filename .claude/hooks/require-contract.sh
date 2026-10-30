@@ -1,3 +1,3 @@
 #!/bin/sh
-# Claude Code PreToolUse hook (Bash). Regles 09 i 10. La logica es a require-contract.py.
+# Claude Code PreToolUse hook (Bash). Rules 09 and 10. The logic lives in require-contract.py.
 exec python3 "$(dirname "$0")/require-contract.py"

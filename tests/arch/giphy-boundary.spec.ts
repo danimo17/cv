@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 const ROOT = process.cwd()
 const SCANNED_DIRS = ['app', 'server', 'shared']
 const TEXT_EXT = /\.(ts|js|mjs|vue|json|css|md|txt|html)$/
-// Decisió 029: l'única porta del client a /api/giphy és la capa de servei.
+// Decision 029: the client's only gateway to /api/giphy is the service layer.
 const CLIENT_OWNER = 'app/services/giphy/'
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -28,7 +28,7 @@ function filesContaining(needle: string): string[] {
     .map(rel)
 }
 
-describe('Giphy boundary (regla 03)', () => {
+describe('Giphy boundary (rule 03)', () => {
   it('only the server talks to api.giphy.com', () => {
     const offenders = filesContaining('api.giphy.com').filter((f) => !f.startsWith('server/'))
     expect(offenders, `api.giphy.com outside server/: ${offenders.join(', ')}`).toEqual([])
@@ -53,7 +53,7 @@ describe('Giphy boundary (regla 03)', () => {
     expect(owners).toContain('app/services/giphy/GiphyService.ts')
   })
 
-  it('no composable talks to /api/giphy any more (decisió 029)', () => {
+  it('no composable talks to /api/giphy any more (decision 029)', () => {
     const composables = filesContaining('/api/giphy').filter((f) =>
       f.startsWith('app/composables/')
     )

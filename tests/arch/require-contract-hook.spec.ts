@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -1250,7 +1250,7 @@ describe('a code commit after the review evidence makes the review stale', () =>
   it('a closed branch is re-checked at push: code after the review blocks', () => {
     const repo = closedBranchRepo(archiveDoc())
     expectAllowed(repo, PUSH)
-    commitFile(repo, 'app/late.ts')
+    commitFile(repo, '.claude/hooks/late.py')
     expectBlocked(repo, PUSH, 'stale', '/code-review high')
   })
 
@@ -1732,6 +1732,88 @@ describe('merging main after the review does not make it stale', () => {
     repo.git('branch', '-m', 'main', 'trunk')
     commitFile(repo, 'app/thing.ts')
     expectBlocked(repo, PUSH, 'stale', 'app/thing.ts')
+  })
+})
+
+describe('a merge in progress takes evidence from both sides of the merge', () => {
+  const BACKLOG = '.claude/backlog.md'
+  const OTHER_ARCHIVE = '.claude/tasks/closed/other.md'
+  const OTHER_FOLDER = '.claude/tasks/other'
+  const hasMergeHead = (repo: Repo): boolean => existsSync(join(repo.dir, '.git', 'MERGE_HEAD'))
+
+  function incoming(options: {
+    closesFolder?: boolean
+    lateCode?: boolean
+    stray?: boolean
+    merge?: boolean
+  }): Repo {
+    const folder = options.closesFolder ? taskFiles(handoffDoc(), 'other') : {}
+    const repo = createRepo({
+      '.claude/tasks/ACTIVE': `${SLUG}\n`,
+      ...taskFiles(handoffDoc()),
+      ...folder,
+      [BACKLOG]: 'row\n',
+    })
+    commitFile(repo, BACKLOG, 'feat line\n')
+    if (options.closesFolder) commitFile(repo, 'app/branch.ts')
+    let stray = ''
+    if (options.stray) {
+      repo.git('switch', '-q', '-c', 'stray', 'main')
+      stray = commitFile(repo, '.claude/stray.md', '# stray\n')
+    }
+    repo.git('switch', '-q', '-c', 'side', 'main')
+    commitFile(repo, BACKLOG, 'side line\n')
+    const reviewed = commitFile(repo, OTHER_ARCHIVE, `# stub\n\n${REVIEW_OK}`)
+    if (options.closesFolder) repo.remove(OTHER_FOLDER)
+    repo.write({
+      [OTHER_ARCHIVE]: archiveDoc({
+        ticks: { commit: reviewed, review: reviewed, 'close-out': stray || reviewed },
+      }),
+    })
+    repo.commitAll('close other')
+    if (options.lateCode) commitFile(repo, '.claude/hooks/late.py')
+    repo.git('switch', '-q', `feat/${SLUG}`)
+    if (options.merge === false) {
+      repo.git('checkout', 'side', '--', OTHER_ARCHIVE)
+      return repo
+    }
+    spawnSync('git', ['merge', '--no-commit', '--no-ff', 'side'], { cwd: repo.dir })
+    repo.write({ [BACKLOG]: 'resolved\n' })
+    repo.git('add', '-A')
+    return repo
+  }
+
+  it('a merge commit accepts evidence shas that are ancestors of MERGE_HEAD', () => {
+    const repo = incoming({})
+    expect(hasMergeHead(repo)).toBe(true)
+    expect(repo.git('ls-files', '--unmerged')).toBe('')
+    expectAllowed(repo, COMMIT)
+    expectCliAllowed(runCli(repo, ['--commit']))
+  })
+
+  it('a merge commit still rejects an evidence sha that is an ancestor of neither side', () => {
+    const repo = incoming({ stray: true })
+    expect(hasMergeHead(repo)).toBe(true)
+    expectBlocked(repo, COMMIT, 'close-out', 'ancestor')
+    expectCliBlocked(runCli(repo, ['--commit']), 'close-out', 'ancestor')
+  })
+
+  it('the same archive staged with no merge in progress is rejected as outside the history of HEAD', () => {
+    const repo = incoming({ merge: false })
+    expect(hasMergeHead(repo)).toBe(false)
+    expectBlocked(repo, COMMIT, 'commit', 'ancestor')
+  })
+
+  it('a merge that closes a task from the other side is not stale because of the branch own code', () => {
+    const repo = incoming({ closesFolder: true })
+    expect(hasMergeHead(repo)).toBe(true)
+    expectAllowed(repo, COMMIT)
+    expectCliAllowed(runCli(repo, ['--commit']))
+  })
+
+  it('a merge that closes a task from the other side still reports a review stale on that side', () => {
+    const repo = incoming({ closesFolder: true, lateCode: true })
+    expectBlocked(repo, COMMIT, 'stale', '.claude/hooks/late.py')
   })
 })
 

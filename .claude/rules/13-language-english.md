@@ -7,6 +7,7 @@ documentation (hard-rules, workflow, rules, decisions, standards, catalog, contr
 reason those files exist.
 **Why.** The repo is public (decision 030); English is the de facto standard for open source and is
 consistent with the commits, which already were in English.
-**How it's checked.** Human review; existing migration inventoried and pending in `docs/decisions/040-english-only.md`
-(explicit debt, not retroactive all at once). Consider a `tests/arch/language.spec.ts` test that would block
-Catalan characters outside `i18n/locales/` once the migration is done.
+**How it's checked.** `tests/arch/language.spec.ts` scans every tracked text file outside `i18n/locales/` (`.claude/`
+docs, workflows, hooks and tests included) for Catalan/Spanish letters, words and function-word runs. It is a
+heuristic: a false positive goes into the spec's whole-file allowlist with its reason inline (proper names, CV data
+tables), never into a weakened heuristic. Wording that is English but unusual is still a human-review matter.

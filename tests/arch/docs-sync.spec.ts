@@ -45,7 +45,7 @@ function expectDocumented(names: string[], doc: string, what: string) {
   expect(missing, `${what} without a ${basename(doc)} block: ${missing.join(', ')}`).toEqual([])
 }
 
-describe('living docs stay in sync (regla 07)', () => {
+describe('living docs stay in sync (rule 07)', () => {
   it('every component has a ### block in .claude/docs/catalog/components.md', () => {
     const documented = headings(COMPONENTS_DOC)
     const components = walk(COMPONENTS_DIR)
@@ -91,7 +91,7 @@ describe('living docs stay in sync (regla 07)', () => {
     expectDocumented(names, STATE_DOC, 'utils')
   })
 
-  it('every service class is documented in .claude/docs/catalog/state.md (decisió 029)', () => {
+  it('every service class is documented in .claude/docs/catalog/state.md (decision 029)', () => {
     const names = tsFiles(join(ROOT, 'app', 'services')).flatMap((f) =>
       exportedNames(f, CLASS_EXPORT)
     )
