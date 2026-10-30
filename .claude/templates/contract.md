@@ -16,11 +16,12 @@
 
 ## Shared component consumers
 
-Only when the task changes a file under `app/components/shared/` (rule 16, enforced at commit time; otherwise
-delete this section): the result of `grep -rn "ComponentName" app/` and the decision (only here / everywhere).
-The hook blocks the commit while this section is empty.
+Required when the task changes a component under `app/components/shared/` or one used from more than one
+parent; otherwise write `n/a` and why. Rule 16 is enforced at commit time: the hook blocks a commit that stages
+a file under `app/components/shared/` while this section is missing or empty.
 
-- …
+- Consumers (result of `grep -rn "ComponentName" app/ tests/ e2e/`): …
+- Scope asked of the user before this contract: only here / everywhere → answer: …
 
 ## Standards to consult
 
