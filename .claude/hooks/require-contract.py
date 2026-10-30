@@ -222,15 +222,24 @@ def review_section_changed(commit, slug):
     return False
 
 
+def merge_head(tip):
+    if tip != "HEAD":
+        return None
+    out = git(["rev-parse", "-q", "--verify", "MERGE_HEAD^{commit}"])
+    return out.strip() if out and out.strip() else None
+
+
 def step_commit(step, evidence, tip, slug):
     tip_commit = resolve_commit(tip)
+    merging = merge_head(tip)
     resolved = [c for c in (resolve_commit(t) for t in HEX_TOKEN.findall(evidence)) if c]
     if not resolved:
         return None, (
             "evidence must contain a 7-40 character commit sha that resolves to a commit in this "
             "repository"
         )
-    ancestors = [c for c in resolved if tip_commit and git_ok(["merge-base", "--is-ancestor", c, tip_commit])]
+    tips = [t for t in (tip_commit, merging) if t]
+    ancestors = [c for c in resolved if any(git_ok(["merge-base", "--is-ancestor", c, t]) for t in tips)]
     if not ancestors:
         return None, (
             "the cited commit sha is not an ancestor of the tip being checked "
@@ -336,6 +345,9 @@ def stale_review_problem(content, tip, slug, base_ref=None):
         tip_commit = resolve_commit(tip)
         if not review_commit or not tip_commit:
             return None
+        merging = merge_head(tip)
+        if merging and not git_ok(["merge-base", "--is-ancestor", review_commit, tip_commit]):
+            tip_commit = merging
         compared = resolve_base(base_ref)
         changed = changed_branch_code(compared, review_commit, tip_commit) if compared else None
         if changed is None:
