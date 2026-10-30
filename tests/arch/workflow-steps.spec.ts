@@ -296,7 +296,10 @@ describe('close-workflow-redesign: workflow documents', () => {
     const decision = read(join(DECISIONS_DIR, file as string))
     expect(decision).toMatch(/042/)
     expect(decision).toMatch(/051/)
+    expect(decision).toContain('## Amendment 2026-10-22 (merge-aware ancestry)')
+    expect(decision).toContain('MERGE_HEAD')
     expect(read(CATALOG)).toContain('workflow-steps.json')
+    expect(read(CATALOG)).toMatch(/ancestor of `HEAD` or of `MERGE_HEAD`/)
   })
 })
 

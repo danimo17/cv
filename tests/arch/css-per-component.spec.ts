@@ -33,7 +33,7 @@ const components = walk(COMPONENTS_DIR)
 
 const mainCss = readFileSync(MAIN_CSS, 'utf8')
 
-describe('one CSS file per component (regla 08)', () => {
+describe('one CSS file per component (rule 08)', () => {
   it('finds components', () => {
     expect(components.length).toBeGreaterThan(0)
   })

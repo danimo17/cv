@@ -120,7 +120,9 @@ the folder back and removes the archive, then fix, re-review, close again (enfor
   `## Review` section of `.claude/tasks/<slug>/handoff.md` or `.claude/tasks/closed/<slug>.md` versus its first
   parent (a root commit counts as changed if the section exists; a commit that only ticks progress, edits
   Pending or drops the section does not), i.e. the commit that recorded the review; if several shas are cited,
-  any qualifying one passes. `close-out` cannot cite its own commit (a commit cannot name its sha), only an earlier one. Any other
+  any qualifying one passes. While a merge is in progress (`MERGE_HEAD`) the commit-time ancestry test accepts an
+  ancestor of `HEAD` or of `MERGE_HEAD` (archives arriving from the other side of a conflicted merge; freshness then uses
+  `MERGE_HEAD` as the tip for such a review; decision 057 amendment 2026-10-22). `close-out` cannot cite its own commit (a commit cannot name its sha), only an earlier one. Any other
   step is free text. `[X]` counts as ticked like `[x]` everywhere (progress regex
   `^- \[( |x|X)\] (\S+) — evidence:\s*(.*)$`). Messages name the step and why (`no evidence`, the sha
   requirement, the ancestry requirement or the review-commit requirement).
@@ -288,7 +290,7 @@ checks `workflow.md`, rules 09/10, decision 057, the templates and this catalog 
 document reopening via `git revert <close-out sha>`; checks `workflow.md`'s `## Review policy` (finding becomes a test, search first, test is the verification, two rounds, deliberate evasions queued, honest limit) and rule 09, decision 057 and both templates carry the finding formats; checks every `hard-rules.md` table row stays under 700
 characters (detail lives in `rules/NN-*.md`); checks no arch spec references a test-only hook override.
 
-**Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058; the CI `audit` job runs `pnpm audit
+**Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058, 061, 062; the CI `audit` job runs `pnpm audit
 --audit-level=high`): parses `pnpm-workspace.yaml` and checks that every `overrides` entry has a selector with an
 exclusive upper bound (`pkg@<range <patched`) and a caret value whose floor is at least that patched version, that a
 decision quotes both the selector and the value, that `pnpm-lock.yaml` resolves nothing inside the vulnerable
@@ -299,7 +301,60 @@ lockfile regeneration that drops a transitive back into a vulnerable range, fail
 switches devtools to the named `simpleGit` export of `simple-git` 4.x): `simple-git` resolves only at or above
 `4.0.1`, each patch file exists under `patches/`, contains `simpleGit as Git` and targets the version locked in
 `pnpm-lock.yaml` (a devtools bump fails with the instruction to remove the patch and the `simple-git` override), the
-patch and the override come together, and a decision names each patch with a remove-when condition.
+patch and the override come together, and a decision names each patch with a remove-when condition. Decision 061 added two
+checks: the lockfile resolves `@modelcontextprotocol/server`, `vite` and `launch-editor` only at or above their patched
+versions (so a removed override or a regenerated lockfile cannot bring the vulnerable range back), and every decision
+that explains an override carries a remove-when condition. Decision 062 extended the lockfile check to `zod`, `happy-dom`, both `undici`
+lines (7.x and 8.x), `seroval`, `@intlify/shared`, `@intlify/core`, `@intlify/core-base` and `vue-i18n`.
+
+**Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
+git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
+absolute path. Specs that build throwaway repos (`cwd: tmpdir`) then wrote into the real repository: stray `seed`,
+`review` and `base` commits, `feat/demo`-style branches, and a `core.hooksPath` pointing at a temp dir (shared by all
+worktrees, so every hook silently stopped running). The setup file exports `scrubGitEnv(env)` (returns the removed
+names) and calls it on `process.env` when imported, before any spec runs. It removes the repository-redirecting
+variables (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`,
+`GIT_NAMESPACE`, `GIT_PREFIX`, `GIT_COMMON_DIR`, `GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_<n>`,
+`GIT_CONFIG_VALUE_<n>`) and the identity/date overrides (`GIT_AUTHOR_*`, `GIT_COMMITTER_*`: they do not redirect the
+repository, but they beat the `git config user.*` the fixtures set, so a leaked value would make fixture commits
+depend on the caller). `PATH`, `HOME`, `GIT_EXEC_PATH` and `GIT_CONFIG_GLOBAL` are kept. The spec unit-tests
+`scrubGitEnv` with a fake environment holding every variable (and one with unrelated variables), checks that the real
+`process.env` is clean, and asserts that `vitest.config.ts` registers the file in `setupFiles`, so removing the
+registration fails the spec instead of silently turning the scrub off.
+
+**Arch tests for rules 02, 13, 14 and 15 (decision 060).** Shared helper `tests/arch/support/repo-files.ts` lists the
+tracked-plus-untracked-not-ignored files (`git ls-files --cached --others --exclude-standard`) and reads them as
+text (binary files are skipped).
+
+- `tests/arch/no-code-comments.spec.ts` (rule 14): tokenizes `.ts`/`.mts`/`.js`/`.mjs`/`.cjs`/`.vue`/`.css` under
+  `app/`, `server/`, `shared/` and `nuxt.config.ts`, `eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`
+  (strings, template literals and regex literals are skipped, so `https://` is not a comment; a `/` after `)`, `]`,
+  `}` or an identifier, including `list_of` / `a$in` / `item2`, is division; the opening `<script>`/`<style>` tag is
+  parsed with quoted attribute values). Any `//`, `/* */` or `<!-- -->` fails, except
+  `// #region <Static variables|Reactive variables|Methods|Component data|Lifecycle|State|Getters>` and
+  `// #endregion` under `app/composables/` and `app/stores/`, and the exact first-line `// @ts-check` pragma of the
+  four root config files. Limit: comments inside Vue template expressions are not scanned (queued in
+  `workflow-integrity-hardening`). Further tests pin the scanner (false positives and misses), the marker rule and
+  the pragma exemption.
+- `tests/arch/no-lint-suppressions.spec.ts` (rule 15): `eslint-disable`, `eslint-enable`, `@ts-expect-error`,
+  `@ts-ignore`, `@ts-nocheck` in any tracked file, `tests/` and `e2e/` included. Only markdown files under `.claude/`
+  (documentation prose that quotes the directives) and the lockfile are skipped; the spec builds its samples from
+  fragments so it matches nothing itself and no test file is exempt.
+- `tests/arch/language.spec.ts` (rule 13): per line, flags a Catalan/Spanish letter, or at least two distinct words
+  from a curated Catalan/Spanish stopword list (function words that are not English words nor locale codes), in every
+  tracked text file outside `i18n/locales/`. An unaccented Catalan sentence is caught by its function words; one foreign
+  word in an English line is not. The allowlist is per token (exact proper names or labels, masked only in the named
+  files, each group with a reason; at most ten groups, asserted, and each token must still exist in its file); the spec
+  itself is the one whole-file exception. A false positive is a token entry, not a weaker heuristic.
+- `tests/arch/no-internal-resources.spec.ts` (rule 02): Atlassian cloud hosts, Jira ticket / Confluence / Slack message
+  URLs, GitHub URLs of the company organization, company sub-domains other than `www`, company e-mail addresses and internal-looking
+  hostnames in any tracked file. Each marker has a sample the spec proves it matches; `https://www.pdpaola.com`
+  (public CV fact) must stay unmatched.
+- `tests/arch/rules-enforced-by-tests.spec.ts`: rules 02, 13, 14, 15 name their spec in "How it's checked", the spec
+  exists, and the rule's own `hard-rules.md` row names it (a spec named only in another rule's row does not count).
+  The backlog row status is deliberately not asserted: it is transient bookkeeping, not part of the rule.
+  A third test checks that every `decision NNN` cited in those four specs has a file under `.claude/docs/decisions/`
+  (a stale citation fails).
 
 ## Environments and deploy
 

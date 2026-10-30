@@ -44,10 +44,10 @@ jobs:
       - if: steps.cf.outputs.configured == 'true'
         run: pnpm build
 
-      # Puja una versió sense desplegar-la. L'àlies `pr-<n>` dona una URL estable per PR
-      # (pr-<n>-cv.<subdomini>.workers.dev) a més de la URL de versió.
-      # `--message` porta número + sha, no el títol del PR: el títol és text d'usuari i aniria dins d'una ordre de shell.
-      # `deployment-url` = `preview_url` de la versió pujada (wrangler-action llegeix el fitxer d'output de wrangler).
+      # Uploads a version without deploying it. The `pr-<n>` alias gives a stable URL per PR
+      # (pr-<n>-cv.<subdomain>.workers.dev) besides the version URL.
+      # `--message` carries number + sha, not the PR title: the title is user text and would end up inside a shell command.
+      # `deployment-url` = `preview_url` of the uploaded version (wrangler-action reads wrangler's output file).
       - name: Upload preview version
         if: steps.cf.outputs.configured == 'true'
         id: upload
