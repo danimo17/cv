@@ -90,7 +90,7 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    | 06 branch discipline      | push-to-`main` blocked by global hook; staying on the right `feat/<slug>` branch is not                                              | yes — extend `require-contract.py` (or a new PreToolUse-on-Edit/Write hook) to check `git branch --show-current` matches `feat/<ACTIVE slug>` before allowing edits under `app/`/`server/`/`shared/`                                                                                                               |
    | 11 decisions logged       | partial (`DECISION_WORTHY` config-file check already exists)                                                                         | extend that same check: a commit touching `.claude/hard-rules.md` or `.claude/rules/*.md` also requires a decision file staged (a rule change is architecturally significant); the "did the AI silently substitute a directive" half stays human-only — inherently about the AI's internal choice, no file to grep |
    | 12 orchestration          | human review only                                                                                                                    | yes — item 4 above                                                                                                                                                                                                                                                                                                 |
-   | 13 English only           | human review only (already flagged "consider" in `rules/13`)                                                                         | yes, heuristically — promote the already-suggested `tests/arch/language.spec.ts` from "consider" to build: flag `ç`/`ñ`/inverted punctuation/common ca-es stopwords outside `i18n/locales/*.json`; won't be 100% precise, still catches the common case                                                            |
+   | 13 English only           | human review only (already flagged "consider" in `rules/13`)                                                                         | yes, heuristically — promote the already-suggested `tests/arch/language.spec.ts` from "consider" to build: flag c-cedilla/n-tilde/inverted punctuation/common ca-es stopwords outside `i18n/locales/*.json`; won't be 100% precise, still catches the common case                                                  |
    | 14 no code comments       | human review only (already a named backlog item)                                                                                     | yes — promote `arch-no-comments-no-suppressions` (already in `.claude/backlog.md`) from `todo` to done as part of this task                                                                                                                                                                                        |
    | 15 lint suppressions      | `pnpm gate` catches real lint errors; the `eslint-disable`/`@ts-expect-error`/`@ts-ignore` grep is the same named backlog item as 14 | yes — same test as above, one pass covers both                                                                                                                                                                                                                                                                     |
    | 16 UI pattern consistency | human review only                                                                                                                    | no realistic general check — visual/design judgment; stays human review, documented as a deliberate, permanent exception, not an oversight                                                                                                                                                                         |
@@ -135,6 +135,21 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
    at commit time, and every finding needs proof, decision 057 third amendment); residual risk accepted (user
    decision 2026-10-06). Same bucket by policy: other deliberate-evasion findings found by later reviews go here
    with a severity and do not block a close.
+
+9. **Comments inside Vue template expressions are not scanned by `tests/arch/no-code-comments.spec.ts`** (queued
+   2026-10-19, high-effort `/code-review` of `arch-rule-gates`; severity: low, a gap in coverage rather than a
+   gate bug). The spec scans `<script>` and `<style>` blocks and `<!-- -->` in templates, but a `//` or `/* */`
+   inside a template expression (`:prop="a /* why */"`, an inline event handler body) is not tokenized. Option:
+   parse the template expressions (`vue-eslint-parser` or a quote-aware scan of attribute values and
+   `{{ }}` interpolations) and run the script tokenizer over them. Documented as a known limit in decision 060 and
+   in the catalog.
+
+10. **The language check (rule 13) stays a heuristic** (queued 2026-10-19, same review; severity: low, accepted
+    limit). `tests/arch/language.spec.ts` flags a Catalan/Spanish letter or two distinct stopwords in one line, so
+    unaccented prose with fewer than two function words, and any other language, passes, and a foreign proper name
+    needs a per-token allowlist entry. A real language detector (a local n-gram model with no network, no new
+    runtime dependency in the app) would replace the word list; revisit only if the allowlist grows past the ten
+    groups that decision 060 sets as the limit.
 
 ## Out of scope
 

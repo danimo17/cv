@@ -17,5 +17,7 @@ templates. Anything that would explain "why" belongs in `.claude/docs/standards/
 and why; a comment in code drifts from them over time and the public repo shouldn't carry two versions of
 the same explanation.
 
-**How it's checked.** Human review; a `tests/arch/no-code-comments.spec.ts` is tracked as a backlog item
-(see `.claude/backlog.md`) to automate this once the initial pass (decision 041) is committed and stable.
+**How it's checked.** `tests/arch/no-code-comments.spec.ts` tokenizes every `.ts`/`.mjs`/`.vue`/`.css` file under `app/`,
+`server/`, `shared/` plus `nuxt.config.ts`, `eslint.config.mjs`, `vitest.config.ts` and `playwright.config.ts`, and
+fails on any `//`, `/* */` or `<!-- -->`, except the exact `// #region <Name>` / `// #endregion` markers (fixed
+region names) in `app/composables/` and `app/stores/`.

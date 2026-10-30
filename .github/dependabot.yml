@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: npm # cobreix pnpm-lock.yaml
+  - package-ecosystem: npm # covers pnpm-lock.yaml
     directory: /
     schedule:
       interval: weekly
@@ -9,7 +9,7 @@ updates:
       minor-and-patch:
         patterns: ['*']
         update-types: [minor, patch]
-    # Els majors arriben en PRs individuals.
+    # Major updates arrive as individual PRs.
 
   - package-ecosystem: github-actions
     directory: /

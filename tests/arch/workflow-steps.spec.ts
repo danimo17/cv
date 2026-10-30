@@ -297,12 +297,15 @@ describe('close-workflow-redesign: workflow documents', () => {
     const decision = read(join(DECISIONS_DIR, file as string))
     expect(decision).toMatch(/042/)
     expect(decision).toMatch(/051/)
+    expect(decision).toContain('## Amendment 2026-10-22 (merge-aware ancestry)')
+    expect(decision).toContain('MERGE_HEAD')
     expect(read(CATALOG)).toContain('workflow-steps.json')
     const catalog = read(CATALOG)
     for (const workflow of readdirSync(WORKFLOWS_DIR).filter((f) => /\.ya?ml$/.test(f)))
       expect(catalog, `${workflow} is not documented in the ai-workflow catalog`).toContain(
         `\`${workflow}\``
       )
+    expect(read(CATALOG)).toMatch(/ancestor of `HEAD` or of `MERGE_HEAD`/)
   })
 })
 

@@ -1,10 +1,10 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { ROOT, repoFiles } from './support/repo-files'
 
-const ROOT = process.cwd()
+const ALL_FILES = repoFiles()
 // Built by concatenation so the dotenv literal never has to appear in a shell command.
 const ENV_FILE = '.' + 'env'
 const ENV_EXAMPLE = ENV_FILE + '.example'
@@ -28,28 +28,19 @@ const BINARY_EXT = new Set([
   '.gz',
 ])
 
-function gitFiles(): string[] {
-  return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
-    cwd: ROOT,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-}
-
 function textFiles(): string[] {
-  return gitFiles().filter((f) => !BINARY_EXT.has(extname(f)) && existsSync(join(ROOT, f)))
+  return ALL_FILES.filter((f) => !BINARY_EXT.has(extname(f)) && existsSync(join(ROOT, f)))
 }
 
 function basename(path: string): string {
   return path.split('/').pop() ?? path
 }
 
-describe('secrets never reach the repo (regla 01)', () => {
-  const files = gitFiles()
+describe('secrets never reach the repo (rule 01)', () => {
+  const files = ALL_FILES
 
   it('no dotenv file is tracked or untracked-unignored', () => {
+    expect(files.length, 'the repository file listing is not empty').toBeGreaterThan(100)
     const offenders = files.filter((f) => basename(f) === ENV_FILE)
     expect(offenders, `dotenv file present: ${offenders.join(', ')}`).toEqual([])
   })
