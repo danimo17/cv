@@ -24,7 +24,8 @@ const CATALOG = join(CLAUDE, 'docs', 'catalog', 'ai-workflow.md')
 const GATE_SCRIPT = 'require-contract.py'
 const PRE_COMMIT_HOOK = join(ROOT, '.githooks', 'pre-commit')
 const PRE_PUSH_HOOK = join(ROOT, '.githooks', 'pre-push')
-const CI_WORKFLOW = join(ROOT, '.github', 'workflows', 'ci.yml')
+const WORKFLOWS_DIR = join(ROOT, '.github', 'workflows')
+const CI_WORKFLOW = join(WORKFLOWS_DIR, 'ci.yml')
 const ARCH_DIR = join(ROOT, 'tests', 'arch')
 const HARD_RULES = join(CLAUDE, 'hard-rules.md')
 const RULE_09 = join(CLAUDE, 'rules', '09-gates.md')
@@ -299,6 +300,11 @@ describe('close-workflow-redesign: workflow documents', () => {
     expect(decision).toContain('## Amendment 2026-10-22 (merge-aware ancestry)')
     expect(decision).toContain('MERGE_HEAD')
     expect(read(CATALOG)).toContain('workflow-steps.json')
+    const catalog = read(CATALOG)
+    for (const workflow of readdirSync(WORKFLOWS_DIR).filter((f) => /\.ya?ml$/.test(f)))
+      expect(catalog, `${workflow} is not documented in the ai-workflow catalog`).toContain(
+        `\`${workflow}\``
+      )
     expect(read(CATALOG)).toMatch(/ancestor of `HEAD` or of `MERGE_HEAD`/)
   })
 })

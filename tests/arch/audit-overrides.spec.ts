@@ -89,6 +89,24 @@ function inRange(version: Version, comparators: string[]): boolean {
   })
 }
 
+function patchedBound(comparators: string[], floor: Version): string | undefined {
+  const exclusive = comparators.find((comparator) => /^<\d/.test(comparator))
+  if (exclusive) {
+    const patched = parseVersion(exclusive.slice(1))!
+    return compare(floor, patched) >= 0
+      ? undefined
+      : `floor ${floor.join('.')} is below the patched version ${exclusive.slice(1)}`
+  }
+  const inclusive = comparators.find((comparator) => /^<=\d/.test(comparator))
+  if (inclusive) {
+    const vulnerable = parseVersion(inclusive.slice(2))!
+    return compare(floor, vulnerable) > 0
+      ? undefined
+      : `floor ${floor.join('.')} is not above the last vulnerable version ${inclusive.slice(2)}`
+  }
+  return 'the vulnerable range needs an upper bound, "<patched" or "<=last-vulnerable"'
+}
+
 function resolvedVersions(name: string): Version[] {
   const escaped = name.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
   const entry = new RegExp(`^ {2}'?${escaped}@(\\d+\\.\\d+\\.\\d+[^'(:\\s]*)'?:`)
@@ -114,21 +132,15 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     const docs = decisions()
     for (const [selector, value] of overrides) {
       const { name, comparators } = splitSelector(selector)
-      const upper = comparators.find((comparator) => /^<\d/.test(comparator))
-      expect(
-        upper,
-        `${selector}: the vulnerable range needs an exclusive upper bound "<patched"`
-      ).toBeDefined()
-      const patched = parseVersion(upper!.slice(1))!
       const floor = /^\^(\d+\.\d+\.\d+)$/.exec(value)
       expect(
         floor,
         `${selector}: the override value must be a caret range "^x.y.z", got "${value}"`
       ).not.toBeNull()
       expect(
-        compare(parseVersion(floor![1]!)!, patched),
-        `${selector}: floor ${floor![1]} is below the patched version ${upper!.slice(1)}`
-      ).toBeGreaterThanOrEqual(0)
+        patchedBound(comparators, parseVersion(floor![1]!)!),
+        `${selector}: ${value} does not clear the vulnerable range`
+      ).toBeUndefined()
       const documented = docs.filter(
         ({ text }) => text.includes(`\`${selector}\``) && text.includes(`\`${value}\``)
       )
@@ -145,6 +157,15 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     for (const ghsa of ignored) {
       expect(ghsa, 'ignoreGhsas entries are GHSA ids').toMatch(/^GHSA(-[2-9cfghjmpqrvwx]{4}){3}$/)
     }
+  })
+
+  it('audit override selectors may close the vulnerable range with <= when the floor is above it', () => {
+    expect(patchedBound(['>=1.4.1', '<=1.6.7'], [1, 6, 8])).toBeUndefined()
+    expect(patchedBound(['<=20.14.5'], [20, 14, 6])).toBeUndefined()
+    expect(patchedBound(['>=1.4.1', '<=1.6.7'], [1, 6, 7])).toMatch(/not above the last vulnerable/)
+    expect(patchedBound(['>=2.0.0', '<2.3.0'], [2, 3, 0])).toBeUndefined()
+    expect(patchedBound(['>=2.0.0', '<2.3.0'], [2, 2, 9])).toMatch(/below the patched version/)
+    expect(patchedBound(['>=2.0.0'], [2, 3, 0])).toMatch(/needs an upper bound/)
   })
 
   it('every ignored advisory is documented in a decision', () => {
