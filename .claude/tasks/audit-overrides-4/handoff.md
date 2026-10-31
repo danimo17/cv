@@ -9,9 +9,9 @@ _Updated: 2026-10-31. REAL state of the `feat/audit-overrides-4` branch._
 - [x] build — evidence: 0d9bc77 (three overrides, nuxt and vue bumps, patch removed, lockfile, decision 064, arch test, catalog)
 - [x] consolidate — evidence: 0d9bc77 (pnpm gate green in the commit hook: 34 files / 698 tests)
 - [x] validate — evidence: 2026-10-31 pnpm gate 34 files / 698 tests passed, 0 lint errors, typecheck clean; pnpm audit --audit-level=high exit 0
-- [x] handoff — evidence: 2026-10-31 handoff.md written with Review and Pending sections
+- [x] handoff — evidence: b3b2c32 (handoff.md with Review committed)
 - [x] commit — evidence: 0d9bc77
-- [ ] review — evidence:
+- [x] review — evidence: b3b2c32 (commit that recorded the Review section; code-review not run, dependency-only change, findings: none)
 - [ ] close-out — evidence:
 - [x] gate-push — evidence: 2026-10-31 pnpm gate:push exit 0 on the build tree: 34 files / 697 tests passed, nuxt build complete, playwright 5 passed (13.1s); the commit hook re-ran the gate on 0d9bc77 (698 tests)
 - [ ] push-pr — evidence:
