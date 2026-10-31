@@ -29,6 +29,29 @@ _Updated: 2026-10-31. REAL state of the `feat/audit-overrides-4` branch._
 - New arch test: an ignore must still match a version the lockfile resolves (red first on the node-forge ignore, then green).
 - `/code-review high` ran twice (round 1 on the whole branch diff, round 2 on the delta); findings and fixes in `## Review (workflow step `review`, rule 09)
 
+## In progress / not done
+
+- Open findings, not fixable (the user decided to leave both open): `deepmerge` `GHSA-gcqx-w48m-w2h4` (low, no 4.3.2 on npm) and `minimatch` `GHSA-g3hv-75wg-m249` (moderate; the `^11.0.1` override breaks `eslint-plugin-import-x`, tried and reverted). Neither is ignored.
+- Close-out is the last commit; the push is not done (needs the user's permission).
+
+## Subagents (rule 12)
+
+| Subagent          | What it did                                                                  | Result                                               |
+| ----------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| audit-overrides-4 | Overrides, bumps, lockfile, decision 064, test strengthening, handoff, close | all of criteria 1-4 done on `feat/audit-overrides-4` |
+
+## Validation (actual output of the last gate)
+
+```
+pnpm gate:push (2026-10-31, on 872aa20) → eslint 0 errors (1 pre-existing warning), nuxt typecheck clean, Test Files 34 passed (34), Tests 701 passed (701), "Build complete!", playwright "5 passed (10.8s)", EXIT=0
+pnpm audit --audit-level=high → exit 0, "2 vulnerabilities found / Severity: 1 low | 1 moderate" (deepmerge low, minimatch moderate)
+pnpm exec wrangler deploy --dry-run → bundle built (Total Upload 1121.74 KiB), exiting at --dry-run
+```
+
+Not covered: a real `pnpm cf:deploy` (only a `wrangler deploy --dry-run` was run); the `glob` major jump is exercised by the Nitro build (`@vercel/nft`), the unit suite and a check that the APIs the three consumers call exist in glob 14.0.3.
+
+## Review (workflow step `review`, rule 09)
+
 Review checklist (`.claude/templates/review-checklist.md`) run over the full branch diff (dependency and config
 only: `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, one deleted patch, one arch test, decisions 056 and 064,
 catalog, backlog, task files):
