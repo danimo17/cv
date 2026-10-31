@@ -123,7 +123,8 @@ function ignoreEntry(
   text: string,
   ghsa: string
 ): { name: string; comparators: string[] } | undefined {
-  const match = new RegExp(`\`${ghsa}\`:\\s*\`([^\`\\s]+)\`((?:[\\s,]*\`[<>=]+[^\`]*\`)+)`).exec(
+  const escaped = ghsa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = new RegExp(`\`${escaped}\`:\\s*\`([^\`\\s]+)\`((?:[\\s,]*\`[<>=]+[^\`]*\`)+)`).exec(
     text
   )
   if (!match) return undefined
@@ -131,6 +132,10 @@ function ignoreEntry(
     token[1]!.split(/\s+/)
   )
   return { name: match[1]!, comparators }
+}
+
+function parseableRange(comparators: string[]): boolean {
+  return comparators.length > 0 && comparators.every((c) => /^(<=|<|>=|>)\d+\.\d+\.\d+$/.test(c))
 }
 
 function decisions(): Array<{ file: string; text: string }> {
@@ -210,11 +215,15 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     const { ignored } = workspace()
     const docs = decisions()
     for (const ghsa of ignored) {
-      const entry = docs.map(({ text }) => ignoreEntry(text, ghsa)).find((found) => found)
+      const entry = docs.map(({ text }) => ignoreEntry(text, ghsa)).findLast((found) => found)
       expect(
         entry,
         `${ghsa}: a decision needs an entry written as "\`${ghsa}\`: \`package\` \`<range>\`"`
       ).toBeDefined()
+      expect(
+        parseableRange(entry!.comparators),
+        `${ghsa}: the range ${entry!.comparators.join(' ')} must be written as <, <=, > or >= with x.y.z versions`
+      ).toBe(true)
       expect(
         resolvedVersions(entry!.name).some((version) => inRange(version, entry!.comparators)),
         `${ghsa}: pnpm-lock.yaml no longer resolves ${entry!.name} inside ${entry!.comparators.join(' ')}, so the ignore is stale; remove it from auditConfig.ignoreGhsas with a dated note in its decision`
@@ -233,6 +242,18 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
       '<=3.0.3',
     ])
     expect(ignoreEntry('mentions GHSA-x in prose only', 'GHSA-x')).toBeUndefined()
+    expect(
+      ignoreEntry('- `GHSA-x`: `pkg` `>=1.0.0`, `<2.0.0` and more', 'GHSA-x')?.comparators
+    ).toEqual(['>=1.0.0', '<2.0.0'])
+    expect(
+      ['- `GHSA-x`: `pkg` `<=1.0.0`', '- `GHSA-x`: `pkg` `<=2.0.0`']
+        .map((line) => ignoreEntry(line, 'GHSA-x'))
+        .findLast((found) => found)?.comparators
+    ).toEqual(['<=2.0.0'])
+    expect(ignoreEntry('- `GHSA-a.b`: `pkg` `<1.0.0`', 'GHSA-axb')).toBeUndefined()
+    expect(parseableRange(['>=1.0'])).toBe(false)
+    expect(parseableRange(['<=1.4.0-beta.1'])).toBe(false)
+    expect(parseableRange(['>=1.0.0', '<2.0.0'])).toBe(true)
     expect(inRange([0, 9, 0], ['>=1.0.0', '<2.0.0'])).toBe(false)
   })
 
@@ -295,7 +316,8 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
       start,
       'the catalog lost the audit-overrides arch test paragraph'
     ).toBeGreaterThanOrEqual(0)
-    const paragraph = catalog.slice(start, catalog.indexOf('\n\n', start))
+    const end = catalog.indexOf('\n\n', start)
+    const paragraph = catalog.slice(start, end === -1 ? undefined : end)
     expect(paragraph.split('`').length % 2, 'unbalanced backticks in the catalog paragraph').toBe(1)
     expect(paragraph.split('(').length, 'unbalanced parentheses in the catalog paragraph').toBe(
       paragraph.split(')').length

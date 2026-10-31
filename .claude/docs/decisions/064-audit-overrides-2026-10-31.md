@@ -53,7 +53,7 @@ decisions 056, 058, 061 and 062 (rule 11: not asked again). Scope: task `audit-o
    `>=4.2.0 <=4.3.1`, patched `>=4.3.2`) via `nitropack > @rollup/plugin-node-resolve`. No `4.3.2` exists on npm (the
    latest is `4.3.1`), so the override proposed by auto-fix cannot install and none is added. It is **not ignored** (no
    `ignoreGhsas` entry: that needs the user's explicit approval, rule 11) and does not matter to the check, because
-   `--audit-level=high` ignores low findings. `pnpm audit --audit-level=high` therefore exits 0 with "2 vulnerabilities
+   `--audit-level=high` ignores low findings. `pnpm audit --audit-level=high` therefore exits 0 (checked on 2026-10-31, after the 22 findings of the Context) with "2 vulnerabilities
    found, Severity: 1 low | 1 moderate" (`deepmerge` low and `minimatch` moderate, see items 4 and 5).
 
 REMOVE-WHEN for every override: `node-forge@<=1.4.0` when `listhen` (via `nitropack` and `@nuxt/cli`) declares a
