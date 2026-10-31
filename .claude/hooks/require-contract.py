@@ -11,6 +11,14 @@ second 2026-10-06 amendments).
                                            CI: the push checks for one branch + commit; with --base the step
                                            list (workflow-steps.json) is read from that ref, not the PR's copy
 
+Decision 059 adds, to the commit checks: rule 12 delegation (a subagent row in the handoff for multi-file code
+commits), a wider rule 11 list of structural config, and rule 16 shared-component consumers; and, to the Claude
+hook only, the unmerged-feat-branch check on branch creation. The Claude hook judges each git call in the
+repository it acts on: the call's `cd <dir>` / `git -C <dir>` target, else the payload cwd, else
+CLAUDE_PROJECT_DIR, else "."; only the project repository (or a worktree sharing its git common dir) is gated, any
+other repository is ignored. Heredoc bodies and quoted strings are masked before commands are matched, and the
+checks that read git state block (fail closed) when git errors.
+
 Behavior is documented in .claude/docs/catalog/ai-workflow.md; tests in tests/arch/require-contract-hook.spec.ts.
 Exit 2 = blocked, the reason is printed on stderr. The task slug of a feat/<slug> branch is <slug>;
 .claude/tasks/ACTIVE is only consulted on other branches.
@@ -20,6 +28,7 @@ Commit-time state is read from the index and push-time state from the pushed com
 the verdict.
 """
 
+import functools
 import json
 import os
 import re
@@ -78,6 +87,51 @@ FIXED_FORMS = (
     "`new <tests/file.spec.ts> › <test name> — searched: <term>[, <term>...]` (a spec under tests/ or e2e/)"
 )
 PUSH_VALUE_FLAGS = ("-o", "--push-option", "--receive-pack", "--exec", "--repo")
+NEW_BRANCH_CALL = re.compile(
+    r"(?:^|[;&|]\s*)(" + ENV_PREFIX + r")git" + GLOBAL_GIT_OPTIONS + r"\s+(checkout|switch|branch)\b([^\n;&|]*)",
+    re.M,
+)
+RESIDUE = re.compile(r"[^\n;&|]*")
+HEREDOC_OPEN = re.compile(
+    r"(?<!<)<<(?!<)-?[ \t]*(?:'([^'\n]*)'|\"([^\"\n]*)\"|\\?([A-Za-z_][A-Za-z0-9_]*))"
+)
+CD_CALL = re.compile(r"(?:^|[;&|]\s*)cd\s+(?:--\s+)?(\"[^\"\n]*\"|'[^'\n]*'|[^\s;&|]+)", re.M)
+ALLOW_UNMERGED = re.compile(r"(?<![\w])ALLOW_UNMERGED_FEAT=(?:1|\"1\"|'1')(?!\S)")
+CREATE_FLAGS = {
+    "checkout": ("-b", "-B"),
+    "switch": ("-c", "-C", "--create", "--force-create"),
+}
+BRANCH_CREATE_FLAGS = ("-f", "--force", "-t", "--track", "--no-track", "-q", "--quiet", "--create-reflog")
+BACKLOG_PATH = ".claude/backlog.md"
+DELEGATED_PREFIXES = ("app/", "server/", "shared/")
+NON_CODE_PREFIXES = ("app/assets/css/", "app/data/", "i18n/locales/")
+SLUG_CELL = re.compile(r"[a-z0-9][a-z0-9-]*")
+DELEGATION_MAX_FILES = 1
+DELEGATION_MAX_LINES = 15
+LEGACY_STRUCTURAL_FILES = ("nuxt.config.ts", "eslint.config.mjs")
+STRUCTURAL_FILES = LEGACY_STRUCTURAL_FILES + (
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "wrangler.jsonc",
+    "pnpm-workspace.yaml",
+    ".claude/hard-rules.md",
+)
+STRUCTURAL_PREFIXES = (".github/workflows/", ".githooks/", ".claude/hooks/")
+RULES_PREFIX = ".claude/rules/"
+DECISIONS_PREFIX = ".claude/docs/decisions/"
+PACKAGE_JSON = "package.json"
+PACKAGE_STRUCTURAL_KEYS = (
+    "dependencies",
+    "devDependencies",
+    "peerDependencies",
+    "optionalDependencies",
+    "pnpm",
+    "overrides",
+    "packageManager",
+    "engines",
+)
+SHARED_COMPONENTS_PREFIX = "app/components/shared/"
+SHARED_CONSUMERS_HEADING = r"^## Shared component consumers\b"
 USAGE = (
     "usage: require-contract.py [--commit | --pre-push | --ci <branch> <sha> [--base <ref>]] "
     "(no argument: Claude PreToolUse hook, JSON on stdin)"
@@ -376,9 +430,23 @@ def stale_review_problem(content, tip, slug, base_ref=None):
     return None
 
 
-def backlog_slugs(rev):
-    rows = (git_show(rev, ".claude/backlog.md") or "").splitlines()
-    return {m.group(1) for m in (re.match(r"^\|\s*([a-z0-9][a-z0-9-]*)\s*\|", r) for r in rows) if m}
+def backlog_rows(text):
+    rows = []
+    for line in (text or "").splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip().strip("`").strip() for c in line.strip().strip("|").split("|")]
+        if SLUG_CELL.fullmatch(cells[0]):
+            rows.append((cells[0], [c.lower() for c in cells[1:]]))
+    return rows
+
+
+def backlog_slugs(text):
+    return {slug for slug, _ in backlog_rows(text)}
+
+
+def doing_slugs(text):
+    return {slug for slug, cells in backlog_rows(text) if "doing" in cells}
 
 
 def test_titles(content):
@@ -475,7 +543,7 @@ def finding_proof_problem(outcome, proof, rev, base_ref, slugs):
 
 def review_findings_problems(path, review, rev, base_ref=None):
     found = []
-    slugs = backlog_slugs(rev)
+    slugs = backlog_slugs(git_show(rev, BACKLOG_PATH))
     compared = resolve_base(base_ref)
     count = 0
     for _, line in outside_fences(review):
@@ -588,16 +656,19 @@ def check_close(slug, status):
         fail(f"Rule 10 (task-close-gate): {archive}: {stale}")
 
 
-def working_tree_active():
+def read_working_file(relative_path):
     try:
-        with open(os.path.join(root, TASKS_PREFIX, "ACTIVE"), encoding="utf-8") as f:
-            return f.read().strip()
+        with open(os.path.join(root, relative_path), encoding="utf-8") as f:
+            return f.read()
     except OSError:
         return ""
 
 
-def task_slug_for_commit():
-    branch = current_branch()
+def working_tree_active():
+    return read_working_file(f"{TASKS_PREFIX}ACTIVE").strip()
+
+
+def task_slug_for_commit(branch):
     if not branch.startswith(FEAT_PREFIX):
         return working_tree_active()
     slug = branch[len(FEAT_PREFIX):]
@@ -635,18 +706,173 @@ def untested_code_problem(slug, staged):
     )
 
 
+def package_json_keys(raw):
+    try:
+        data = json.loads(raw) if raw is not None else {}
+    except ValueError:
+        data = None
+    if not isinstance(data, dict):
+        return {"invalid": True}
+    return {key: data.get(key) for key in PACKAGE_STRUCTURAL_KEYS}
+
+
+def package_json_structural(code):
+    if code == "D":
+        return True
+    before_raw = git_show("HEAD", PACKAGE_JSON)
+    after_raw = git_show("", PACKAGE_JSON)
+    if after_raw is None or (before_raw is None and code != "A"):
+        fail(
+            f"Rule 11: could not read {PACKAGE_JSON} from the index or HEAD (git show failed), so whether "
+            "the commit changes dependencies cannot be checked. Retry the commit; if it persists, repair the "
+            "repository state."
+        )
+    before, after = package_json_keys(before_raw), package_json_keys(after_raw)
+    return "invalid" in before or "invalid" in after or before != after
+
+
+def is_structural(path, code, include_wider):
+    if path in LEGACY_STRUCTURAL_FILES:
+        return True
+    if not include_wider:
+        return False
+    if path in STRUCTURAL_FILES or path.startswith(STRUCTURAL_PREFIXES):
+        return True
+    if path.startswith(RULES_PREFIX) and path.endswith(".md"):
+        return True
+    return path == PACKAGE_JSON and package_json_structural(code)
+
+
+def decision_texts(status):
+    texts = [
+        git_show("", path) or ""
+        for path, code in sorted(status.items())
+        if path.startswith(DECISIONS_PREFIX) and code != "D"
+    ]
+    base = resolve_base(None)
+    if base:
+        for path in git_nul(
+            ["diff", "--name-only", "--diff-filter=AM", "-z", f"{base}...HEAD", "--", DECISIONS_PREFIX]
+        ):
+            texts.append(git_show("HEAD", path) or "")
+    return texts
+
+
+def decision_mentions(texts, path):
+    needles = [os.path.basename(path)]
+    if os.path.dirname(path):
+        needles.append(os.path.dirname(path) + "/")
+    return any(needle in text for text in texts for needle in needles)
+
+
+def structural_problem(status, special):
+    found = [p for p in sorted(status) if is_structural(p, status[p], not special)]
+    if not found:
+        return
+    texts = decision_texts(status)
+    uncovered = [p for p in found if not decision_mentions(texts, p)]
+    if not uncovered:
+        return
+    fail(
+        f"Rule 11: this commit changes structural config ({', '.join(uncovered)}) but no decision record "
+        f"under {DECISIONS_PREFIX} that mentions it (the file name or its directory) is staged in this "
+        "commit or was added earlier on this branch. Architecture/config changes need a decision record — "
+        "write one (see decision 041 for the pattern) naming what changes and stage it."
+    )
+
+
+def counts_as_code(path):
+    return path.startswith(DELEGATED_PREFIXES) and not path.startswith(NON_CODE_PREFIXES)
+
+
+def staged_code_size():
+    out = git(["diff", "--cached", "--numstat", "-M", "-z"])
+    if out is None:
+        fail(
+            "Rule 12: could not read the staged diff (git diff --cached --numstat failed), so the size of "
+            "the code change cannot be checked. Retry the commit; if it persists, repair the repository state."
+        )
+    tokens = out.split("\0")
+    files = lines = 0
+    i = 0
+    while i < len(tokens):
+        parts = tokens[i].split("\t", 2)
+        i += 1
+        if len(parts) != 3:
+            continue
+        paths = [parts[2]]
+        if not parts[2]:
+            paths = tokens[i:i + 2]
+            i += 2
+        if not any(counts_as_code(p) for p in paths):
+            continue
+        files += 1
+        lines += sum(int(n) for n in parts[:2] if n.isdigit())
+    return files, lines
+
+
+def has_subagent_row(handoff):
+    section_lines = section(handoff, r"^## Subagents\b") if handoff is not None else None
+    rows = [
+        line.strip()
+        for _, line in outside_fences(section_lines or [])
+        if line.strip().startswith("|")
+    ]
+    if len(rows) < 3 or not re.fullmatch(r"[|\s:-]+", rows[1]):
+        return False
+    for row in rows[2:]:
+        first = row.strip("|").split("|")[0].strip()
+        if first:
+            return True
+    return False
+
+
+def delegation_problem(slug):
+    files, lines = staged_code_size()
+    if files <= DELEGATION_MAX_FILES and lines <= DELEGATION_MAX_LINES:
+        return
+    handoff_path = f"{TASKS_PREFIX}{slug}/handoff.md"
+    if has_subagent_row(git_show("", handoff_path)):
+        return
+    fail(
+        f"Rule 12 (the main thread orchestrates, subagents execute): this commit stages {files} file{'' if files == 1 else 's'} and "
+        f"{lines} changed line{'' if lines == 1 else 's'} under app/, server/ or shared/ (more than {DELEGATION_MAX_FILES} file or "
+        f"{DELEGATION_MAX_LINES} lines), but the `## Subagents` table of the staged {handoff_path} has no row. "
+        "Delegate the work to a subagent and record it there (| Subagent | What it did | Result |), "
+        "or keep the change within the threshold."
+    )
+
+
+def shared_component_problem(slug, status):
+    shared = sorted(p for p in status if p.startswith(SHARED_COMPONENTS_PREFIX))
+    if not shared:
+        return
+    contract = git_show("", f"{TASKS_PREFIX}{slug}/contract.md")
+    body = section(contract, SHARED_CONSUMERS_HEADING) if contract is not None else None
+    if body is not None and any(line.strip() for _, line in outside_fences(body)):
+        return
+    fail(
+        f"Rule 16 (UI pattern consistency): this commit changes a shared component ({', '.join(shared)}) but "
+        f"{TASKS_PREFIX}{slug}/contract.md has no filled `## Shared component consumers` section. Grep every "
+        "consumer (grep -rn \"ComponentName\" app/), list the result there and state whether the change is "
+        "applied only here or everywhere."
+    )
+
+
 def commit_checks():
     status = staged_changes()
     staged = list(status)
     closing = closing_slugs(status)
+    branch = current_branch()
+    special = special_commit_in_progress()
 
     for slug in closing:
         check_close(slug, status)
 
-    slug = task_slug_for_commit()
+    slug = task_slug_for_commit(branch)
 
     if closing or not slug:
-        docs_only_exempt = not closing and special_commit_in_progress()
+        docs_only_exempt = not closing and special
         if not docs_only_exempt and not all(f.startswith(CLAUDE_PREFIX) for f in staged):
             fail(
                 "Rule 10: no active task (a non-feat branch with .claude/tasks/ACTIVE empty, or a "
@@ -676,18 +902,13 @@ def commit_checks():
         if code in ("A", "M") and (HANDOFF_PATH.match(path) or ARCHIVE_PATH.match(path)):
             check_progress_evidence(path, git_show("", path) or "")
 
-    decision_worthy = ("nuxt.config.ts", "eslint.config.mjs")
-    touches_config = any(f in decision_worthy for f in staged)
-    touches_decision = any(f.startswith(".claude/docs/decisions/") for f in staged)
-    if touches_config and not touches_decision:
-        fail(
-            "Rule 11: this commit changes nuxt.config.ts or eslint.config.mjs but stages no file under "
-            ".claude/docs/decisions/. Architecture/config changes need a decision record in the same "
-            "commit — write one (see decision 041 for the pattern) and stage it."
-        )
+    structural_problem(status, special)
 
-    if slug and not closing and not special_commit_in_progress():
+    if slug and not closing and not special:
         untested_code_problem(slug, staged)
+        shared_component_problem(slug, status)
+        if branch.startswith(FEAT_PREFIX):
+            delegation_problem(slug)
 
 
 def push_gate(branch, sha, base_ref=None):
@@ -859,25 +1080,244 @@ def skips_hooks(sub, rest):
     return False
 
 
+def repo_containing(path):
+    if not path or not os.path.isdir(path):
+        return None
+    try:
+        top = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--show-toplevel"], capture_output=True, text=True
+        )
+    except OSError:
+        return None
+    return top.stdout.strip() if top.returncode == 0 and top.stdout.strip() else None
+
+
+@functools.lru_cache(maxsize=None)
+def common_git_dir(path):
+    if not path or not os.path.isdir(path):
+        return None
+    try:
+        out = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--git-common-dir"], capture_output=True, text=True
+        )
+    except OSError:
+        return None
+    found = out.stdout.strip()
+    return os.path.realpath(os.path.join(path, found)) if out.returncode == 0 and found else None
+
+
+def project_common_dir():
+    for candidate in (os.environ.get("CLAUDE_PROJECT_DIR"), os.path.dirname(os.path.abspath(__file__))):
+        found = common_git_dir(candidate)
+        if found:
+            return found
+    return None
+
+
+def is_project_repo(top):
+    project = project_common_dir()
+    return project is None or common_git_dir(top) == project
+
+
+def mask_heredocs(cmd):
+    lines = cmd.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        out.append(line)
+        i += 1
+        for m in HEREDOC_OPEN.finditer(line):
+            delimiter = m.group(1) or m.group(2) or m.group(3)
+            end = next((j for j in range(i, len(lines)) if lines[j].strip() == delimiter), None)
+            if end is None:
+                break
+            out.extend("x" * len(body) for body in lines[i:end])
+            out.append(lines[end])
+            i = end + 1
+    return "\n".join(out)
+
+
+def mask_quotes(text):
+    out = list(text)
+    i = 0
+    while i < len(text):
+        quote = text[i]
+        if quote == "\\":
+            i += 2
+        elif quote == "#" and (i == 0 or text[i - 1] in " \t\n;&|("):
+            end = text.find("\n", i)
+            i = len(text) if end < 0 else end
+        elif quote in "'\"":
+            j = i + 1
+            while j < len(text) and text[j] != quote:
+                j += 2 if quote == '"' and text[j] == "\\" else 1
+            if j < len(text):
+                for k in range(i + 1, j):
+                    if out[k] != "\n":
+                        out[k] = "x"
+            i = j + 1
+        else:
+            i += 1
+    return "".join(out)
+
+
+def call_matches(pattern, cmd, masked):
+    for m in pattern.finditer(masked):
+        groups = [cmd[m.start(i):m.end(i)] for i in range(1, pattern.groups + 1)]
+        groups[-1] = RESIDUE.match(cmd, m.start(pattern.groups)).group(0)
+        yield m.start(), groups
+
+
+def existing_dir(base, target):
+    if not target or "$" in target or "`" in target:
+        return None
+    path = os.path.expanduser(target)
+    if not os.path.isabs(path):
+        path = os.path.join(base, path)
+    return os.path.normpath(path) if os.path.isdir(path) else None
+
+
+def call_directory(base, cmd, masked, position, opts):
+    current = base
+    for m in CD_CALL.finditer(masked):
+        if m.end() > position:
+            break
+        current = existing_dir(current, unquote(cmd[m.start(1):m.end(1)])) or current
+    try:
+        tokens = shlex.split(opts)
+    except ValueError:
+        tokens = opts.split()
+    for i, token in enumerate(tokens[:-1]):
+        if token == "-C":
+            current = existing_dir(current, tokens[i + 1]) or current
+    return current
+
+
+def call_root(cmd, masked, position, opts, cwd):
+    given = cwd if cwd and os.path.isdir(cwd) else None
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    base = given or project_dir or "."
+    directory = call_directory(base, cmd, masked, position, opts)
+    top = repo_containing(directory)
+    if top is None:
+        return (repo_containing(project_dir) or project_dir or ".") if directory == base else None
+    if directory == base and given is None:
+        return top
+    return top if is_project_repo(top) else None
+
+
+def created_branch(sub, rest):
+    try:
+        tokens = shlex.split(rest)
+    except ValueError:
+        tokens = rest.split()
+    if sub in CREATE_FLAGS:
+        for i, token in enumerate(tokens):
+            if token in CREATE_FLAGS[sub] and i + 1 < len(tokens):
+                return tokens[i + 1]
+            for prefix in ("--create=", "--force-create="):
+                if sub == "switch" and token.startswith(prefix):
+                    return token[len(prefix):]
+        return None
+    positional = []
+    for token in tokens:
+        if token.startswith("-"):
+            if token not in BRANCH_CREATE_FLAGS and not token.startswith("--track="):
+                return None
+        else:
+            positional.append(token)
+    return positional[0] if positional else None
+
+
+def orphaned_feat_branches(new_slug):
+    base = resolve_base(None)
+    if not base:
+        fail(
+            "Rule 06/18 (decision 059): no base branch (origin/main or main) resolves in this repository, so "
+            "the unmerged feat branches cannot be found before creating a new one. Create or fetch the base "
+            "branch, or for this command only prefix it with `ALLOW_UNMERGED_FEAT=1 `."
+        )
+    out = git(
+        ["for-each-ref", f"--no-merged={base}", "--format=%(refname)%09%(subject)",
+         f"refs/heads/{FEAT_PREFIX}", f"refs/remotes/origin/{FEAT_PREFIX}"]
+    )
+    if out is None:
+        fail(
+            "Rule 06/18 (decision 059): could not list the feat branches (git for-each-ref failed), so the "
+            "unmerged ones cannot be found before creating a new one. Retry, or for this command only prefix "
+            "it with `ALLOW_UNMERGED_FEAT=1 `."
+        )
+    parallel = doing_slugs(read_working_file(BACKLOG_PATH))
+    found = {}
+    for line in out.splitlines():
+        ref, _, subject = line.partition("\t")
+        for prefix, where in ((f"refs/heads/{FEAT_PREFIX}", "local"), (f"refs/remotes/origin/{FEAT_PREFIX}", "remote")):
+            if ref.startswith(prefix):
+                slug = ref[len(prefix):]
+                entry = found.setdefault(slug, {"where": [], "subject": subject, "tips": []})
+                entry["where"].append(where)
+                entry["tips"].append(ref)
+    orphans = []
+    for slug, entry in sorted(found.items()):
+        if slug == new_slug or slug in parallel:
+            continue
+        if any(slug in doing_slugs(git_show(tip, BACKLOG_PATH)) for tip in entry["tips"]):
+            continue
+        orphans.append((slug, entry["where"], entry["subject"]))
+    return orphans
+
+
+def new_branch_check(cmd, masked, cwd):
+    global root
+    for position, (env, opts, sub, rest) in call_matches(NEW_BRANCH_CALL, cmd, masked):
+        name = created_branch(sub, rest)
+        if not name or not name.startswith(FEAT_PREFIX) or ALLOW_UNMERGED.search(env):
+            continue
+        target = call_root(cmd, masked, position, opts, cwd)
+        if target is None:
+            continue
+        root = target
+        orphans = orphaned_feat_branches(name[len(FEAT_PREFIX):])
+        if not orphans:
+            continue
+        listed = "\n".join(
+            f"  - {FEAT_PREFIX}{slug} ({', '.join(where)}): {subject}" for slug, where, subject in orphans
+        )
+        fail(
+            f"Rule 06/18 (decision 059): creating {name} while {len(orphans)} feat branch(es) are not merged "
+            f"into the base branch and are not a `doing` row of {BACKLOG_PATH} (an orphaned branch is lost "
+            f"work):\n{listed}\nFinish, merge or delete them, set a legitimately parallel task to `doing` in "
+            f"{BACKLOG_PATH}, or for this command only prefix it with `ALLOW_UNMERGED_FEAT=1 `."
+        )
+
+
 def claude_hook():
     global root
-    root = os.environ.get("CLAUDE_PROJECT_DIR", ".")
     data = json.load(sys.stdin)
     cmd = data.get("tool_input", {}).get("command", "")
+    cwd = data.get("cwd")
+    without_heredocs = mask_heredocs(cmd)
+    masked = mask_quotes(without_heredocs)
 
-    calls = GIT_CALL.findall(cmd)
+    new_branch_check(cmd, masked, cwd)
+
+    calls = []
+    for position, (opts, sub, rest) in call_matches(GIT_CALL, cmd, masked):
+        target = call_root(cmd, masked, position, opts, cwd)
+        if target is not None:
+            calls.append((target, opts, sub, rest))
     if not calls:
         return
-    hits = [(sub, rest) for _opts, sub, rest in calls]
 
-    if HOOKS_PATH_WRITE.search(cmd):
+    if HOOKS_PATH_WRITE.search(without_heredocs):
         fail(
             "Rule 09: setting core.hooksPath (git config, GIT_CONFIG_KEY_*) in a command that commits or "
             "pushes switches the git hooks off exactly like --no-verify, which is not allowed. Pass the "
             "gate (pnpm gate)."
         )
 
-    for opts, sub, rest in calls:
+    for _target, opts, sub, rest in calls:
         if skips_hooks(sub, rest):
             fail("Rule 09: --no-verify / -n is not allowed. Pass the gate (pnpm gate).")
         if HOOKS_PATH_OVERRIDE.search(opts):
@@ -886,15 +1326,14 @@ def claude_hook():
                 "hooks off exactly like --no-verify, which is not allowed. Pass the gate (pnpm gate)."
             )
 
-    run_commit_hook(hits)
+    for target in dict.fromkeys(call[0] for call in calls):
+        root = target
+        run_commit_hook([(sub, rest) for t, _opts, sub, rest in calls if t == target])
 
 
 def use_cwd_repo():
     global root
-    top = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True
-    )
-    root = top.stdout.strip() if top.returncode == 0 and top.stdout.strip() else "."
+    root = repo_containing(".") or "."
 
 
 def pre_push_hook():

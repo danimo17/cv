@@ -11,4 +11,9 @@ Every answer or decision is logged in `.claude/docs/decisions/NNN-<slug>.md` (co
 **is not asked again** if the situation is the same.
 **Why.** The user read in a plan "LinkedIn blocks access; using the PDF instead" after having explicitly said
 to use LinkedIn. A question was needed, not a substitution.
-**How it's checked.** Human review. Before asking, read `.claude/docs/decisions/`.
+**How it's checked.** Human review. Before asking, read `.claude/docs/decisions/`. The mechanical slice:
+`require-contract.py` blocks a commit that stages structural config (`nuxt.config.ts`, `eslint.config.mjs`,
+`playwright.config.ts`, `vitest.config.ts`, `wrangler.jsonc`, `pnpm-workspace.yaml`, `package.json` dependency
+keys, `.github/workflows/*`, `.githooks/*`, `.claude/hooks/*`, `.claude/hard-rules.md`, `.claude/rules/*.md`)
+unless a decision record under `.claude/docs/decisions/` that mentions the file name (or its directory) is staged
+in the same commit or was added earlier on the branch (decisions 041 and 059); an unrelated decision does not count.

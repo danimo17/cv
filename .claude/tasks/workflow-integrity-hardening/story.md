@@ -151,6 +151,20 @@ feat/*` / `git branch feat/*`, run `git branch --no-merged main`. Any hit beside
     runtime dependency in the app) would replace the word list; revisit only if the allowlist grows past the ten
     groups that decision 060 sets as the limit.
 
+11. **Evasions of the orphaned-branch check and the rule 12 table** (queued 2026-10-19, high-effort `/code-review` of
+    `hook-hardening`; severity: low, deliberate evasions of the gate, not normal use; decision 059 amendment
+    2026-10-19). Not built in `hook-hardening`:
+
+- Branch creation the check does not recognise: `git checkout --orphan`, `git switch --orphan`,
+  `git worktree add -b <feat/x>`, `git branch -c` (copy), and wrappers that hide the call from the line-start
+  match (`sh -c '...'`, `bash -c`, `xargs git ...`, `$(...)`).
+- The `ALLOW_UNMERGED_FEAT=1` command prefix is an unaudited escape hatch: nothing records that it was used or
+  that the user said so in chat. Option: a one-line trace appended to the handoff, or requiring the branch name
+  in the variable (`ALLOW_UNMERGED_FEAT=feat/x`).
+- The rule 12 `## Subagents` table accepts any non-empty first cell, so a placeholder row (`| x | | |`) satisfies
+  it without any delegation. Option: require the second and third cells too, or a cross-check against the commit
+  messages.
+
 ## Out of scope
 
 - Actually building the CSS architecture change (`css-tailwind-first`, separate story/task).

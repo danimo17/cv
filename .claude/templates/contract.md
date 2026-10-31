@@ -17,7 +17,8 @@
 ## Shared component consumers
 
 Required when the task changes a component under `app/components/shared/` or one used from more than one
-parent; otherwise write `n/a` and why.
+parent; otherwise write `n/a` and why. Rule 16 is enforced at commit time: the hook blocks a commit that stages
+a file under `app/components/shared/` while this section is missing or empty.
 
 - Consumers (result of `grep -rn "ComponentName" app/ tests/ e2e/`): …
 - Scope asked of the user before this contract: only here / everywhere → answer: …

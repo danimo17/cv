@@ -11,4 +11,10 @@ protection).
 a deployment standpoint, so it's never delegated; pushing a working branch is reversible (it can be deleted)
 and so it can be delegated punctually with express permission.
 **How it's checked.** The user's global Claude Code `git-safety` hook (blocks force-push and direct push to
-`main`/`master`, but not push of a `feat/*` branch) + `main` ruleset on GitHub.
+`main`/`master`, but not push of a `feat/*` branch) + `main` ruleset on GitHub. Creating a `feat/*` branch
+(`git checkout -b`, `git switch -c`, `git branch`) from a Claude Bash command is blocked by `require-contract.py`
+while another local or remote `feat/*` branch is unmerged into `origin/main` and is not a `doing` row of
+`.claude/backlog.md` (decision 059, rule 18's mechanical net); the escape hatch is the command prefix
+`ALLOW_UNMERGED_FEAT=1`. The Claude hook judges the repository the command acts on: the `git -C`/`cd` directory of the
+call, else the payload `cwd`, else `CLAUDE_PROJECT_DIR`; a repository that is not the project (no shared git common
+dir) is not gated at all. It fails closed: no base branch or a failing `git for-each-ref` blocks the creation.
