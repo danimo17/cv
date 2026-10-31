@@ -320,27 +320,24 @@ document reopening via `git revert <close-out sha>`; checks `workflow.md`'s `## 
 characters (detail lives in `rules/NN-*.md`); checks no arch spec references a test-only hook override.
 
 **Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058, 061, 062, 064; the CI `audit` job runs `pnpm audit
---audit-level=high`): parses `pnpm-workspace.yaml` and checks that every `overrides` entry has a selector with an
-exclusive upper bound (`pkg@<range <patched`) and a caret value whose floor is at least that patched version, that a
-decision quotes both the selector and the value, that `pnpm-lock.yaml` resolves nothing inside the vulnerable
-range, that every `auditConfig.ignoreGhsas` entry is a well-formed GHSA id, and that each one sits in a decision
-entry naming its package and a remove-when condition. An override or an ignore added without its decision, or a
-lockfile regeneration that drops a transitive back into a vulnerable range, fails the test. It also guards the
-`patchedDependencies` mechanism of decision 058 (it held `@nuxt/devtools@3.4.2` to `patches/@nuxt__devtools@3.4.2.patch` until decision 064 removed it; the checks stay for any future patch; the patch then switched devtools to the named `simpleGit` export, which
-switches devtools to the named `simpleGit` export of `simple-git` 4.x): `simple-git`, if present, resolves only at or above
-`4.0.1`, each patch file exists under `patches/`, contains `simpleGit as Git` and targets the version locked in
-`pnpm-lock.yaml` (a devtools bump fails with the instruction to remove the patch and the `simple-git` override), the
-patch and the override come together, and a decision names each patch with a remove-when condition. Decision 061 added two
+--audit-level=high`): parses `pnpm-workspace.yaml` and checks that every `overrides` entry has a selector with a
+vulnerable range closed by `<patched` or `<=last-vulnerable` and a caret value whose floor clears it, that a decision
+quotes both the selector and the value, that `pnpm-lock.yaml` resolves nothing inside the vulnerable range, that every
+`auditConfig.ignoreGhsas` entry is a well-formed GHSA id, and that each one sits in a decision entry naming its package
+and a remove-when condition. An override or an ignore added without its decision, or a lockfile regeneration that drops
+a transitive back into a vulnerable range, fails the test. An ignore must also still apply: its decision entry is
+written as a GHSA id, the package and the vulnerable range in backticks, and the lockfile must resolve a version inside
+that range, otherwise the ignore is stale and the test fails (decision 064). The `patchedDependencies` mechanism of
+decision 058 is guarded for any patch (none exists today; the `@nuxt/devtools@3.4.2` patch was removed by decision 064):
+each patch file exists under `patches/`, is non-empty and targets the version locked in `pnpm-lock.yaml`, no file under
+`patches/` is left unreferenced, and a decision names each patch with a remove-when condition. Decision 061 added two
 checks: the lockfile resolves `@modelcontextprotocol/server`, `vite` and `launch-editor` only at or above their patched
 versions (so a removed override or a regenerated lockfile cannot bring the vulnerable range back), and every decision
-that explains an override carries a remove-when condition. Decision 062 extended the lockfile check to `zod`, `happy-dom`, both `undici`
-lines (7.x and 8.x), `seroval`, `@intlify/shared`, `@intlify/core`, `@intlify/core-base` and `vue-i18n`. Decision 064
-extended it to `node-forge`, `serialize-javascript`, `glob`, `nuxt`, `@nuxt/nitro-server` and
-`@nuxt/vite-builder`, dropped the requirement that `simple-git` be present in the lockfile (the `@nuxt/devtools` patch,
-its `simple-git@<4.0.1` override and the `@simple-git/argv-parser` override were removed when `nuxt` 4.6.3 brought
-`@nuxt/devtools` 3.4.4, which no longer depends on `simple-git`), and added a check that every file under `patches/` is
-referenced by a `patchedDependencies` entry, that every `ignoreGhsas` entry still names a package and vulnerable range the lockfile resolves (a stale ignore fails), and that the lockfile holds a single `vue` version (two copies break the
-Nuxt auto-import types in `nuxt typecheck`).
+that explains an override carries a remove-when condition. Decision 062 extended the lockfile check to `zod`, `happy-dom`,
+both `undici` lines (7.x and 8.x), `seroval`, `@intlify/shared`, `@intlify/core`, `@intlify/core-base` and `vue-i18n`.
+Decision 064 extended it to `node-forge`, `serialize-javascript`, `glob`, `nuxt`, `@nuxt/nitro-server` and
+`@nuxt/vite-builder`, made `simple-git` optional in the lockfile (still never below `4.0.1`), and added a check that the
+lockfile holds a single `vue` version (two copies break the Nuxt auto-import types in `nuxt typecheck`).
 
 **Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
 git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
