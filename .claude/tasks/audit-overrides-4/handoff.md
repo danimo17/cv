@@ -8,12 +8,12 @@ _Updated: 2026-10-31. REAL state of the `feat/audit-overrides-4` branch._
 - [x] contract — evidence: c5f8978 (contract.md, criteria 1-4)
 - [x] build — evidence: 0d9bc77 (three overrides, nuxt and vue bumps, patch removed, lockfile, decision 064, arch test, catalog)
 - [x] consolidate — evidence: 0d9bc77 (pnpm gate green in the commit hook: 34 files / 698 tests)
-- [x] validate — evidence: 2026-10-31 pnpm gate 34 files / 698 tests passed, 0 lint errors, typecheck clean; pnpm audit --audit-level=high exit 0
-- [x] handoff — evidence: b3b2c32 (handoff.md with Review committed)
-- [x] commit — evidence: 0d9bc77
-- [x] review — evidence: b3b2c32 (commit that recorded the Review section; code-review not run, dependency-only change, findings: none)
+- [x] validate — evidence: 2026-10-31 pnpm gate 34 files / 701 tests passed, 0 lint errors, typecheck clean; pnpm audit --audit-level=high exit 0
+- [x] handoff — evidence: handoff.md rewritten 2026-10-31 after the reopen, Review round 1 and 2 recorded
+- [x] commit — evidence: 872aa20 (last code commit; first was 0d9bc77)
+- [ ] review — evidence:
 - [ ] close-out — evidence:
-- [x] gate-push — evidence: 2026-10-31 pnpm gate:push exit 0 on the build tree: 34 files / 697 tests passed, nuxt build complete, playwright 5 passed (13.1s); the commit hook re-ran the gate on 0d9bc77 (698 tests)
+- [x] gate-push — evidence: 2026-10-31 pnpm gate:push exit 0 on 872aa20: 701 unit/arch tests passed (34 files), nuxt build complete, playwright 5 passed (10.8s)
 - [ ] push-pr — evidence:
 
 ## Done (verified)
@@ -25,52 +25,44 @@ _Updated: 2026-10-31. REAL state of the `feat/audit-overrides-4` branch._
 - `pnpm audit --audit-level=high` exits 0: "2 vulnerabilities found, Severity: 1 low | 1 moderate" (`deepmerge` low and `minimatch` moderate, see below).
 - `tests/arch/audit-overrides.spec.ts` strengthened (red first, then green, 9 tests): lockfile floors for `node-forge`, `serialize-javascript`, `glob`, `nuxt`, `@nuxt/nitro-server`, `@nuxt/vite-builder`; `simple-git` no longer required to exist; no orphan file under `patches/`; single `vue` in the lockfile.
 - Decision 064 written; catalog `ai-workflow.md` updated.
-
-## In progress / not done
-
-- Open findings, not fixable: `deepmerge` `GHSA-gcqx-w48m-w2h4` (low, no 4.3.2 on npm) and `minimatch` `GHSA-g3hv-75wg-m249` (moderate; the `^11.0.1` override breaks `eslint-plugin-import-x`, tried and reverted). Neither is ignored.
-- Close-out is the last commit; the push is not done (needs the user's permission).
-
-## Subagents (rule 12)
-
-| Subagent          | What it did                                                                  | Result                                               |
-| ----------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
-| audit-overrides-4 | Overrides, bumps, lockfile, decision 064, test strengthening, handoff, close | all of criteria 1-4 done on `feat/audit-overrides-4` |
-
-## Validation (actual output of the last gate)
-
-```
-pnpm gate:push (2026-10-31) → eslint 0 errors (1 pre-existing warning), nuxt typecheck clean, Test Files 34 passed (34), Tests 697 passed (697), "Build complete!", playwright "5 passed (13.1s)", EXIT=0
-pnpm gate in the commit hook on 0d9bc77 → Test Files 34 passed (34), Tests 698 passed (698)
-pnpm audit --audit-level=high → exit 0, "2 vulnerabilities found / Severity: 1 low | 1 moderate"
-```
-
-Not covered: `wrangler` / `pnpm cf:deploy` (only runs in the deploy workflow); the `glob` major jump is exercised by the Nitro build (`@vercel/nft`) and the unit suite only.
-
-## Review (workflow step `review`, rule 09)
+- Reopened with `git revert 4e17646` (604f00e) after the user's approval: the stale ignore `GHSA-86w9-cpqp-85rv` (node-forge, range `<=1.4.0`, lockfile resolves 1.4.2) was removed from `auditConfig.ignoreGhsas` (bf85676) with a dated amendment in decision 056 and an addendum in 064. `deepmerge` and `minimatch` stay open, not ignored (user decision). The `braces` ignore is untouched (GitHub shows its advisory as withdrawn).
+- New arch test: an ignore must still match a version the lockfile resolves (red first on the node-forge ignore, then green).
+- `/code-review high` ran twice (round 1 on the whole branch diff, round 2 on the delta); findings and fixes in `## Review (workflow step `review`, rule 09)
 
 Review checklist (`.claude/templates/review-checklist.md`) run over the full branch diff (dependency and config
-only: `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, one deleted patch, one arch test, decision 064, catalog,
-backlog, task files):
+only: `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, one deleted patch, one arch test, decisions 056 and 064,
+catalog, backlog, task files):
 
 - [x] Secrets (01), company (02), Giphy boundary (03), PII (04), i18n (05): n/a, no app, server or locale change; sources are the public npm registry and GitHub advisories.
-- [x] Branch (06): on `feat/audit-overrides-4`. Catalog (07): `ai-workflow.md` updated for the strengthened arch test. Gates (09): `pnpm gate` green in the commit, `gate:push` green. Contract (10): criteria 1-4 each map to the audit exit 0, the arch tests and `gate:push`. Decisions (11): 064 written, no ignore added.
+- [x] Branch (06): on `feat/audit-overrides-4`. Catalog (07): `ai-workflow.md` updated for the strengthened arch test. Gates (09): `pnpm gate` green in every commit, `gate:push` green. Contract (10): criteria 1-4 each map to the audit exit 0, the arch tests and `gate:push`. Decisions (11): 064 written, 056 amended with the user's approval to remove one ignore, no ignore added.
 - [x] CSS (08), primitives (026, 038), living docs components (027), accessibility, UI consistency (16): n/a, no UI change. Subagents (12): the handoff names the single subagent.
 
-code-review: not run for this dependency-only change; covered by `pnpm audit --audit-level=high` exiting 0, the
-arch tests (`tests/arch/audit-overrides.spec.ts`) and `pnpm gate:push` (typecheck, build + e2e). 2026-10-31, round 1,
-no effort level.
+code-review high, 2026-10-31. Round 1 over `origin/main...bf85676` (the first run of the skill reviewed the uncommitted
+tree of the main checkout instead of this branch and its output was discarded; the rerun was pointed at the worktree).
+Round 2 over the delta `bf85676..260ef0a` only. Fixes: 260ef0a (round 1) and 872aa20 (round 2).
 
-- findings: none
+- finding r1-1 — outcome: fixed — proof: strengthened tests/arch/audit-overrides.spec.ts › every patched dependency has an existing patch file that still matches the locked version
+- finding r1-2 — outcome: no_change_needed — proof: the handoff and the Pending table were stale only until this re-close; this file is rewritten against the final tree and the close and push gates read it
+- finding r1-3 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › the catalog paragraph on this arch test is well formed prose — searched: catalog paragraph, well formed — differs: docs-sync.spec.ts checks that each artifact has a catalog block, not the prose of this one paragraph
+- finding r1-4 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › an ignore entry is read as its package and its full vulnerable range — searched: ignore entry, vulnerable range — differs: the existing ignore tests check documentation, this one tests the parser of the entry that the stale-ignore test relies on
+- finding r1-5 — outcome: no_change_needed — proof: glob 14.0.3 keeps the CommonJS entry and exports `sync`, `glob`, `globSync` and `hasMagic`, the only APIs `archiver-utils`, `@vercel/nft` and `js-beautify` call; `pnpm gate:push` (Nitro build with `@vercel/nft`, 701 tests) and `wrangler deploy --dry-run` pass; the minimatch break was in `eslint-plugin-import-x` importing `makeRe`, which glob's own `minimatch` dependency does not involve
+- finding r1-6 — outcome: no_change_needed — proof: prose-only correction in decision 064 (the audit figure is now "2 vulnerabilities, 1 low | 1 moderate", dated 2026-10-31); a snapshot of tool output cannot be asserted by a test
+- finding r1-7 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › the lockfile resolves a single vue version so the Nuxt auto-import types augment it — searched: single vue, auto-import types
+- finding r1-8 — outcome: no_change_needed — proof: this record replaces "code-review: not run"; both rounds of `/code-review high` are recorded here
+- finding r2-1 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › the catalog paragraph on this arch test is well formed prose — searched: catalog paragraph, well formed — differs: docs-sync.spec.ts checks that each artifact has a catalog block, not the prose of this one paragraph
+- finding r2-2 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › an ignore entry is read as its package and its full vulnerable range — searched: ignore entry, vulnerable range — differs: the existing ignore tests check documentation, this one tests the parser of the entry that the stale-ignore test relies on
+- finding r2-3 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › an ignore entry is read as its package and its full vulnerable range — searched: ignore entry, vulnerable range — differs: the existing ignore tests check documentation, this one tests the parser of the entry that the stale-ignore test relies on
+- finding r2-4 — outcome: no_change_needed — proof: the coupling between the `simple-git` override and a patch was removed on purpose in r1-1 (no patch exists any more); the remaining loop checks existence, locked version and decision for any future patch
+- finding r2-5 — outcome: fixed — proof: new tests/arch/audit-overrides.spec.ts › an ignore entry is read as its package and its full vulnerable range — searched: ignore entry, vulnerable range — differs: the existing ignore tests check documentation, this one tests the parser of the entry that the stale-ignore test relies on
+- finding r2-6 — outcome: no_change_needed — proof: the audit figure in decision 064 carries its date (2026-10-31) since 872aa20; prose only
 
 ## Pending on the user
 
-| #   | What                                                                                                                                                                                                                      | Blocks  | Status  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
-| 1   | `deepmerge` `GHSA-gcqx-w48m-w2h4` (low) has no patched release: leave it open (recommended, below the `high` threshold) or approve an `ignoreGhsas` entry with a decision                                                 | nothing | pending |
-| 2   | `minimatch` `GHSA-g3hv-75wg-m249` (moderate) cannot be overridden to 11.x without breaking ESLint: leave open (recommended) until `eslint-plugin-import-x` supports minimatch 11                                          | nothing | pending |
-| 3   | The existing ignore `GHSA-86w9-cpqp-85rv` (node-forge) is now stale: its range is `<=1.4.0` and the lockfile resolves 1.4.2. Approve removing it from `auditConfig.ignoreGhsas` and from decision 056 (not done, rule 11) | nothing | pending |
+| #   | What                                                                                                                                                                                                      | Blocks  | Status  |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| 1   | `deepmerge` `GHSA-gcqx-w48m-w2h4` (low) and `minimatch` `GHSA-g3hv-75wg-m249` (moderate) stay open and are not ignored (decided by the user); revisit when `eslint-plugin-import-x` supports minimatch 11 | nothing | decided |
+| 2   | The `braces` ignore `GHSA-vfj7-8cjw-p6xm` is shown by GitHub as a withdrawn advisory: decide whether to remove it in a later task                                                                         | nothing | pending |
 
 ## Decisions made in this task
 
-- → `.claude/docs/decisions/064-audit-overrides-2026-10-31.md`
+- → `.claude/docs/decisions/064-audit-overrides-2026-10-31.md` (with the 2026-10-31 addendum) and the amendment in `056-audit-overrides-and-ignored-advisories.md`
