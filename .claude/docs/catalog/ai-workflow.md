@@ -339,7 +339,7 @@ extended it to `node-forge`, `serialize-javascript`, `glob`, `nuxt`, `@nuxt/nitr
 `@nuxt/vite-builder`, dropped the requirement that `simple-git` be present in the lockfile (the `@nuxt/devtools` patch,
 its `simple-git@<4.0.1` override and the `@simple-git/argv-parser` override were removed when `nuxt` 4.6.3 brought
 `@nuxt/devtools` 3.4.4, which no longer depends on `simple-git`), and added a check that every file under `patches/` is
-referenced by a `patchedDependencies` entry, and that the lockfile holds a single `vue` version (two copies break the
+referenced by a `patchedDependencies` entry, that every `ignoreGhsas` entry still names a package and vulnerable range the lockfile resolves (a stale ignore fails), and that the lockfile holds a single `vue` version (two copies break the
 Nuxt auto-import types in `nuxt typecheck`).
 
 **Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
@@ -419,7 +419,7 @@ Audit auto-fix (decision 063): `audit-fix.yml` opens the pull request that adds 
 
 Dependabot (`.github/dependabot.yml`): npm (pnpm-lock) weekly with minor+patch grouped, GitHub Actions weekly grouped.
 
-Audit configuration (decision 056, 2026-10-04): `pnpm-workspace.yaml` carries `overrides` (patched `brace-expansion`, `devalue`, `undici`; decision 058 adds more, including `simple-git@<4.0.1` with a `patchedDependencies` patch for `@nuxt/devtools@3.4.2`, both removed by decision 064) and `auditConfig.ignoreGhsas` (`GHSA-86w9-cpqp-85rv` node-forge, `GHSA-vfj7-8cjw-p6xm` braces: no patched version on npm). The `audit` job still fails on any other high advisory; each ignore has a REMOVE-WHEN condition in the decision.
+Audit configuration (decision 056, 2026-10-04): `pnpm-workspace.yaml` carries `overrides` (patched `brace-expansion`, `devalue`, `undici`; decision 058 adds more, including `simple-git@<4.0.1` with a `patchedDependencies` patch for `@nuxt/devtools@3.4.2`, both removed by decision 064) and `auditConfig.ignoreGhsas` (`GHSA-vfj7-8cjw-p6xm` braces: no patched version on npm; the `GHSA-86w9-cpqp-85rv` node-forge ignore was removed by decision 064 once `node-forge` 1.4.2 was out of its range). The `audit` job still fails on any other high advisory; each ignore has a REMOVE-WHEN condition in the decision.
 
 Action versions (verified 2026-09-14): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6` (reads `packageManager` from `package.json`), `actions/upload-artifact@v7`, `actions/github-script@v9`, `cloudflare/wrangler-action@v4`, `gitleaks/gitleaks-action@v3`, `github/codeql-action@v4`. Dependabot keeps them up to date.
 

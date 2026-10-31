@@ -192,6 +192,31 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     }
   })
 
+  it('every ignored advisory still matches a version the lockfile resolves', () => {
+    const { ignored } = workspace()
+    const docs = decisions()
+    for (const ghsa of ignored) {
+      const block = docs
+        .flatMap(({ text }) => text.split(/\n(?=\s*- )|\n\s*\n/))
+        .find((candidate) => candidate.includes(ghsa))
+      expect(block, `${ghsa} is not named in any decision`).toBeDefined()
+      const tokens = [
+        ...block!.slice(block!.indexOf(ghsa) + ghsa.length + 1).matchAll(/`([^`]+)`/g),
+      ].map((match) => match[1]!)
+      const name = tokens.find((token) => /^[@a-z][@a-z0-9/._-]*$/.test(token))
+      const range = tokens.find((token) => /^(<=|<)\d+\.\d+\.\d+$/.test(token))
+      expect(name, `${ghsa}: its decision entry needs the package name in backticks`).toBeDefined()
+      expect(
+        range,
+        `${ghsa}: its decision entry needs the vulnerable range in backticks`
+      ).toBeDefined()
+      expect(
+        resolvedVersions(name!).some((version) => inRange(version, [range!])),
+        `${ghsa}: pnpm-lock.yaml no longer resolves ${name} inside ${range}, so the ignore is stale; remove it from auditConfig.ignoreGhsas with a dated note in its decision`
+      ).toBe(true)
+    }
+  })
+
   it('the lockfile resolves simple-git only at or above the 4.0.1 advisory fix', () => {
     const versions = resolvedVersions('simple-git')
     expect(

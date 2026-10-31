@@ -73,3 +73,11 @@ resolves only patched versions.
   `js-beautify`); `nuxt` 4.5.2 to 4.6.3 is a minor bump of the framework itself.
   All are covered by `pnpm gate:push` (lint, typecheck, unit and arch tests, `nuxt build`, Playwright e2e). Not covered:
   `wrangler`/`pnpm cf:deploy`, which only runs in the deploy workflow.
+
+**Addendum 2026-10-31 (user approval): the stale `node-forge` ignore is removed.** `GHSA-86w9-cpqp-85rv` (`node-forge`,
+vulnerable `<=1.4.0`, no patched version when decision 056 ignored it) is no longer needed: the lockfile resolves
+`node-forge@1.4.2`, outside the range, and its remove-when condition (a release `>=1.4.1`) holds. The entry is deleted
+from `auditConfig.ignoreGhsas` and a dated amendment is added to decision 056. `deepmerge` `GHSA-gcqx-w48m-w2h4` and
+`minimatch` `GHSA-g3hv-75wg-m249` stay open as decided above, neither ignored. The `braces` ignore `GHSA-vfj7-8cjw-p6xm`
+is untouched (GitHub marks that advisory "Withdrawn", a question for a later task). The arch test gained "every ignored
+advisory still matches a version the lockfile resolves".
