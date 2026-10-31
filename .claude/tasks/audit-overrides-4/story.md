@@ -10,7 +10,7 @@ on `main`'s own lockfile. The weekly audit-fix run (issue #31) also proposed fix
 
 ## Out of scope
 
-- Ignoring an advisory without a patched version (`deepmerge`, `GHSA-gcqx-w48m-w2h4`, low): needs the user's explicit
+- Ignoring an advisory without a usable patched version (`deepmerge`, `GHSA-gcqx-w48m-w2h4`, low; `minimatch`, `GHSA-g3hv-75wg-m249`, moderate, whose patched 11.x breaks ESLint): needs the user's explicit
   approval (rule 11); it is reported, not ignored.
 - Changing how the audit job or the auto-fix workflow works.
 

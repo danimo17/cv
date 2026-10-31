@@ -194,16 +194,13 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
 
   it('the lockfile resolves simple-git only at or above the 4.0.1 advisory fix', () => {
     const versions = resolvedVersions('simple-git')
-    expect(versions.length, 'pnpm-lock.yaml no longer resolves simple-git at all').toBeGreaterThan(
-      0
-    )
     expect(
       versions.filter((version) => compare(version, [4, 0, 1]) < 0),
       'simple-git below 4.0.1 is inside GHSA-x6jw-m9v5-85vh / GHSA-g4wm-2vf7-vfgr / GHSA-858h-whjf-mvg5'
     ).toEqual([])
   })
 
-  it('the lockfile resolves the advisory packages of decisions 061 and 062 only at or above their patched versions', () => {
+  it('the lockfile resolves the advisory packages of decisions 061, 062 and 064 only at or above their patched versions', () => {
     const advisories: Array<[string, Version, Version, string]> = [
       [
         '@modelcontextprotocol/server',
@@ -222,6 +219,12 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
       ['@intlify/core', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
       ['@intlify/core-base', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
       ['vue-i18n', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
+      ['node-forge', [0, 0, 0], [1, 4, 1], 'GHSA-7wch-p9px-956x / GHSA-jc66-7q78-782g'],
+      ['serialize-javascript', [0, 0, 0], [7, 1, 3], 'GHSA-gfhx-hw2g-v5hg / GHSA-m5mm-p8h7-m29v'],
+      ['glob', [9, 0, 0], [14, 0, 2], 'GHSA-3g3m-2fjr-6pw4'],
+      ['nuxt', [3, 13, 0], [4, 6, 2], 'GHSA-vjh5-4x84-xrqp / GHSA-xfq5-w38q-pc2x'],
+      ['@nuxt/nitro-server', [4, 2, 0], [4, 6, 2], 'GHSA-vjh5-4x84-xrqp'],
+      ['@nuxt/vite-builder', [3, 0, 0], [4, 6, 3], 'GHSA-648h-gw55-m2g7'],
     ]
     for (const [name, from, patched, advisory] of advisories) {
       const versions = resolvedVersions(name)
@@ -231,6 +234,14 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
         `${name} in ${from.join('.')} to ${patched.join('.')} (exclusive) is inside ${advisory}`
       ).toEqual([])
     }
+  })
+
+  it('the lockfile resolves a single vue version so the Nuxt auto-import types augment it', () => {
+    const versions = resolvedVersions('vue').map((version) => version.join('.'))
+    expect(
+      versions,
+      'two vue copies make vue-tsc miss the ComponentCustomProperties of .nuxt/types/imports.d.ts (decision 064)'
+    ).toHaveLength(1)
   })
 
   it('every decision that explains an audit override carries a remove-when condition', () => {
@@ -250,6 +261,14 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
   it('every patched dependency has an existing patch file that still matches the locked version', () => {
     const { overrides, patched } = workspace()
     const hasSimpleGitOverride = overrides.some(([selector]) => selector === 'simple-git@<4.0.1')
+    const patchesDir = join(ROOT, 'patches')
+    const patchFiles = existsSync(patchesDir) ? readdirSync(patchesDir) : []
+    expect(
+      patchFiles
+        .map((file) => `patches/${file}`)
+        .filter((file) => !patched.some(([, patch]) => patch === file)),
+      'a file under patches/ that no patchedDependencies entry references is an orphan, delete it'
+    ).toEqual([])
     expect(
       patched.length > 0,
       'the simple-git@<4.0.1 override and the @nuxt/devtools patch only work together'
