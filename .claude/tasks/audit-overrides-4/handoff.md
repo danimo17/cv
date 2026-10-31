@@ -11,7 +11,7 @@ _Updated: 2026-10-31. REAL state of the `feat/audit-overrides-4` branch._
 - [x] validate — evidence: 2026-10-31 pnpm gate 34 files / 701 tests passed, 0 lint errors, typecheck clean; pnpm audit --audit-level=high exit 0
 - [x] handoff — evidence: handoff.md rewritten 2026-10-31 after the reopen, Review round 1 and 2 recorded
 - [x] commit — evidence: 872aa20 (last code commit; first was 0d9bc77)
-- [ ] review — evidence:
+- [x] review — evidence: 3d434f8 (commit that recorded the Review section: /code-review high, round 1 on the branch diff and round 2 on the delta, 14 findings, each with an outcome)
 - [ ] close-out — evidence:
 - [x] gate-push — evidence: 2026-10-31 pnpm gate:push exit 0 on 872aa20: 701 unit/arch tests passed (34 files), nuxt build complete, playwright 5 passed (10.8s)
 - [ ] push-pr — evidence:
