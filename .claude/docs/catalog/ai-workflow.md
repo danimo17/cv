@@ -319,22 +319,25 @@ checks `workflow.md`, rules 09/10, decision 057, the templates and this catalog 
 document reopening via `git revert <close-out sha>`; checks `workflow.md`'s `## Review policy` (finding becomes a test, search first, test is the verification, two rounds, deliberate evasions queued, honest limit) and rule 09, decision 057 and both templates carry the finding formats; checks every `hard-rules.md` table row stays under 700
 characters (detail lives in `rules/NN-*.md`); checks no arch spec references a test-only hook override.
 
-**Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058, 061, 062; the CI `audit` job runs `pnpm audit
---audit-level=high`): parses `pnpm-workspace.yaml` and checks that every `overrides` entry has a selector with an
-exclusive upper bound (`pkg@<range <patched`) and a caret value whose floor is at least that patched version, that a
-decision quotes both the selector and the value, that `pnpm-lock.yaml` resolves nothing inside the vulnerable
-range, that every `auditConfig.ignoreGhsas` entry is a well-formed GHSA id, and that each one sits in a decision
-entry naming its package and a remove-when condition. An override or an ignore added without its decision, or a
-lockfile regeneration that drops a transitive back into a vulnerable range, fails the test. It also guards the
-`patchedDependencies` entry of decision 058 (`@nuxt/devtools@3.4.2` to `patches/@nuxt__devtools@3.4.2.patch`, which
-switches devtools to the named `simpleGit` export of `simple-git` 4.x): `simple-git` resolves only at or above
-`4.0.1`, each patch file exists under `patches/`, contains `simpleGit as Git` and targets the version locked in
-`pnpm-lock.yaml` (a devtools bump fails with the instruction to remove the patch and the `simple-git` override), the
-patch and the override come together, and a decision names each patch with a remove-when condition. Decision 061 added two
+**Arch test `tests/arch/audit-overrides.spec.ts`** (decisions 056, 058, 061, 062, 064; the CI `audit` job runs `pnpm audit
+--audit-level=high`): parses `pnpm-workspace.yaml` and checks that every `overrides` entry has a selector with a
+vulnerable range closed by `<patched` or `<=last-vulnerable` and a caret value whose floor clears it, that a decision
+quotes both the selector and the value, that `pnpm-lock.yaml` resolves nothing inside the vulnerable range, that every
+`auditConfig.ignoreGhsas` entry is a well-formed GHSA id, and that each one sits in a decision entry naming its package
+and a remove-when condition. An override or an ignore added without its decision, or a lockfile regeneration that drops
+a transitive back into a vulnerable range, fails the test. An ignore must also still apply: its decision entry is
+written as a GHSA id, the package and the vulnerable range in backticks, and the lockfile must resolve a version inside
+that range, otherwise the ignore is stale and the test fails (decision 064). The `patchedDependencies` mechanism of
+decision 058 is guarded for any patch (none exists today; the `@nuxt/devtools@3.4.2` patch was removed by decision 064):
+each patch file exists under `patches/`, is non-empty and targets the version locked in `pnpm-lock.yaml`, no file under
+`patches/` is left unreferenced, and a decision names each patch with a remove-when condition. Decision 061 added two
 checks: the lockfile resolves `@modelcontextprotocol/server`, `vite` and `launch-editor` only at or above their patched
 versions (so a removed override or a regenerated lockfile cannot bring the vulnerable range back), and every decision
-that explains an override carries a remove-when condition. Decision 062 extended the lockfile check to `zod`, `happy-dom`, both `undici`
-lines (7.x and 8.x), `seroval`, `@intlify/shared`, `@intlify/core`, `@intlify/core-base` and `vue-i18n`.
+that explains an override carries a remove-when condition. Decision 062 extended the lockfile check to `zod`, `happy-dom`,
+both `undici` lines (7.x and 8.x), `seroval`, `@intlify/shared`, `@intlify/core`, `@intlify/core-base` and `vue-i18n`.
+Decision 064 extended it to `node-forge`, `serialize-javascript`, `glob`, `nuxt`, `@nuxt/nitro-server` and
+`@nuxt/vite-builder`, made `simple-git` optional in the lockfile (still never below `4.0.1`), and added a check that the
+lockfile holds a single `vue` version (two copies break the Nuxt auto-import types in `nuxt typecheck`).
 
 **Test setup `tests/setup/clean-git-env.ts` (vitest `setupFiles`) and arch test `tests/arch/test-env-isolation.spec.ts`:**
 git sets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and friends for hooks, and in a linked worktree `GIT_DIR` is an
@@ -413,7 +416,7 @@ Audit auto-fix (decision 063): `audit-fix.yml` opens the pull request that adds 
 
 Dependabot (`.github/dependabot.yml`): npm (pnpm-lock) weekly with minor+patch grouped, GitHub Actions weekly grouped.
 
-Audit configuration (decision 056, 2026-10-04): `pnpm-workspace.yaml` carries `overrides` (patched `brace-expansion`, `devalue`, `undici`; decision 058 adds more, including `simple-git@<4.0.1` with the `patchedDependencies` patch for `@nuxt/devtools@3.4.2`) and `auditConfig.ignoreGhsas` (`GHSA-86w9-cpqp-85rv` node-forge, `GHSA-vfj7-8cjw-p6xm` braces: no patched version on npm). The `audit` job still fails on any other high advisory; each ignore has a REMOVE-WHEN condition in the decision.
+Audit configuration (decision 056, 2026-10-04): `pnpm-workspace.yaml` carries `overrides` (patched `brace-expansion`, `devalue`, `undici`; decision 058 adds more, including `simple-git@<4.0.1` with a `patchedDependencies` patch for `@nuxt/devtools@3.4.2`, both removed by decision 064) and `auditConfig.ignoreGhsas` (`GHSA-vfj7-8cjw-p6xm` braces: no patched version on npm; the `GHSA-86w9-cpqp-85rv` node-forge ignore was removed by decision 064 once `node-forge` 1.4.2 was out of its range). The `audit` job still fails on any other high advisory; each ignore has a REMOVE-WHEN condition in the decision.
 
 Action versions (verified 2026-09-14): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6` (reads `packageManager` from `package.json`), `actions/upload-artifact@v7`, `actions/github-script@v9`, `cloudflare/wrangler-action@v4`, `gitleaks/gitleaks-action@v3`, `github/codeql-action@v4`. Dependabot keeps them up to date.
 

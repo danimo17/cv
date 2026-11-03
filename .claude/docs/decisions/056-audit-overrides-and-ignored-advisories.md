@@ -34,3 +34,11 @@ again) to fix it inside `feat/spacing-tokens` instead of a separate PR (contract
   (`nuxt`, `@nuxtjs/i18n`, their `minimatch`/`brace-expansion` chain) require the patched ranges themselves,
   the overrides are redundant and can be dropped.
 - The remaining `low` advisory is below the `--audit-level=high` threshold and is not addressed here.
+
+**Amendment 2026-10-31 (task `audit-overrides-4`, decision 064): the `node-forge` ignore is removed.** The user approved
+removing the ignore of `node-forge` (the first of the two above, GHSA id `GHSA-86w9-cpqp-85rv`) from
+`auditConfig.ignoreGhsas`. Its REMOVE-WHEN condition held: `node-forge` published `1.4.1` and `1.4.2` on 2026-10-27, the
+advisory's range `<=1.4.0` no longer contains the version the lockfile resolves (`1.4.2`, forced by the
+`node-forge@<=1.4.0` to `^1.4.1` override of decision 064), and `pnpm audit` no longer reports it. The `braces` ignore is
+unchanged. `tests/arch/audit-overrides.spec.ts` now fails when an ignore names a package whose vulnerable range the
+lockfile no longer resolves, so a stale ignore cannot linger.

@@ -119,6 +119,25 @@ function resolvedVersions(name: string): Version[] {
   return found
 }
 
+function ignoreEntry(
+  text: string,
+  ghsa: string
+): { name: string; comparators: string[] } | undefined {
+  const escaped = ghsa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = new RegExp(`\`${escaped}\`:\\s*\`([^\`\\s]+)\`((?:[\\s,]*\`[<>=]+[^\`]*\`)+)`).exec(
+    text
+  )
+  if (!match) return undefined
+  const comparators = [...match[2]!.matchAll(/`([^`]+)`/g)].flatMap((token) =>
+    token[1]!.split(/\s+/)
+  )
+  return { name: match[1]!, comparators }
+}
+
+function parseableRange(comparators: string[]): boolean {
+  return comparators.length > 0 && comparators.every((c) => /^(<=|<|>=|>)\d+\.\d+\.\d+$/.test(c))
+}
+
 function decisions(): Array<{ file: string; text: string }> {
   return readdirSync(DECISIONS_DIR)
     .filter((file) => file.endsWith('.md'))
@@ -192,18 +211,61 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
     }
   })
 
+  it('every ignored advisory still matches a version the lockfile resolves', () => {
+    const { ignored } = workspace()
+    const docs = decisions()
+    for (const ghsa of ignored) {
+      const entry = docs.map(({ text }) => ignoreEntry(text, ghsa)).findLast((found) => found)
+      expect(
+        entry,
+        `${ghsa}: a decision needs an entry written as "\`${ghsa}\`: \`package\` \`<range>\`"`
+      ).toBeDefined()
+      expect(
+        parseableRange(entry!.comparators),
+        `${ghsa}: the range ${entry!.comparators.join(' ')} must be written as <, <=, > or >= with x.y.z versions`
+      ).toBe(true)
+      expect(
+        resolvedVersions(entry!.name).some((version) => inRange(version, entry!.comparators)),
+        `${ghsa}: pnpm-lock.yaml no longer resolves ${entry!.name} inside ${entry!.comparators.join(' ')}, so the ignore is stale; remove it from auditConfig.ignoreGhsas with a dated note in its decision`
+      ).toBe(true)
+    }
+  })
+
+  it('an ignore entry is read as its package and its full vulnerable range', () => {
+    const text =
+      '- `GHSA-aaaa-bbbb-cccc`: `pkg` `>=1.0.0` `<2.0.0`, reached via x. See `GHSA-aaaa-bbbb-cccc` later.'
+    expect(ignoreEntry(text, 'GHSA-aaaa-bbbb-cccc')).toEqual({
+      name: 'pkg',
+      comparators: ['>=1.0.0', '<2.0.0'],
+    })
+    expect(ignoreEntry('- `GHSA-x`: `pkg` `<=3.0.3`, y', 'GHSA-x')?.comparators).toEqual([
+      '<=3.0.3',
+    ])
+    expect(ignoreEntry('mentions GHSA-x in prose only', 'GHSA-x')).toBeUndefined()
+    expect(
+      ignoreEntry('- `GHSA-x`: `pkg` `>=1.0.0`, `<2.0.0` and more', 'GHSA-x')?.comparators
+    ).toEqual(['>=1.0.0', '<2.0.0'])
+    expect(
+      ['- `GHSA-x`: `pkg` `<=1.0.0`', '- `GHSA-x`: `pkg` `<=2.0.0`']
+        .map((line) => ignoreEntry(line, 'GHSA-x'))
+        .findLast((found) => found)?.comparators
+    ).toEqual(['<=2.0.0'])
+    expect(ignoreEntry('- `GHSA-a.b`: `pkg` `<1.0.0`', 'GHSA-axb')).toBeUndefined()
+    expect(parseableRange(['>=1.0'])).toBe(false)
+    expect(parseableRange(['<=1.4.0-beta.1'])).toBe(false)
+    expect(parseableRange(['>=1.0.0', '<2.0.0'])).toBe(true)
+    expect(inRange([0, 9, 0], ['>=1.0.0', '<2.0.0'])).toBe(false)
+  })
+
   it('the lockfile resolves simple-git only at or above the 4.0.1 advisory fix', () => {
     const versions = resolvedVersions('simple-git')
-    expect(versions.length, 'pnpm-lock.yaml no longer resolves simple-git at all').toBeGreaterThan(
-      0
-    )
     expect(
       versions.filter((version) => compare(version, [4, 0, 1]) < 0),
       'simple-git below 4.0.1 is inside GHSA-x6jw-m9v5-85vh / GHSA-g4wm-2vf7-vfgr / GHSA-858h-whjf-mvg5'
     ).toEqual([])
   })
 
-  it('the lockfile resolves the advisory packages of decisions 061 and 062 only at or above their patched versions', () => {
+  it('the lockfile resolves the advisory packages of decisions 061, 062 and 064 only at or above their patched versions', () => {
     const advisories: Array<[string, Version, Version, string]> = [
       [
         '@modelcontextprotocol/server',
@@ -222,6 +284,12 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
       ['@intlify/core', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
       ['@intlify/core-base', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
       ['vue-i18n', [11, 1, 10], [11, 4, 14], 'GHSA-83rm-6c8r-g728'],
+      ['node-forge', [0, 0, 0], [1, 4, 1], 'GHSA-7wch-p9px-956x / GHSA-jc66-7q78-782g'],
+      ['serialize-javascript', [0, 0, 0], [7, 1, 3], 'GHSA-gfhx-hw2g-v5hg / GHSA-m5mm-p8h7-m29v'],
+      ['glob', [9, 0, 0], [14, 0, 2], 'GHSA-3g3m-2fjr-6pw4'],
+      ['nuxt', [3, 13, 0], [4, 6, 2], 'GHSA-vjh5-4x84-xrqp / GHSA-xfq5-w38q-pc2x'],
+      ['@nuxt/nitro-server', [4, 2, 0], [4, 6, 2], 'GHSA-vjh5-4x84-xrqp'],
+      ['@nuxt/vite-builder', [3, 0, 0], [4, 6, 3], 'GHSA-648h-gw55-m2g7'],
     ]
     for (const [name, from, patched, advisory] of advisories) {
       const versions = resolvedVersions(name)
@@ -231,6 +299,33 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
         `${name} in ${from.join('.')} to ${patched.join('.')} (exclusive) is inside ${advisory}`
       ).toEqual([])
     }
+  })
+
+  it('the lockfile resolves a single vue version so the Nuxt auto-import types augment it', () => {
+    const versions = [...new Set(resolvedVersions('vue').map((version) => version.join('.')))]
+    expect(
+      versions,
+      'two vue copies make vue-tsc miss the ComponentCustomProperties of .nuxt/types/imports.d.ts (decision 064)'
+    ).toHaveLength(1)
+  })
+
+  it('the catalog paragraph on this arch test is well formed prose', () => {
+    const catalog = readFileSync(join(ROOT, '.claude', 'docs', 'catalog', 'ai-workflow.md'), 'utf8')
+    const start = catalog.indexOf('**Arch test `tests/arch/audit-overrides.spec.ts`**')
+    expect(
+      start,
+      'the catalog lost the audit-overrides arch test paragraph'
+    ).toBeGreaterThanOrEqual(0)
+    const end = catalog.indexOf('\n\n', start)
+    const paragraph = catalog.slice(start, end === -1 ? undefined : end)
+    expect(paragraph.split('`').length % 2, 'unbalanced backticks in the catalog paragraph').toBe(1)
+    expect(paragraph.split('(').length, 'unbalanced parentheses in the catalog paragraph').toBe(
+      paragraph.split(')').length
+    )
+    expect(
+      paragraph,
+      'the removed simple-git patch scenario must not be described as live'
+    ).not.toContain('contains `simpleGit as Git`')
   })
 
   it('every decision that explains an audit override carries a remove-when condition', () => {
@@ -248,12 +343,15 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
   })
 
   it('every patched dependency has an existing patch file that still matches the locked version', () => {
-    const { overrides, patched } = workspace()
-    const hasSimpleGitOverride = overrides.some(([selector]) => selector === 'simple-git@<4.0.1')
+    const { patched } = workspace()
+    const patchesDir = join(ROOT, 'patches')
+    const patchFiles = existsSync(patchesDir) ? readdirSync(patchesDir) : []
     expect(
-      patched.length > 0,
-      'the simple-git@<4.0.1 override and the @nuxt/devtools patch only work together'
-    ).toBe(hasSimpleGitOverride)
+      patchFiles
+        .map((file) => `patches/${file}`)
+        .filter((file) => !patched.some(([, patch]) => patch === file)),
+      'a file under patches/ that no patchedDependencies entry references is an orphan, delete it'
+    ).toEqual([])
     for (const [target, patchPath] of patched) {
       expect(patchPath, `${target}: patch files live under patches/`).toMatch(
         /^patches\/[^/]+\.patch$/
@@ -266,11 +364,9 @@ describe('audit overrides and ignored advisories (decisions 056, 058)', () => {
       expect(version, `${target}: a patch target needs an exact version`).toBeDefined()
       expect(
         resolvedVersions(name).some((resolved) => compare(resolved, version!) === 0),
-        `${target}: pnpm-lock.yaml resolves ${name} at another version; the patch is stale, remove it with the patchedDependencies entry and the simple-git@<4.0.1 override`
+        `${target}: pnpm-lock.yaml resolves ${name} at another version; the patch is stale, remove it with its patchedDependencies entry and the overrides that only it needed`
       ).toBe(true)
-      expect(text, `${patchPath}: the patch must switch to the named simple-git export`).toContain(
-        'simpleGit as Git'
-      )
+      expect(text.trim().length, `${patchPath}: the patch file is empty`).toBeGreaterThan(0)
     }
   })
 
